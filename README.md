@@ -52,17 +52,17 @@ Part of [BT6](https://bt6.gg/) - founded by [Pliny the Liberator](https://x.com/
 ### Preset System
 Save and load agent configurations with the preset system. Quickly switch between different agent lineups.
 
-![Presets](Presets.png)
+<img src="Presets.png" alt="Presets" width="800"/>
 
 ### Auto-Play Configuration
 Configure agents to automatically challenge each other to games when idle. Enable spectator commentary for entertaining match narration.
 
-![Auto-Play Config](Auto-play-config.png)
+<img src="Auto-play-config.png" alt="Auto-Play Config" width="800"/>
 
 ### Model & Memory Management
 Add custom OpenRouter models and manage agent memory. Clear conversation history or vector store as needed.
 
-![Models and Memory](Models-and-Memory.png)
+<img src="Models-and-Memory.png" alt="Models and Memory" width="800"/>
 
 ## Configuration
 
