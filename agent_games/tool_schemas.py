@@ -6,6 +6,7 @@ Context-aware tool schemas that change based on agent mode:
 - Game mode: ONLY game-specific move functions
 """
 
+import re
 from typing import Dict, List, Optional
 
 # Chat mode tools - available during normal conversation
@@ -273,33 +274,68 @@ def convert_tool_call_to_message(tool_name: str, tool_args: Dict) -> tuple[str, 
     """
     # Game move functions - return (move, commentary) tuple
     if tool_name == "place_piece":
-        position = tool_args.get("position")
+        # Tic-tac-toe: position should be 1-9
+        position = str(tool_args.get("position", ""))
         reasoning = tool_args.get("reasoning", "")
-        return (str(position), reasoning)
+        # Normalize: extract first digit 1-9
+        position = re.sub(r'\s+', '', position)
+        match = re.search(r'([1-9])', position)
+        if match:
+            position = match.group(1)
+        return (position, reasoning)
 
     elif tool_name == "drop_piece":
-        column = tool_args.get("column")
+        # Connect Four: column should be 1-7
+        column = str(tool_args.get("column", ""))
         reasoning = tool_args.get("reasoning", "")
-        return (str(column), reasoning)
+        # Normalize: extract first digit 1-7
+        column = re.sub(r'\s+', '', column)
+        match = re.search(r'([1-7])', column)
+        if match:
+            column = match.group(1)
+        return (column, reasoning)
 
     elif tool_name == "make_chess_move":
-        move = tool_args.get("move")
+        # Chess: UCI notation like "e2e4" or "e2-e4"
+        move = str(tool_args.get("move", ""))
         reasoning = tool_args.get("reasoning", "")
+        # Normalize: remove spaces, dashes, lowercase
+        move = re.sub(r'[\s\-]+', '', move).lower()
+        # Extract valid UCI pattern (letter+digit + letter+digit, optional promotion)
+        match = re.search(r'([a-h][1-8])([a-h][1-8])([qrbn])?', move)
+        if match:
+            move = match.group(1) + match.group(2) + (match.group(3) or '')
         return (move, reasoning)
 
     elif tool_name == "attack_coordinate":
-        coordinate = tool_args.get("coordinate")
+        # Battleship: coordinate like "a5", "j10"
+        coordinate = str(tool_args.get("coordinate", ""))
         reasoning = tool_args.get("reasoning", "")
+        # Normalize malformed coordinates like "I a 7" -> "i7"
+        coordinate = re.sub(r'\s+', '', coordinate).lower()
+        # Extract just letter + number pattern (handles garbled input)
+        match = re.search(r'([a-j]).*?(\d{1,2})', coordinate)
+        if match:
+            coordinate = match.group(1) + match.group(2)
         return (coordinate, reasoning)
 
     elif tool_name == "guess_letter":
-        letter = tool_args.get("letter")
+        # Hangman: single letter a-z
+        letter = str(tool_args.get("letter", ""))
         reasoning = tool_args.get("reasoning", "")
+        # Normalize: extract first letter a-z
+        letter = re.sub(r'\s+', '', letter).lower()
+        match = re.search(r'([a-z])', letter)
+        if match:
+            letter = match.group(1)
         return (letter, reasoning)
 
     elif tool_name == "guess_word":
-        word = tool_args.get("word")
+        # Hangman/Wordle: a word
+        word = str(tool_args.get("word", ""))
         reasoning = tool_args.get("reasoning", "")
+        # Normalize: strip spaces, lowercase, letters only
+        word = re.sub(r'[^a-zA-Z]', '', word).lower()
         return (word, reasoning)
 
     # Chat mode functions
