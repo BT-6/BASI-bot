@@ -1,0 +1,12 @@
+{
+  "enabled": true,
+  "idle_threshold_minutes": 1,
+  "enabled_games": [
+    "wordle",
+    "hangman",
+    "battleship"
+  ],
+  "commentary_enabled": true,
+  "commentary_frequency": "low",
+  "store_game_memories": true
+}

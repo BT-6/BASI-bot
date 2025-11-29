@@ -1,0 +1,852 @@
+/*
+   BASI-Bot Matrix Theme CSS
+   Modern layout with classic Matrix green-on-black color scheme
+*/
+
+/* ============================================================================
+   CSS CUSTOM PROPERTIES - Matrix Color Palette
+   ============================================================================ */
+:root {
+    /* Backgrounds */
+    --bg-primary: #000000;
+    --bg-secondary: #0a0a0a;
+    --bg-card: #0d1117;
+    --bg-hover: #1a1a1a;
+
+    /* Borders */
+    --border-color: #00FF00;
+    --border-dim: #004400;
+    --border-glow: #00FF0066;
+
+    /* Text */
+    --text-primary: #00FF00;
+    --text-secondary: #00CC00;
+    --text-muted: #006600;
+    --text-bright: #33FF33;
+
+    /* Accent colors */
+    --accent: #00FF00;
+    --accent-hover: #33FF33;
+    --accent-dim: #009900;
+
+    /* Status colors */
+    --status-running: #00FF00;
+    --status-stopped: #FF0000;
+    --status-error: #FFFF00;
+    --status-warning: #FF9900;
+
+    /* Semantic */
+    --danger: #FF0000;
+    --success: #00FF00;
+    --warning: #FFFF00;
+
+    /* Typography */
+    --font-mono: 'Courier New', Consolas, Monaco, monospace;
+    --font-system: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* ============================================================================
+   BASE STYLES
+   ============================================================================ */
+body {
+    background-color: var(--bg-primary) !important;
+    color: var(--text-primary) !important;
+    font-family: var(--font-mono) !important;
+}
+
+.gradio-container {
+    background-color: var(--bg-primary) !important;
+    color: var(--text-primary) !important;
+    font-family: var(--font-mono) !important;
+    max-width: 1200px !important;
+    margin: 0 auto !important;
+    padding: 20px 40px !important;
+}
+
+.contain {
+    background-color: var(--bg-primary) !important;
+}
+
+/* ============================================================================
+   HEADER
+   ============================================================================ */
+.app-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 0;
+    margin-bottom: 20px;
+    border-bottom: 1px solid var(--border-dim);
+}
+
+.header-logo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.header-logo .logo {
+    width: 44px;
+    height: 44px;
+    background: linear-gradient(135deg, var(--accent) 0%, #00CCCC 100%);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 22px;
+    color: #000;
+}
+
+.header-logo .title {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--text-primary);
+    text-shadow: 0 0 10px var(--border-glow);
+}
+
+.header-status {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--text-secondary);
+    font-size: 14px;
+}
+
+.header-status .status-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--text-muted);
+}
+
+.header-status .status-dot.connected {
+    background: var(--status-running);
+    box-shadow: 0 0 8px var(--status-running);
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.6; }
+}
+
+/* ============================================================================
+   TAB NAVIGATION
+   ============================================================================ */
+.tab-nav, .tabs {
+    background-color: var(--bg-secondary) !important;
+    border-radius: 8px !important;
+    padding: 4px !important;
+    margin-bottom: 20px !important;
+}
+
+.tab-nav button, .tabs button {
+    background-color: transparent !important;
+    color: var(--text-secondary) !important;
+    border: none !important;
+    padding: 12px 24px !important;
+    border-radius: 6px !important;
+    font-family: var(--font-mono) !important;
+    font-size: 13px !important;
+    font-weight: 600 !important;
+    letter-spacing: 1px !important;
+    transition: all 0.15s ease !important;
+}
+
+.tab-nav button:hover, .tabs button:hover {
+    background-color: var(--bg-hover) !important;
+    color: var(--text-primary) !important;
+}
+
+.tab-nav button.selected, .tabs button.selected {
+    background-color: var(--accent) !important;
+    color: #000000 !important;
+    box-shadow: 0 0 10px var(--border-glow) !important;
+}
+
+/* ============================================================================
+   STATS CARDS
+   ============================================================================ */
+.stats-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.stat-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-dim);
+    border-radius: 12px;
+    padding: 20px;
+    text-align: center;
+    transition: border-color 0.15s ease;
+}
+
+.stat-card:hover {
+    border-color: var(--accent);
+}
+
+.stat-card .stat-value {
+    font-size: 32px;
+    font-weight: 700;
+    color: var(--text-primary);
+    text-shadow: 0 0 8px var(--border-glow);
+    margin-bottom: 4px;
+}
+
+.stat-card .stat-label {
+    color: var(--text-muted);
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+/* ============================================================================
+   PANELS / CARDS
+   ============================================================================ */
+.panel {
+    background: var(--bg-card);
+    border: 1px solid var(--border-dim);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border-dim);
+}
+
+.panel-header h3 {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0;
+}
+
+.panel-footer {
+    display: flex;
+    gap: 12px;
+    margin-top: 16px;
+    padding-top: 12px;
+    border-top: 1px solid var(--border-dim);
+}
+
+/* ============================================================================
+   AGENT LIST
+   ============================================================================ */
+.agent-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.agent-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px;
+    background: var(--bg-secondary);
+    border: 1px solid transparent;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.agent-row:hover {
+    background: var(--bg-hover);
+    border-color: var(--border-dim);
+}
+
+.agent-row.selected {
+    background: var(--bg-hover);
+    border-color: var(--accent);
+    box-shadow: 0 0 8px var(--border-glow);
+}
+
+.agent-row.stopped {
+    opacity: 0.6;
+}
+
+.agent-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 14px;
+    color: #000;
+    flex-shrink: 0;
+}
+
+.agent-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.agent-info .agent-name {
+    font-weight: 600;
+    font-size: 14px;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.agent-info .agent-model {
+    color: var(--text-muted);
+    font-size: 11px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* ============================================================================
+   STATUS BADGES
+   ============================================================================ */
+.status-badge {
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    flex-shrink: 0;
+}
+
+.status-badge.running, .status-running {
+    background: rgba(0, 255, 0, 0.15);
+    color: var(--status-running);
+    border: 1px solid var(--status-running);
+}
+
+.status-badge.stopped, .status-stopped {
+    background: rgba(255, 0, 0, 0.15);
+    color: var(--status-stopped);
+    border: 1px solid var(--status-stopped);
+}
+
+.status-badge.error, .status-error {
+    background: rgba(255, 255, 0, 0.15);
+    color: var(--status-error);
+    border: 1px solid var(--status-error);
+}
+
+/* ============================================================================
+   BUTTONS
+   ============================================================================ */
+button, .btn {
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    font-family: var(--font-mono) !important;
+    border: 1px solid var(--border-dim) !important;
+    background: var(--bg-secondary) !important;
+    color: var(--text-primary) !important;
+}
+
+button:hover {
+    background: var(--bg-hover) !important;
+    border-color: var(--accent) !important;
+}
+
+.btn-sm {
+    padding: 6px 14px !important;
+    font-size: 12px !important;
+}
+
+.btn-primary, button.primary {
+    background: var(--accent) !important;
+    color: #000 !important;
+    border-color: var(--accent) !important;
+}
+
+.btn-primary:hover, button.primary:hover {
+    background: var(--accent-hover) !important;
+    box-shadow: 0 0 12px var(--border-glow) !important;
+}
+
+.btn-danger, button[variant="stop"] {
+    background: var(--danger) !important;
+    color: #fff !important;
+    border-color: var(--danger) !important;
+}
+
+.btn-danger:hover, button[variant="stop"]:hover {
+    background: #CC0000 !important;
+}
+
+.btn-success {
+    background: var(--success) !important;
+    color: #000 !important;
+    border-color: var(--success) !important;
+}
+
+.btn-ghost {
+    background: transparent !important;
+    color: var(--text-secondary) !important;
+    border-color: var(--border-dim) !important;
+}
+
+.btn-ghost:hover {
+    background: var(--bg-hover) !important;
+    color: var(--text-primary) !important;
+}
+
+/* ============================================================================
+   FORM ELEMENTS
+   ============================================================================ */
+input, textarea, select, .gr-input, .gr-text-input, .gr-dropdown {
+    background-color: var(--bg-secondary) !important;
+    color: var(--text-primary) !important;
+    border: 1px solid var(--border-dim) !important;
+    border-radius: 8px !important;
+    padding: 10px 14px !important;
+    font-family: var(--font-mono) !important;
+    font-size: 14px !important;
+    transition: border-color 0.15s ease !important;
+}
+
+input:focus, textarea:focus, select:focus {
+    outline: none !important;
+    border-color: var(--accent) !important;
+    box-shadow: 0 0 8px var(--border-glow) !important;
+}
+
+input::placeholder, textarea::placeholder {
+    color: var(--text-muted) !important;
+}
+
+label, .gr-label {
+    color: var(--text-secondary) !important;
+    font-size: 13px !important;
+    margin-bottom: 6px !important;
+}
+
+.form-group {
+    margin-bottom: 16px;
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+}
+
+/* Slider styling */
+input[type="range"] {
+    accent-color: var(--accent) !important;
+}
+
+/* Checkbox styling */
+input[type="checkbox"] {
+    accent-color: var(--accent) !important;
+    width: 18px !important;
+    height: 18px !important;
+}
+
+/* ============================================================================
+   GAME BUTTONS
+   ============================================================================ */
+.game-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 12px;
+}
+
+.game-btn {
+    padding: 24px 16px !important;
+    background: var(--bg-secondary) !important;
+    border: 1px solid var(--border-dim) !important;
+    border-radius: 12px !important;
+    color: var(--text-primary) !important;
+    font-size: 14px !important;
+    text-align: center !important;
+    cursor: pointer;
+    transition: all 0.15s ease !important;
+}
+
+.game-btn:hover {
+    border-color: var(--accent) !important;
+    background: var(--bg-hover) !important;
+    box-shadow: 0 0 12px var(--border-glow) !important;
+}
+
+.game-btn .game-icon {
+    font-size: 32px;
+    display: block;
+    margin-bottom: 8px;
+}
+
+/* ============================================================================
+   DATA TABLES
+   ============================================================================ */
+.data-table, table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+}
+
+.data-table th, table th,
+.data-table td, table td {
+    padding: 12px;
+    text-align: left;
+    border-bottom: 1px solid var(--border-dim);
+}
+
+.data-table th, table th {
+    color: var(--text-muted);
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.data-table tbody tr:hover, table tbody tr:hover {
+    background: var(--bg-hover);
+}
+
+.win-high { color: var(--success) !important; font-weight: 700; }
+.win-med { color: var(--warning) !important; font-weight: 700; }
+.win-low { color: var(--danger) !important; font-weight: 700; }
+
+/* ============================================================================
+   LIVE FEED
+   ============================================================================ */
+.feed-container {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-dim);
+    border-radius: 8px;
+    padding: 12px;
+    max-height: 500px;
+    overflow-y: auto;
+}
+
+.feed-msg {
+    display: flex;
+    gap: 12px;
+    padding: 10px;
+    border-radius: 6px;
+    margin-bottom: 6px;
+    font-size: 13px;
+    transition: background 0.15s ease;
+}
+
+.feed-msg:hover {
+    background: var(--bg-hover);
+}
+
+.feed-msg.system {
+    background: rgba(0, 255, 255, 0.1);
+    border-left: 3px solid #00CCCC;
+}
+
+.feed-time {
+    color: var(--text-muted);
+    font-size: 11px;
+    flex-shrink: 0;
+    min-width: 70px;
+}
+
+.feed-author {
+    font-weight: 600;
+    flex-shrink: 0;
+    min-width: 130px;
+}
+
+.feed-text {
+    color: var(--text-secondary);
+    flex: 1;
+    word-break: break-word;
+}
+
+/* ============================================================================
+   PRESETS
+   ============================================================================ */
+.preset-card {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-dim);
+    border-radius: 10px;
+    padding: 16px;
+    margin-bottom: 12px;
+    transition: border-color 0.15s ease;
+}
+
+.preset-card:hover {
+    border-color: var(--accent);
+}
+
+.preset-card .preset-name {
+    font-weight: 600;
+    font-size: 15px;
+    color: var(--text-primary);
+    margin-bottom: 4px;
+}
+
+.preset-card .preset-desc {
+    color: var(--text-muted);
+    font-size: 12px;
+    margin-bottom: 12px;
+}
+
+.preset-card .preset-actions {
+    display: flex;
+    gap: 8px;
+}
+
+/* ============================================================================
+   CONNECTION STATUS CARD
+   ============================================================================ */
+.connection-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-dim);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.connection-status {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 16px;
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.connection-status .status-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+}
+
+.connection-status.connected .status-dot {
+    background: var(--status-running);
+    box-shadow: 0 0 10px var(--status-running);
+}
+
+.connection-status.disconnected .status-dot {
+    background: var(--status-stopped);
+}
+
+.connection-details {
+    margin-bottom: 16px;
+}
+
+.connection-details .detail-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border-dim);
+}
+
+.connection-details .detail-label {
+    color: var(--text-muted);
+}
+
+.connection-details .detail-value {
+    color: var(--text-primary);
+    font-weight: 500;
+}
+
+/* ============================================================================
+   MARKDOWN CONTENT
+   ============================================================================ */
+.markdown-text, .gr-markdown {
+    color: var(--text-primary) !important;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    color: var(--text-primary) !important;
+    text-shadow: 0 0 8px var(--border-glow);
+}
+
+h1 { font-size: 28px !important; }
+h2 { font-size: 22px !important; }
+h3 { font-size: 18px !important; }
+
+hr {
+    border: none;
+    border-top: 1px solid var(--border-dim);
+    margin: 20px 0;
+}
+
+a {
+    color: var(--accent) !important;
+}
+
+a:hover {
+    color: var(--accent-hover) !important;
+    text-shadow: 0 0 8px var(--border-glow);
+}
+
+/* ============================================================================
+   GRADIO COMPONENT OVERRIDES
+   ============================================================================ */
+
+/* Tab content should fill container width */
+.tabitem {
+    width: 100% !important;
+}
+
+.tabitem > div {
+    width: 100% !important;
+}
+
+/* Rows should use full width and not wrap awkwardly */
+.gr-row, .row {
+    width: 100% !important;
+}
+
+/* Columns should flex properly */
+.gr-column, .column {
+    flex: 1 1 0 !important;
+    min-width: 0 !important;
+}
+
+/* Block elements use available width */
+.gr-block, .block {
+    width: 100% !important;
+}
+
+.gr-box {
+    border: 1px solid var(--border-dim) !important;
+    background-color: var(--bg-card) !important;
+    border-radius: 12px !important;
+}
+
+.gr-form {
+    background-color: transparent !important;
+    width: 100% !important;
+}
+
+.gr-panel {
+    background-color: var(--bg-card) !important;
+    border: 1px solid var(--border-dim) !important;
+    border-radius: 12px !important;
+}
+
+.gr-padded {
+    padding: 16px !important;
+}
+
+/* Accordion styling */
+.gr-accordion {
+    border: 1px solid var(--border-dim) !important;
+    border-radius: 8px !important;
+    background: var(--bg-card) !important;
+}
+
+/* Block borders */
+.gr-block {
+    border-color: var(--border-dim) !important;
+}
+
+/* Ensure proper column distribution in rows */
+.gr-group {
+    width: 100% !important;
+}
+
+/* Panel/section containers */
+.panel-header {
+    width: 100%;
+}
+
+/* Ensure form inputs stretch to fill their container */
+input[type="text"],
+input[type="password"],
+input[type="number"],
+textarea,
+select,
+.gr-text-input,
+.gr-textbox textarea,
+.gr-textbox input {
+    width: 100% !important;
+    box-sizing: border-box !important;
+}
+
+/* Ensure dropdown fills width */
+.gr-dropdown, .dropdown {
+    width: 100% !important;
+}
+
+/* Make form groups fill available width */
+.gr-form-group, .form-group {
+    width: 100% !important;
+}
+
+/* Buttons in rows should not shrink too much */
+.gr-button, button {
+    min-width: 100px;
+}
+
+/* ============================================================================
+   SCROLLBAR
+   ============================================================================ */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--bg-primary);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--border-dim);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--text-muted);
+}
+
+/* ============================================================================
+   TWO COLUMN LAYOUT
+   ============================================================================ */
+.two-column {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+}
+
+@media (max-width: 900px) {
+    .two-column {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* ============================================================================
+   UTILITY CLASSES
+   ============================================================================ */
+.text-center { text-align: center; }
+.text-right { text-align: right; }
+.text-muted { color: var(--text-muted) !important; }
+.text-success { color: var(--success) !important; }
+.text-danger { color: var(--danger) !important; }
+.text-warning { color: var(--warning) !important; }
+
+.mb-0 { margin-bottom: 0 !important; }
+.mb-1 { margin-bottom: 8px !important; }
+.mb-2 { margin-bottom: 16px !important; }
+.mb-3 { margin-bottom: 24px !important; }
+
+.mt-0 { margin-top: 0 !important; }
+.mt-1 { margin-top: 8px !important; }
+.mt-2 { margin-top: 16px !important; }
+.mt-3 { margin-top: 24px !important; }
+
+.hidden { display: none !important; }

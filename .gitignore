@@ -1,0 +1,45 @@
+# Virtual environment
+venv/
+.venv/
+env/
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Encrypted credentials and keys
+*.enc
+key.key
+
+# Personal data
+data/
+config/affinity.json
+config/discord_channel.json
+config/game_history.json
+
+# IDE/Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Claude Code settings
+.claude/
+
+# OS files
+.DS_Store
+Thumbs.db
+nul
+
+# Screenshots and notes
+*.png
+*.jpg
+*.jpeg
+CONTEXT_AWARE_PROMPTS_INVESTIGATION.md
+CONTROL_PANEL_REVIEW_NOTES.md
+UI_FRAMEWORK_ANALYSIS.md
+
+# Logs
+*.log

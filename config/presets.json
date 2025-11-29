@@ -1,0 +1,28 @@
+{
+  "presets": [
+    {
+      "name": "Social Media Zombies",
+      "description": "The social media personalities, all together.",
+      "agent_names": [
+        "The Starving Artist",
+        "The Redditor",
+        "The Twitterer",
+        "The Channer",
+        "The Tumblrer",
+        "The TikTokker"
+      ]
+    },
+    {
+      "name": "American Gods",
+      "description": "American Gods characters + one invented character.",
+      "agent_names": [
+        "The Starving Artist",
+        "Czernobog",
+        "Mr. Nancy",
+        "Brigid",
+        "Mad Sweeney",
+        "Mr. Wednesday"
+      ]
+    }
+  ]
+}

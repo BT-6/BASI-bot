@@ -1,0 +1,8 @@
+gradio
+discord.py
+openai
+cryptography
+requests
+chromadb
+python-chess
+english-words
