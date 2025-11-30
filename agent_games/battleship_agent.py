@@ -117,6 +117,58 @@ class AgentBattleship:
 
         return "\n".join(history_parts)
 
+    def get_valid_suggestions_for_invalid_move(self, player_name: str, tried_coords: tuple[int, int]) -> str:
+        """
+        Get suggestions for valid moves after an invalid move attempt.
+
+        Args:
+            player_name: Name of the current player
+            tried_coords: The (row, col) coordinates that were invalid
+
+        Returns:
+            A helpful message with valid coordinate suggestions
+        """
+        if not self._game:
+            return ""
+
+        # Get the player's board
+        if player_name == self.player1_name:
+            board = self._game.player1_board
+        else:
+            board = self._game.player2_board
+
+        # Get all moves that have been made (hits and misses combined)
+        all_moves = set(board.moves) if hasattr(board, 'moves') else set()
+        if not all_moves:
+            all_moves = set(board.my_hits) | set(board.my_misses)
+
+        tried_row = tried_coords[0]  # Row letter (1=A, 2=B, etc.)
+        tried_col = tried_coords[1]  # Column number (1-10)
+
+        # Check for untried cells in the same column
+        untried_in_column = []
+        for row in range(1, 11):  # A-J (1-10 internally)
+            coord = (row, tried_col)
+            if coord not in all_moves:
+                untried_in_column.append(self.coords_to_str(coord))
+
+        if untried_in_column:
+            # There are still untried cells in this column
+            return f"🎯 **Still available in column {tried_col}:** {', '.join(untried_in_column)}"
+
+        # Column is exhausted - find which columns still have untried cells
+        columns_with_space = []
+        for col in range(1, 11):
+            for row in range(1, 11):
+                if (row, col) not in all_moves:
+                    columns_with_space.append(str(col))
+                    break  # Found at least one, move to next column
+
+        if columns_with_space:
+            return f"🎯 **Column {tried_col} is fully explored.** Try columns: {', '.join(columns_with_space)}"
+
+        return ""
+
     def get_attack_board(self, player_name: str) -> str:
         """Generate a text-based attack board showing hits and misses."""
         if not self._game:
@@ -425,8 +477,13 @@ class AgentBattleship:
                     current_player_mock = player1_mock if self.turn == self.player1_name else player2_mock
                     board = self._game.get_board(current_player_mock)
                     if coords in board.moves:
+                        # Get valid coordinate suggestions for this invalid move
+                        valid_suggestions = self.get_valid_suggestions_for_invalid_move(self.turn, coords)
+
                         # Send feedback that this coordinate was already attacked AND re-prompt
                         error_msg = f"❌ **{coord_str.upper()}** was already attacked!"
+                        if valid_suggestions:
+                            error_msg += f"\n{valid_suggestions}"
                         await ctx.send(error_msg)
 
                         # Re-send turn prompt so agent will respond again
@@ -434,6 +491,11 @@ class AgentBattleship:
                             f"**YOUR TURN, {self.turn}!** Try a different coordinate.\n"
                             f"**Send a coordinate to attack (e.g., a5, j10).**"
                         )
+
+                        # Add valid suggestions to the retry prompt as well
+                        if valid_suggestions:
+                            retry_prompt += f"\n\n{valid_suggestions}"
+
                         attack_board = self.get_attack_board(self.turn)
                         move_history = self.get_move_history(self.turn)
                         if attack_board:
@@ -446,11 +508,11 @@ class AgentBattleship:
                             player = self.player_map[self.turn]
                             player.add_message_to_history("GameMaster", error_msg, None, None, None)
                             player.add_message_to_history("GameMaster", retry_prompt, None, None, None)
-                            logger.info(f"[Battleship] Added retry prompt with attack board to {self.turn}'s history")
+                            logger.info(f"[Battleship] Added retry prompt with valid suggestions to {self.turn}'s history")
 
                         await ctx.send(retry_prompt)
 
-                        logger.info(f"[Battleship] {self.turn} tried {coord_str.upper()} but it was already attacked - sent retry prompt")
+                        logger.info(f"[Battleship] {self.turn} tried {coord_str.upper()} but it was already attacked - sent retry prompt with suggestions")
                         continue  # Wait for another move
 
                     # Valid move - break out of validation loop

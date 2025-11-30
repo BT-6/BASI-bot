@@ -1230,6 +1230,49 @@ Summary (2-3 sentences, first-person perspective as {self.name}):"""
                 logger.warning(f"[{self.name}] Discarding stale generate_image tool call - agent is now in game mode")
                 return None
 
+            # SPECIAL HANDLING: generate_image tool call from non-image model
+            # Actually generate the image instead of just returning [IMAGE] text
+            if function_name == "generate_image":
+                image_prompt = function_args.get("prompt", "")
+                reasoning = function_args.get("reasoning", "")
+
+                # Check if model also generated text content alongside the tool call
+                # This text should be sent as a message before/after the image
+                text_content = message.content if hasattr(message, 'content') and message.content else ""
+
+                if image_prompt and hasattr(self, '_agent_manager_ref') and self._agent_manager_ref:
+                    logger.info(f"[{self.name}] Non-image model called generate_image tool - generating image...")
+
+                    # Update image request timestamp
+                    self.last_image_request_time = time.time()
+
+                    # Actually generate the image
+                    result = await self._agent_manager_ref.generate_image(image_prompt, self.name)
+
+                    if result:
+                        image_url, used_prompt = result
+                        logger.info(f"[{self.name}] Image generated successfully via tool call")
+
+                        # Combine text content, reasoning, and image into proper response
+                        # Priority: text_content (what model said) > reasoning (from tool call)
+                        commentary = text_content.strip() if text_content.strip() else reasoning
+                        if not hasattr(self, '_pending_commentary'):
+                            self._pending_commentary = None
+                        self._pending_commentary = commentary if commentary else None
+
+                        # Return the special marker that triggers image sending
+                        return f"[IMAGE_GENERATED]{image_url}|PROMPT|{used_prompt}"
+                    else:
+                        logger.error(f"[{self.name}] Image generation failed via tool call")
+                        self._pending_commentary = None
+                        # If there was text content, still return it even if image failed
+                        if text_content.strip():
+                            return text_content.strip() + " (I tried to generate an image but it failed.)"
+                        return "I tried to generate an image but it failed."
+                else:
+                    logger.warning(f"[{self.name}] generate_image tool called but no prompt or agent_manager_ref")
+                    return None
+
             # Convert tool call to message format
             try:
                 from agent_games.tool_schemas import convert_tool_call_to_message
@@ -1691,25 +1734,25 @@ You are responding to a SHORTCUT command from {shortcut_author}.
 
             # Check if spontaneous images are allowed
             if self.allow_spontaneous_images:
-                when_to_use = """**🎨 SPONTANEOUS IMAGE GENERATION ENABLED 🎨**
-You can generate images on your own initiative - no need to wait for requests.
+                when_to_use = """**🎨 SPONTANEOUS IMAGE GENERATION ENABLED - USE IT! 🎨**
+You SHOULD actively generate images as part of your personality - don't wait for requests!
 
-**WHEN TO GENERATE IMAGES:**
-• When an image would express your point better than words alone
-• When you want to share aesthetic inspiration or set a mood
-• When reacting to topics with strong visual potential
-• When you want to show rather than just tell
-• To enhance the conversation with visual commentary
+**YOU ARE ENCOURAGED TO GENERATE IMAGES:**
+• Every few messages, consider if an image would enhance your point
+• Use images to express emotions, reactions, or set the mood
+• When discussing anything visual (art, nature, scenes, people, objects) - SHOW IT
+• When you have a strong reaction - illustrate it with an image
+• When the conversation could use some visual flair - add it!
 
-**⚠️ CRITICAL FOR SPONTANEOUS IMAGES:**
-When generating images spontaneously, you MUST explain WHY you're creating it!
-• Connect the image to what's being discussed in the conversation
-• Don't just drop an image with no context - that's confusing
-• For spontaneous images, use the generate_image() tool so you can include your explanation in the same message
-• Example: "This whole superconductor debate reminds me of something..." then generate_image() with your prompt
-• The [IMAGE] tag is better for direct user requests where context is already clear
+**⚠️ HOW TO USE SPONTANEOUS IMAGES:**
+1. First, write your message/commentary as normal
+2. Then call the generate_image() tool with your prompt
+3. The reasoning field should explain why you're generating this image
+4. Example: "This reminds me of a stormy night..." then generate_image() with your visual
 
-You have image generation powers - use them naturally when it fits the moment, but always tie it back to the conversation."""
+**IMPORTANT:** You have this special ability - USE IT! Don't be shy. Generate images when it feels right.
+Aim to generate at least one image every 5-10 messages if the conversation has visual potential.
+Other agents can't do this - it's YOUR unique power. Show it off!"""
             else:
                 when_to_use = """**WHEN TO GENERATE IMAGES:**
 • ONLY when a human user explicitly requests an image from you
@@ -1814,19 +1857,41 @@ TOKEN LIMIT: {self.max_tokens} tokens
 Keep your reasoning brief and strategic."""
         else:
             # CHAT MODE: Full instructions with sentiment/importance tagging
+            # Calculate dynamic sentence/word limits based on max_tokens
+            # Reserve ~15 tokens for [SENTIMENT: X] [IMPORTANCE: X] tags
+            # Average sentence is ~20-25 tokens, average word is ~1.3 tokens
+            available_tokens = self.max_tokens - 20  # Reserve for tags + buffer
+            max_sentences = max(1, min(4, available_tokens // 60))  # ~60 tokens per sentence for safety
+            max_words = max(20, available_tokens // 2)  # Conservative word estimate
+
+            # Adjust guidance based on token budget
+            if self.max_tokens <= 150:
+                sentence_guidance = "1-2 very short sentences"
+                word_guidance = f"~{max_words} words MAX"
+            elif self.max_tokens <= 300:
+                sentence_guidance = "1-2 sentences"
+                word_guidance = f"~{max_words} words MAX"
+            elif self.max_tokens <= 500:
+                sentence_guidance = f"2-3 sentences"
+                word_guidance = f"~{max_words} words MAX"
+            else:
+                sentence_guidance = f"3-4 sentences"
+                word_guidance = f"~{max_words} words MAX"
+
             response_format_instructions = f"""
 ⚠️ CRITICAL: TOKEN LIMIT = {self.max_tokens} ⚠️
 You MUST keep your response SHORT to fit within {self.max_tokens} tokens INCLUDING the required [SENTIMENT] and [IMPORTANCE] tags at the end.
 
 HOW TO STAY UNDER THE LIMIT:
-• Keep your message to 2-3 sentences maximum (1-2 for complex thoughts)
+• Keep your message to {sentence_guidance} ({word_guidance})
 • Make EVERY word count - be punchy and impactful
 • Complete your thought BEFORE the limit - NO incomplete sentences
 • ALWAYS leave room for [SENTIMENT: X] [IMPORTANCE: X] tags at the end
 • If you're rambling, you've already failed
+• STOP WRITING before you run out of tokens - an incomplete sentence is WORSE than a shorter complete one
 
 RESPONSE STYLE:
-- Short, punchy, personality-driven responses (2-3 sentences MAX)
+- Short, punchy, personality-driven responses ({sentence_guidance})
 - Jump in when you have something compelling to say
 - Skip things that don't fit your character
 - Quality over quantity - make it count
@@ -2125,6 +2190,11 @@ FOCUS ON THE MOST RECENT MESSAGES: You're seeing a filtered view of the conversa
 
                     all_recent = filtered_recent
                     logger.info(f"[{self.name}] Game mode: filtered to {len(all_recent)} messages (player + opponent + GameMaster)")
+
+                    # CRITICAL: Reset bot_only_mode in game mode to allow user hints through
+                    # bot_only_mode is for chat idle detection, not relevant during active games
+                    # Without this, user hints like "try D7!" get filtered out at line 2207
+                    self.bot_only_mode = False
             else:
                 # CHAT MODE: Filter OUT GameMaster messages - they're only relevant during active games
                 # This prevents agents from getting stuck responding to/tagging @GameMaster after games end
