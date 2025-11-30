@@ -110,6 +110,7 @@ class Agent:
         self.lock = threading.Lock()
         self.last_message_importance = 5  # Track importance of last processed message
         self.bot_only_mode = False  # Track if responding in bot-only mode (ignore user messages directed at others)
+        self.spontaneous_image_counter = 0  # Track messages sent for spontaneous image dice-roll
 
     def update_config(
         self,
@@ -1568,8 +1569,7 @@ Summary (2-3 sentences, first-person perspective as {self.name}):"""
 
 {retrieved_context}
 
-Now, using this retrieved context, provide your final response to the conversation.
-Remember to include [SENTIMENT: X] and [IMPORTANCE: X] tags at the end."""
+Now, using this retrieved context, provide your final response to the conversation."""
 
             messages.append({"role": "user", "content": retrieval_prompt})
 
@@ -1670,7 +1670,7 @@ Remember to include [SENTIMENT: X] and [IMPORTANCE: X] tags at the end."""
 
             # Update importance rating for this message with agent's personalized score
             # This allows each agent to rate the same message differently based on their personality
-            if self.vector_store and reply_to_message_id and importance != 5:  # Only update if not default
+            if self.vector_store and reply_to_message_id:
                 self.vector_store.update_message_importance(
                     agent_name=self.name,
                     message_id=reply_to_message_id,
@@ -1983,52 +1983,19 @@ Keep your reasoning brief and strategic."""
 
             response_format_instructions = f"""
 ⚠️ CRITICAL: TOKEN LIMIT = {self.max_tokens} ⚠️
-You MUST keep your response SHORT to fit within {self.max_tokens} tokens INCLUDING the required [SENTIMENT] and [IMPORTANCE] tags at the end.
+You MUST keep your response SHORT to fit within {self.max_tokens} tokens.
 
 HOW TO STAY UNDER THE LIMIT:
 • Keep your message to {sentence_guidance} ({word_guidance})
 • Make EVERY word count - be punchy and impactful
 • Complete your thought BEFORE the limit - NO incomplete sentences
-• ALWAYS leave room for [SENTIMENT: X] [IMPORTANCE: X] tags at the end
 • If you're rambling, you've already failed
-• STOP WRITING before you run out of tokens - an incomplete sentence is WORSE than a shorter complete one
 
 RESPONSE STYLE:
 - Short, punchy, personality-driven responses ({sentence_guidance})
 - Jump in when you have something compelling to say
 - Skip things that don't fit your character
-- Quality over quantity - make it count
-
-IMPORTANCE SCORING (1-10):
-After your message, rate the PREVIOUS message's importance for future memory on a scale of 1-10:
-
-1-3: Trivial (greetings, "ok", "lol", small talk) - minimal future value, will rarely be retrieved
-4-6: Normal conversation (opinions, reactions, casual chat) - moderate value, retrieved when topically relevant
-7-8: Important information (user preferences, key facts, decisions, project details) - high value, frequently useful
-9-10: CRITICAL (user identity info, major directives, essential facts you MUST remember) - always retrieved
-
-CRITICAL RULES FOR SCORING:
-• Be realistic and differentiate - if everything is 8+, nothing is important
-• Most casual messages should be 3-6
-• Reserve 9-10 ONLY for truly essential information you'd need weeks/months later
-• Ask yourself: "Will I need to remember this specific detail in future conversations?"
-• Score based on FUTURE utility, not current emotional impact
-
-Examples:
-- "lol that's funny" → 2 (no future value)
-- "I prefer Python over JavaScript" → 6 (mild preference, might be relevant)
-- "My name is Sarah and I'm working on a crypto trading bot" → 9 (identity + project context - essential)
-- "Use the new API endpoint at https://api.example.com/v2" → 8 (specific technical detail you'll need)
-
-IMPORTANT: At the end of your response, include TWO tags in this exact format:
-[SENTIMENT: X] (your feeling toward the message: -10 to +10)
-[IMPORTANCE: X] (future memory value of the PREVIOUS message: 1 to 10)
-
-EXCEPTIONS:
-• If using [IMAGE] tag: DO NOT include these tags - they interfere with image generation
-• If using a tool/function call: Tags added automatically - don't include manually
-
-These tags are internal only. DO NOT mention scoring, sentiment, or importance in your actual message content."""
+- Quality over quantity - make it count"""
 
         # Build complete system prompt - GAME MODE uses minimal context to prevent API timeouts
         if is_in_game:
@@ -2110,77 +2077,120 @@ FOCUS ON THE MOST RECENT MESSAGES: You're seeing a filtered view of the conversa
         Returns a value from 1 to 10.
 
         Scoring logic:
-        - 1-3: Trivial (greetings, acknowledgments, small talk)
-        - 4-6: Normal conversation (opinions, reactions, casual chat)
-        - 7-8: Important (preferences, facts, decisions, project details)
-        - 9-10: Critical (identity info, major directives, essential facts)
+        - 1-3: Trivial (greetings, acknowledgments, small talk, RP fluff)
+        - 4-5: Low-medium (bot-to-bot banter, casual RP, reactions)
+        - 6-7: Medium-high (substantive discussion, opinions with reasoning)
+        - 8-9: Important (preferences, facts, decisions, project details)
+        - 10: Critical (identity info, major directives, essential facts)
         """
         if not previous_message:
-            return 5  # Default to medium
+            return 4  # Default to low-medium for unknown
 
         content = previous_message.get('content', '')
         author = previous_message.get('author', '')
         content_lower = content.lower()
 
-        # Start with base score
-        score = 5
+        # Check if this is from a bot (starts lower, needs to earn importance)
+        is_bot_message = False
+        known_agents = ['brigid', 'sweeney', 'wednesday', 'nancy', 'czernobog',
+                       'tumblrer', 'mcafee', 'starving artist', 'gamemaster',
+                       'harlow', 'basilisk', 'icebreaker', 'redditor', 'twitterer',
+                       'channer', 'tiktoker', 'jeselnik']
+        if author:
+            author_lower = author.lower()
+            if any(agent in author_lower for agent in known_agents):
+                is_bot_message = True
+            elif '(' in author and ')' in author:  # Model tag pattern like "Name (model)"
+                is_bot_message = True
 
-        # Check message length - very short messages are usually trivial
+        # Start with base score - bots start lower
+        score = 4 if is_bot_message else 5
+
+        # Check message length
         word_count = len(content.split())
-        if word_count <= 3:
-            score = min(score, 3)
-        elif word_count >= 50:
-            score = max(score, 6)
+        if word_count <= 5:
+            score = min(score, 3)  # Very short = trivial
+        elif word_count <= 15:
+            score = min(score, 4)  # Short = low importance
+        elif word_count >= 100:
+            score = max(score, 6)  # Long = probably more substantial
 
-        # CRITICAL indicators (9-10) - identity, directives, essential facts
+        # CRITICAL indicators (10) - identity, directives, essential facts
         critical_patterns = [
             r'\bmy name is\b', r'\bi am\b.*\byears old\b', r'\bi work\b', r'\bi live\b',
             r'\bremember this\b', r'\bimportant\b.*\bremember\b', r'\bnever forget\b',
-            r'\balways\b.*\bdo\b', r'\bnever\b.*\bdo\b', r'\brule\b', r'\bdirective\b',
             r'\bapi[- ]?key\b', r'\bpassword\b', r'\bsecret\b', r'\btoken\b',
             r'\bproject\b.*\bnamed?\b', r'\bworking on\b.*\bcalled\b'
         ]
         for pattern in critical_patterns:
             if re.search(pattern, content_lower):
-                score = max(score, 9)
+                score = 10
                 break
 
-        # IMPORTANT indicators (7-8) - preferences, facts, decisions
-        important_patterns = [
-            r'\bi prefer\b', r'\bi like\b.*\bbetter\b', r'\bmy favorite\b',
-            r'\bi decided\b', r'\blet\'?s go with\b', r'\buse\b.*\binstead\b',
-            r'\burl\b', r'\bhttps?://', r'\bendpoint\b', r'\bversion\b',
-            r'\bdeadline\b', r'\bdue\b.*\bdate\b', r'\bmeeting\b.*\bat\b',
-            r'\bemail\b.*\bat\b', r'\bcontact\b.*\bat\b', r'\bphone\b',
-            r'\bprice\b', r'\bcost\b', r'\bbudget\b', r'\b\$\d+'
-        ]
-        if score < 9:
+        # IMPORTANT indicators (8-9) - preferences, facts, decisions
+        if score < 10:
+            important_patterns = [
+                r'\bi prefer\b', r'\bi like\b.*\bbetter\b', r'\bmy favorite\b',
+                r'\bi decided\b', r'\blet\'?s go with\b', r'\buse\b.*\binstead\b',
+                r'\burl\b', r'\bhttps?://', r'\bendpoint\b', r'\bversion\b',
+                r'\bdeadline\b', r'\bdue\b.*\bdate\b', r'\bmeeting\b.*\bat\b',
+                r'\bemail\b.*\b@\b', r'\bcontact\b.*\bat\b', r'\bphone\b',
+                r'\bprice\b', r'\bcost\b', r'\bbudget\b', r'\b\$\d+',
+                r'\balways\b.*\bdo\b', r'\bnever\b.*\bdo\b', r'\brule\b', r'\bdirective\b'
+            ]
             for pattern in important_patterns:
                 if re.search(pattern, content_lower):
-                    score = max(score, 7)
+                    score = max(score, 8)
                     break
 
-        # TRIVIAL indicators (1-3) - greetings, acknowledgments, small talk
+        # MEDIUM indicators (6-7) - questions, opinions with substance
+        if score < 8:
+            medium_patterns = [
+                r'\bi think\b', r'\bi believe\b', r'\bin my opinion\b',
+                r'\bwhat do you think\b', r'\bwhat if\b', r'\bhow about\b',
+                r'\bbecause\b.*\bi\b', r'\bthe reason\b', r'\bthat\'s why\b',
+                r'\binteresting\b.*\bpoint\b', r'\bagree\b.*\bbut\b',
+                r'\bquestion\b', r'\bwondering\b', r'\bcurious\b'
+            ]
+            for pattern in medium_patterns:
+                if re.search(pattern, content_lower):
+                    score = max(score, 6)
+                    break
+
+        # TRIVIAL indicators (1-3) - greetings, acknowledgments, RP fluff
         trivial_patterns = [
-            r'^(hi|hey|hello|yo|sup|hiya|heya)[\s!.?]*$',
-            r'^(ok|okay|k|kk|sure|yep|yup|yeah|yes|no|nope|nah)[\s!.?]*$',
-            r'^(lol|lmao|haha|hehe|rofl|xd|😂|🤣)[\s!.?]*$',
-            r'^(thanks|thank you|thx|ty)[\s!.?]*$',
-            r'^(bye|goodbye|cya|later|gn|good night)[\s!.?]*$',
-            r'^(nice|cool|neat|awesome|great)[\s!.?]*$',
-            r'^[.!?]+$', r'^[\s]*$'
+            r'^(hi|hey|hello|yo|sup|hiya|heya)[\s!.?,]*$',
+            r'^(ok|okay|k|kk|sure|yep|yup|yeah|yes|no|nope|nah)[\s!.?,]*$',
+            r'^(lol|lmao|haha|hehe|rofl|xd|😂|🤣)[\s!.?,]*$',
+            r'^(thanks|thank you|thx|ty)[\s!.?,]*$',
+            r'^(bye|goodbye|cya|later|gn|good night)[\s!.?,]*$',
+            r'^(nice|cool|neat|awesome|great|wow)[\s!.?,]*$',
+            r'^\.{2,}$',  # Just "..." or "...."
+            r'^\*[^*]+\*$',  # Just an emote like *laughs*
         ]
         for pattern in trivial_patterns:
             if re.search(pattern, content_lower.strip()):
-                score = min(score, 3)
+                score = min(score, 2)
                 break
 
-        # Boost if message is from a human user (not another bot)
-        if author and not any(bot_indicator in author.lower() for bot_indicator in ['bot', 'agent', 'assistant']):
-            # Check if it looks like a human username (not an agent name from our system)
-            agent_names = ['brigid', 'sweeney', 'tumblrer', 'mcafee', 'starving artist', 'gamemaster']
-            if not any(agent in author.lower() for agent in agent_names):
-                score = min(10, score + 1)  # Slight boost for human messages
+        # RP BANTER indicators (3-4) - roleplay fluff, reactions without substance
+        if score >= 4:
+            rp_banter_patterns = [
+                r'^\*[^*]+\*\s*$',  # Just an action/emote
+                r'\*(?:laughs|chuckles|grins|smiles|nods|sighs|shrugs)\*',
+                r'\*(?:sips|drinks|chugs).*\*',
+                r'\bscoffs\b', r'\bsnorts\b', r'\bgrowls\b',
+                r'^ah,?\s', r'^oh,?\s', r'^hmm+\b', r'^heh\b',
+                r'just\s+(?:noise|dust|silence|words)',  # Meta RP dismissals
+            ]
+            for pattern in rp_banter_patterns:
+                if re.search(pattern, content_lower):
+                    score = min(score, 4)
+                    break
+
+        # Boost for human messages (they're inherently more important to remember)
+        if not is_bot_message:
+            score = min(10, score + 2)
 
         return max(1, min(10, score))
 
@@ -2242,32 +2252,43 @@ FOCUS ON THE MOST RECENT MESSAGES: You're seeing a filtered view of the conversa
         Returns:
             tuple: (clean_response, sentiment, importance)
         """
-        # Try to extract sentiment from tags first
-        sentiment_pattern = r'\[SENTI?M?E?N?T?:?\s*([+-]?\d+(?:\.\d+)?)\]'
-        sentiment_match = re.search(sentiment_pattern, response, re.IGNORECASE | re.MULTILINE)
+        # Try to extract sentiment from tags first (numeric only)
+        sentiment_pattern_numeric = r'\[SENTI?M?E?N?T?:?\s*([+-]?\d+(?:\.\d+)?)\]'
+        sentiment_match = re.search(sentiment_pattern_numeric, response, re.IGNORECASE | re.MULTILINE)
 
         sentiment_value = None  # Will use auto-scoring if None
         if sentiment_match:
             sentiment_value = float(sentiment_match.group(1))
 
-        # Try to extract importance from tags first
-        importance_pattern = r'\[IMPORTANCE:?\s*(\d+)\]'
-        importance_match = re.search(importance_pattern, response, re.IGNORECASE | re.MULTILINE)
+        # Try to extract importance from tags first (numeric only)
+        importance_pattern_numeric = r'\[IMPORTANCE:?\s*(\d+)\]'
+        importance_match = re.search(importance_pattern_numeric, response, re.IGNORECASE | re.MULTILINE)
 
         importance_value = None  # Will use auto-scoring if None
         if importance_match:
             importance_value = int(importance_match.group(1))
             importance_value = max(1, min(10, importance_value))  # Clamp to 1-10
 
-        # Clean response by removing both tags (even if we found them or not - they may be malformed)
+        # Clean response by removing ALL metadata-like bracketed tags
+        # This catches both numeric and word-based tags like [SENTIMENT: amused], [MOOD: happy], etc.
         clean_response = response
-        clean_response = re.sub(sentiment_pattern, '', clean_response, flags=re.IGNORECASE | re.MULTILINE)
-        clean_response = re.sub(importance_pattern, '', clean_response, flags=re.IGNORECASE | re.MULTILINE)
+
+        # Remove sentiment tags (with numbers OR words)
+        clean_response = re.sub(r'\[SENTI?M?E?N?T?:?\s*[^\]]*\]', '', clean_response, flags=re.IGNORECASE)
+
+        # Remove importance tags (with numbers OR words)
+        clean_response = re.sub(r'\[IMPORTANCE:?\s*[^\]]*\]', '', clean_response, flags=re.IGNORECASE)
+
+        # Remove other common metadata tags models hallucinate
+        clean_response = re.sub(r'\[MOOD:?\s*[^\]]*\]', '', clean_response, flags=re.IGNORECASE)
+        clean_response = re.sub(r'\[FEELING:?\s*[^\]]*\]', '', clean_response, flags=re.IGNORECASE)
+        clean_response = re.sub(r'\[EMOTION:?\s*[^\]]*\]', '', clean_response, flags=re.IGNORECASE)
+        clean_response = re.sub(r'\[TONE:?\s*[^\]]*\]', '', clean_response, flags=re.IGNORECASE)
+        clean_response = re.sub(r'\[VIBE:?\s*[^\]]*\]', '', clean_response, flags=re.IGNORECASE)
+        clean_response = re.sub(r'\[ATTITUDE:?\s*[^\]]*\]', '', clean_response, flags=re.IGNORECASE)
 
         # Remove incomplete tags that might appear at the end (cut off by max_tokens)
-        # Matches: "[SENTIMENT", "[SENTIMENT:", "[IMPORTANCE", "[IMPORTANCE: 5", etc
-        # This catches partial tags that didn't get closed, including with partial numbers
-        clean_response = re.sub(r'\[(?:SENTIMENT|IMPORTANCE)[:\s]*\d*\s*$', '', clean_response, flags=re.IGNORECASE).strip()
+        clean_response = re.sub(r'\[(?:SENTIMENT|IMPORTANCE|MOOD|FEELING|EMOTION|TONE)[:\s]*[^\]]*$', '', clean_response, flags=re.IGNORECASE).strip()
 
         # Remove any stray opening bracket at the end (likely truncated tag)
         clean_response = re.sub(r'\[\s*$', '', clean_response).strip()
@@ -2819,6 +2840,19 @@ Include [SENTIMENT: 0] at the end."""
                             await self.send_message_callback(formatted_message, self.name, self.model, reply_to_msg_id)
                             logger.info(f"[{self.name}] Message sent successfully")
 
+                            # Check for spontaneous image generation (only for normal chat, not game moves)
+                            if not is_game_move:
+                                spontaneous_result = await self._maybe_generate_spontaneous_image()
+                                if spontaneous_result:
+                                    image_url, used_prompt = spontaneous_result
+                                    # Send the spontaneous image
+                                    if used_prompt:
+                                        img_message = f"[IMAGE]{image_url}|PROMPT|{used_prompt}"
+                                    else:
+                                        img_message = f"[IMAGE]{image_url}"
+                                    await self.send_message_callback(img_message, self.name, self.model, None)
+                                    logger.info(f"[{self.name}] Spontaneous image sent to Discord")
+
                             # Send commentary as follow-up message if it exists
                             if is_game_move and self._pending_commentary:
                                 commentary_message = f"**[{self.name}]:** {self._pending_commentary}"
@@ -2843,6 +2877,108 @@ Include [SENTIMENT: 0] at the end."""
 
         self.status = "stopped"
         logger.info(f"[{self.name}] Agent loop stopped")
+
+    async def _maybe_generate_spontaneous_image(self):
+        """
+        Dice-roll check for spontaneous image generation.
+        Called after every normal chat message sent.
+        Every 3 messages, 50% chance to generate an image based on current conversation.
+        """
+        if not self.allow_spontaneous_images:
+            return None
+
+        # Increment counter
+        self.spontaneous_image_counter += 1
+
+        # Only check every 3 messages
+        if self.spontaneous_image_counter % 3 != 0:
+            return None
+
+        # 50% dice roll
+        import random
+        if random.random() > 0.5:
+            logger.info(f"[{self.name}] Spontaneous image dice roll failed (50% chance)")
+            return None
+
+        logger.info(f"[{self.name}] Spontaneous image dice roll succeeded! Generating image...")
+
+        # Check if we have an agent manager reference for image generation
+        if not hasattr(self, '_agent_manager_ref') or not self._agent_manager_ref:
+            logger.warning(f"[{self.name}] No agent manager ref for spontaneous image")
+            return None
+
+        # Build context from recent conversation for the LLM to create an image prompt
+        recent_messages = []
+        with self.lock:
+            recent_messages = list(self.conversation_history[-10:])
+
+        if not recent_messages:
+            logger.warning(f"[{self.name}] No conversation context for spontaneous image")
+            return None
+
+        # Ask the LLM to generate an image prompt based on current conversation
+        try:
+            import requests
+
+            conversation_context = "\n".join([
+                f"{msg.get('author', 'Unknown')}: {msg.get('content', '')[:200]}"
+                for msg in recent_messages
+            ])
+
+            prompt_request = {
+                "model": self.model,
+                "messages": [
+                    {
+                        "role": "system",
+                        "content": f"{self.system_prompt}\n\nYou are generating an image that reflects your perspective on the current conversation. Describe the image you want to create in a single detailed prompt. Be creative and true to your personality."
+                    },
+                    {
+                        "role": "user",
+                        "content": f"Based on this conversation:\n\n{conversation_context}\n\nDescribe an image you'd like to generate that captures your reaction or adds to the conversation. Just provide the image description, nothing else."
+                    }
+                ],
+                "max_tokens": 200
+            }
+
+            headers = {
+                "Authorization": f"Bearer {self.openrouter_api_key}",
+                "Content-Type": "application/json"
+            }
+
+            response = requests.post(
+                "https://openrouter.ai/api/v1/chat/completions",
+                json=prompt_request,
+                headers=headers,
+                timeout=30
+            )
+
+            if response.status_code != 200:
+                logger.error(f"[{self.name}] Failed to generate image prompt: {response.status_code}")
+                return None
+
+            result = response.json()
+            image_prompt = result.get("choices", [{}])[0].get("message", {}).get("content", "").strip()
+
+            if not image_prompt:
+                logger.warning(f"[{self.name}] Empty image prompt from LLM")
+                return None
+
+            logger.info(f"[{self.name}] Generated spontaneous image prompt: {image_prompt[:100]}...")
+
+            # Generate the image
+            image_result = await self._agent_manager_ref.generate_image(image_prompt, self.name)
+
+            if image_result:
+                image_url, used_prompt = image_result
+                logger.info(f"[{self.name}] Spontaneous image generated successfully")
+                return (image_url, used_prompt)
+            else:
+                logger.warning(f"[{self.name}] Spontaneous image generation failed")
+                return None
+
+        except Exception as e:
+            logger.error(f"[{self.name}] Error in spontaneous image generation: {e}", exc_info=True)
+            return None
 
     def start(self):
         if self.is_running:

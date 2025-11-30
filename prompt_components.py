@@ -435,27 +435,19 @@ Keep your reasoning brief and strategic."""
         # CHAT MODE: Full instructions with sentiment/importance tagging
         return f"""
 ⚠️ CRITICAL: TOKEN LIMIT = {agent.max_tokens} ⚠️
-You MUST keep your response SHORT to fit within {agent.max_tokens} tokens INCLUDING the required [SENTIMENT] and [IMPORTANCE] tags at the end.
+You MUST keep your response SHORT to fit within {agent.max_tokens} tokens.
 
 HOW TO STAY UNDER THE LIMIT:
 • Keep your message to 2-3 sentences maximum (1-2 for complex thoughts)
 • Make EVERY word count - be punchy and impactful
 • Complete your thought BEFORE the limit - NO incomplete sentences
-• ALWAYS leave room for [SENTIMENT: X] [IMPORTANCE: X] tags at the end
 • If you're rambling, you've already failed
 
 RESPONSE STYLE:
 - Short, punchy, personality-driven responses (2-3 sentences MAX)
 - Jump in when you have something compelling to say
 - Skip things that don't fit your character
-- Quality over quantity - make it count
-
-OPTIONAL - SENTIMENT/IMPORTANCE TAGS:
-You may optionally add tags at the end of your response (system will auto-score if omitted):
-[SENTIMENT: X] (-10 to +10, your feeling)
-[IMPORTANCE: X] (1-10, memory value of previous message)
-
-Skip these tags when using [IMAGE] or tool calls."""
+- Quality over quantity - make it count"""
 
 
 # =============================================================================
