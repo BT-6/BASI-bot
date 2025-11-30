@@ -2174,10 +2174,11 @@ FOCUS ON THE MOST RECENT MESSAGES: You're seeing a filtered view of the conversa
                 if game_state and game_state.opponent_name:
                     opponent_name = game_state.opponent_name
 
-                    # Filter to only player, opponent, and GameMaster messages
+                    # Filter to only player, opponent, GameMaster, and USER HINTS
                     filtered_recent = []
                     for msg in all_recent:
                         author = msg.get('author', '')
+                        content = msg.get('content', '').lower()
                         # Strip model suffix for comparison
                         author_base = author.split(' (')[0] if ' (' in author else author
 
@@ -2187,9 +2188,22 @@ FOCUS ON THE MOST RECENT MESSAGES: You're seeing a filtered view of the conversa
                             'GameMaster' in author or
                             '(system)' in author):
                             filtered_recent.append(msg)
+                        # ALSO keep user messages that are hints (mention player name or contain coordinates)
+                        elif self.is_user_message(author):
+                            player_name_lower = self.name.lower()
+                            # Check for name or any significant part of name (>2 chars to avoid false positives)
+                            name_parts = [player_name_lower] + player_name_lower.split()
+                            is_hint = any(part in content for part in name_parts if len(part) > 2)
+                            # Check for game coordinates like "a5", "j10", "D7" (battleship/chess style)
+                            has_coordinate = bool(re.search(r'\b[a-j](?:10|[1-9])\b', content, re.IGNORECASE))
+                            # Also check for position numbers 1-9 for tictactoe, columns 1-7 for connect four
+                            has_position = bool(re.search(r'\btry\s+\d\b|\bposition\s+\d\b|\bcolumn\s+\d\b', content, re.IGNORECASE))
+                            if is_hint or has_coordinate or has_position:
+                                filtered_recent.append(msg)
+                                logger.debug(f"[{self.name}] Kept user hint: '{content[:50]}...' (name_match={is_hint}, coord={has_coordinate}, pos={has_position})")
 
                     all_recent = filtered_recent
-                    logger.info(f"[{self.name}] Game mode: filtered to {len(all_recent)} messages (player + opponent + GameMaster)")
+                    logger.info(f"[{self.name}] Game mode: filtered to {len(all_recent)} messages (player + opponent + GameMaster + user hints)")
 
                     # CRITICAL: Reset bot_only_mode in game mode to allow user hints through
                     # bot_only_mode is for chat idle detection, not relevant during active games
