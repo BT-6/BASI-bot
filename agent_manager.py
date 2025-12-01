@@ -3217,19 +3217,14 @@ Be specific and descriptive. This is for Sora 2 video generation."""
 
             logger.info(f"[{self.name}] Generated spontaneous video prompt: {video_prompt[:100]}...")
 
-            # Generate the video
-            video_url = await self._agent_manager_ref.generate_video(
-                video_prompt,
-                self.name,
-                self.video_duration
-            )
+            # Spawn background task to generate and post video (same as user-requested)
+            # This allows the agent to continue talking while video generates
+            import asyncio
+            asyncio.create_task(self._generate_and_post_video(video_prompt, ""))
+            logger.info(f"[{self.name}] Spontaneous video generation spawned in background")
 
-            if video_url:
-                logger.info(f"[{self.name}] Spontaneous video generated successfully")
-                return (video_url, video_prompt)
-            else:
-                logger.warning(f"[{self.name}] Spontaneous video generation failed")
-                return None
+            # Return None - video will be posted by background task when complete
+            return None
 
         except Exception as e:
             logger.error(f"[{self.name}] Error in spontaneous video generation: {e}", exc_info=True)
