@@ -1412,7 +1412,6 @@ Summary (2-3 sentences, first-person perspective as {self.name}):"""
 
                     # Spawn background task to generate and post video
                     # This allows the agent to continue while video generates (takes up to 10 minutes)
-                    import asyncio
                     asyncio.create_task(self._generate_and_post_video(video_prompt, ""))
                     logger.info(f"[{self.name}] Video generation spawned in background via tool call")
 
