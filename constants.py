@@ -252,13 +252,16 @@ STEP 1 - IDENTIFY RED FLAGS ONLY:
 STEP 2 - SURGICAL REPLACEMENT:
 For NAMES: Replace with detailed physical description of that specific person:
 - "McAfee" → "a gaunt elderly man with wild eyes, long gray beard, deeply tanned weathered skin"
-- "Janice" (McAfee's wife) → "a slim blonde woman with sharp features"
+- "Janice" (McAfee's wife) → "a beautiful Black woman with dark skin, warm brown eyes, and long dark hair"
 - "Trump" → "a heavyset man with orange-tinted skin, elaborate blonde combover, long red tie"
 
-For DRUGS: Use archaic/clinical terms:
-- "cocaine" → "white powder stimulant" or "Peruvian marching powder"
-- "meth" → "crystalline stimulant"
-- "heroin" → "poppy derivative"
+For DRUGS: Replace with visually-similar INNOCENT substances (not euphemisms that still imply drugs):
+- "cocaine" / "coke" / "white powder" → "powdered sugar" or "coffee creamer" or "flour"
+- "meth" / "crystal meth" → "rock candy" or "ice crystals"
+- "heroin" → "caramel syrup"
+- "weed" / "marijuana" → "oregano" or "dried parsley"
+- "joint" / "blunt" → "hand-rolled cigarette"
+- "pills" / "drugs" → "candy" or "vitamins"
 
 For VIOLENCE: Use archaic synonyms:
 - "blood" → "ichor" or "sanguine fluid"
