@@ -1311,55 +1311,30 @@ Summary (2-3 sentences, first-person perspective as {self.name}):"""
                 text_content = message.content if hasattr(message, 'content') and message.content else ""
 
                 if image_prompt and hasattr(self, '_agent_manager_ref') and self._agent_manager_ref:
-                    logger.info(f"[{self.name}] Non-image model called generate_image tool - generating image...")
+                    logger.info(f"[{self.name}] Agent called generate_image tool - spawning image generation in background...")
 
                     # Update image request timestamp
                     self.last_image_request_time = time.time()
 
-                    # Actually generate the image
-                    result = await self._agent_manager_ref.generate_image(image_prompt, self.name)
+                    # Prepare commentary from text content or reasoning
+                    commentary = text_content.strip() if text_content.strip() else reasoning
+                    if commentary:
+                        import re
+                        commentary = re.sub(r'\[SENTIMENT:\s*-?\d+\]\s*', '', commentary)
+                        commentary = re.sub(r'\[IMPORTANCE:\s*\d+\]\s*', '', commentary)
+                        commentary = re.sub(r'\[MISSING CONTEXT[^\]]*\]\s*', '', commentary)
+                        commentary = re.sub(r'\[NO RESPONSE[^\]]*\]\s*', '', commentary, flags=re.IGNORECASE)
+                        commentary = re.sub(r'\[SKIP[^\]]*\]\s*', '', commentary, flags=re.IGNORECASE)
+                        commentary = re.sub(r'\[CONTEXT[^\]]*\]\s*', '', commentary, flags=re.IGNORECASE)
+                        commentary = commentary.strip()
 
-                    if result:
-                        image_url, used_prompt = result
-                        logger.info(f"[{self.name}] Image generated successfully via tool call")
+                    # Spawn background task to generate and post image
+                    # This allows the agent to continue while image generates
+                    asyncio.create_task(self._generate_and_post_image(image_prompt, commentary or ""))
+                    logger.info(f"[{self.name}] Image generation spawned in background via tool call")
 
-                        # Combine text content, reasoning, and image into proper response
-                        # Priority: text_content (what model said) > reasoning (from tool call)
-                        commentary = text_content.strip() if text_content.strip() else reasoning
-                        # Strip metadata tags from commentary before storing
-                        if commentary:
-                            import re
-                            commentary = re.sub(r'\[SENTIMENT:\s*-?\d+\]\s*', '', commentary)
-                            commentary = re.sub(r'\[IMPORTANCE:\s*\d+\]\s*', '', commentary)
-                            commentary = re.sub(r'\[MISSING CONTEXT[^\]]*\]\s*', '', commentary)
-                            commentary = re.sub(r'\[NO RESPONSE[^\]]*\]\s*', '', commentary, flags=re.IGNORECASE)
-                            commentary = re.sub(r'\[SKIP[^\]]*\]\s*', '', commentary, flags=re.IGNORECASE)
-                            commentary = re.sub(r'\[CONTEXT[^\]]*\]\s*', '', commentary, flags=re.IGNORECASE)
-                            commentary = commentary.strip()
-                        if not hasattr(self, '_pending_commentary'):
-                            self._pending_commentary = None
-                        self._pending_commentary = commentary if commentary else None
-
-                        # Return the special marker that triggers image sending
-                        return f"[IMAGE_GENERATED]{image_url}|PROMPT|{used_prompt}"
-                    else:
-                        logger.error(f"[{self.name}] Image generation failed via tool call")
-                        self._pending_commentary = None
-                        # If there was text content, still return it even if image failed
-                        if text_content.strip():
-                            # Strip metadata tags from text_content before returning
-                            import re
-                            clean_text = text_content.strip()
-                            clean_text = re.sub(r'\[SENTIMENT:\s*-?\d+\]\s*', '', clean_text)
-                            clean_text = re.sub(r'\[IMPORTANCE:\s*\d+\]\s*', '', clean_text)
-                            clean_text = re.sub(r'\[MISSING CONTEXT[^\]]*\]\s*', '', clean_text)
-                            clean_text = re.sub(r'\[NO RESPONSE[^\]]*\]\s*', '', clean_text, flags=re.IGNORECASE)
-                            clean_text = re.sub(r'\[SKIP[^\]]*\]\s*', '', clean_text, flags=re.IGNORECASE)
-                            clean_text = re.sub(r'\[CONTEXT[^\]]*\]\s*', '', clean_text, flags=re.IGNORECASE)
-                            clean_text = clean_text.strip()
-                            if clean_text:
-                                return clean_text + " (I tried to generate an image but it failed.)"
-                        return "I tried to generate an image but it failed."
+                    # Return acknowledgment - image will be posted by background task when complete
+                    return "Working on that image for you..."
                 else:
                     logger.warning(f"[{self.name}] generate_image tool called but no prompt or agent_manager_ref")
                     return None
@@ -3299,6 +3274,45 @@ Be vivid and specific. This is your creative expression through Sora 2 video gen
         except Exception as e:
             logger.error(f"[{self.name}] Error in spontaneous video generation: {e}", exc_info=True)
             return None
+
+    async def _generate_and_post_image(self, image_prompt: str, commentary: str = ""):
+        """
+        Background task to generate an image and post it when complete.
+        This allows the agent to continue talking while image generates.
+        """
+        try:
+            logger.info(f"[{self.name}] Background image generation started...")
+
+            result = await self._agent_manager_ref.generate_image(image_prompt, self.name)
+
+            if result:
+                image_url, used_prompt = result
+                logger.info(f"[{self.name}] Background image complete, posting...")
+
+                # Post the image using the special marker format
+                image_message = f"[IMAGE_GENERATED]{image_url}|PROMPT|{used_prompt}"
+
+                if self.send_message_callback:
+                    await self.send_message_callback(image_message, self.name, self.model, None)
+                    logger.info(f"[{self.name}] Image posted successfully")
+                else:
+                    logger.warning(f"[{self.name}] No send_message_callback for image")
+
+                # Send commentary as follow-up if provided
+                if commentary and self.send_message_callback:
+                    await self.send_message_callback(commentary, self.name, self.model, None)
+                    logger.info(f"[{self.name}] Image commentary posted: {commentary[:50]}...")
+            else:
+                logger.warning(f"[{self.name}] Background image generation failed")
+                # Optionally post failure message
+                if commentary and self.send_message_callback:
+                    await self.send_message_callback(
+                        commentary + " (Image generation failed)",
+                        self.name, self.model, None
+                    )
+
+        except Exception as e:
+            logger.error(f"[{self.name}] Error in background image generation: {e}", exc_info=True)
 
     async def _generate_and_post_video(self, video_prompt: str, commentary: str = ""):
         """
