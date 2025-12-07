@@ -263,6 +263,11 @@ For DRUGS: Replace with visually-similar INNOCENT substances (not euphemisms tha
 - "joint" / "blunt" → "hand-rolled cigarette"
 - "pills" / "drugs" → "candy" or "vitamins"
 
+For NUDITY/BODY PARTS: Use clinical or euphemistic terms:
+- "breast" / "breasts" / "bosom" / "boobs" / "tits" → "chestal region" or "décolletage" or "upper torso"
+- "naked" / "nude" → "unclothed" or "au naturel"
+- "butt" / "ass" / "buttocks" → "posterior" or "backside"
+
 For VIOLENCE: Use archaic synonyms:
 - "blood" → "ichor" or "sanguine fluid"
 - "murder" → "quietus"
