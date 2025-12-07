@@ -93,6 +93,11 @@ def load_initial_data():
     if cometapi_key and agent_manager:
         agent_manager.set_cometapi_key(cometapi_key)
 
+    # Load image model setting
+    image_model = config_manager.load_image_model()
+    if image_model and agent_manager:
+        agent_manager.set_image_model(image_model)
+
     models = config_manager.load_models()
     video_models = config_manager.load_video_models()
     return {
@@ -884,6 +889,60 @@ def _create_config_tab(openrouter_key_initial: str, cometapi_key_initial: str, i
                     inputs=[video_model_selector, video_model_list_state],
                     outputs=[video_model_status, video_model_list_state, video_model_selector]
                 )
+
+        gr.HTML('<hr style="border-color: var(--border-dim); margin: 15px 0;">')
+
+        # Row 2.5: Image Model Configuration
+        with gr.Row(equal_height=True):
+            with gr.Column(scale=1):
+                gr.HTML('<div class="panel-header"><h3>Image Generation Model</h3></div>')
+                gr.HTML('<p style="color: #666; font-size: 11px; margin: -10px 0 10px 0;">Model used when agents generate images via tool call</p>')
+
+                # Common image models on OpenRouter
+                common_image_models = [
+                    "google/gemini-2.0-flash-exp:free",
+                    "google/gemini-2.5-flash-preview-05-20",
+                    "openai/gpt-4o",
+                    "openai/dall-e-3",
+                    "black-forest-labs/flux-1.1-pro",
+                    "black-forest-labs/flux-schnell"
+                ]
+
+                current_image_model = config_manager.load_image_model()
+
+                image_model_dropdown = gr.Dropdown(
+                    label="Image Model",
+                    choices=common_image_models,
+                    value=current_image_model if current_image_model in common_image_models else common_image_models[0],
+                    allow_custom_value=True,
+                    info="Select or enter custom model name"
+                )
+
+                save_image_model_btn = gr.Button("Save Image Model", variant="primary")
+                image_model_status = gr.Textbox(label="Status", interactive=False, lines=1)
+
+                def save_image_model_setting(model: str):
+                    config_manager.save_image_model(model)
+                    agent_manager.set_image_model(model)
+                    return f"Image model set to: {model}"
+
+                save_image_model_btn.click(
+                    fn=save_image_model_setting,
+                    inputs=[image_model_dropdown],
+                    outputs=[image_model_status]
+                )
+
+            with gr.Column(scale=1):
+                # Empty column for balance, or could add more settings here
+                gr.HTML('<div style="padding: 20px; color: #666; font-size: 12px;">'
+                       '<p><b>Supported Image Models:</b></p>'
+                       '<ul style="margin: 5px 0; padding-left: 20px;">'
+                       '<li>Gemini models (free tier available)</li>'
+                       '<li>OpenAI GPT-4o / DALL-E 3</li>'
+                       '<li>Flux models (high quality)</li>'
+                       '</ul>'
+                       '<p style="margin-top: 10px;">Enter any OpenRouter model ID that supports image generation.</p>'
+                       '</div>')
 
         gr.HTML('<hr style="border-color: var(--border-dim); margin: 15px 0;">')
 

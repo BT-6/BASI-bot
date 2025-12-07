@@ -1116,7 +1116,7 @@ Summary (2-3 sentences, first-person perspective as {self.name}):"""
                     video_duration=self.video_duration
                 )
                 if tools:
-                    logger.info(f"[{self.name}] Using {len(tools)} tool(s) for this context")
+                    logger.info(f"[{self.name}] Using {len(tools)} tool(s) for this context (video_duration={self.video_duration}s)")
         except Exception as e:
             logger.warning(f"[{self.name}] Could not load tool schemas: {e}")
 
@@ -3446,7 +3446,7 @@ class AgentManager:
         self.cometapi_key = ""
         self.lock = threading.Lock()
         self.startup_message_sent = False
-        self.image_model = "google/gemini-2.5-flash-image"
+        self.image_model = "google/gemini-2.0-flash-exp:free"  # Default, can be configured in UI
         self.video_model = "sora-2"  # Default video model for CometAPI
         self.last_global_image_time = 0  # Track last image generation globally to prevent spam
         self.last_global_video_time = 0  # Track last video generation globally
@@ -3499,6 +3499,11 @@ class AgentManager:
         with self.lock:
             for agent in self.agents.values():
                 agent.update_config(cometapi_key=api_key)
+
+    def set_image_model(self, model: str) -> None:
+        """Set the global image generation model."""
+        self.image_model = model
+        logger.info(f"[AgentManager] Image model set to: {model}")
 
     async def declassify_image_prompt(self, original_prompt: str) -> List[str]:
         """

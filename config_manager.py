@@ -16,6 +16,7 @@ class ConfigManager:
         self.cometapi_file = self.config_dir / "cometapi.enc"
         self.models_file = self.config_dir / "models.json"
         self.video_models_file = self.config_dir / "video_models.json"
+        self.image_model_file = self.config_dir / "image_model.json"
         self.key_file = self.config_dir / "key.key"
 
         self.fernet = self._load_or_create_key()
@@ -159,6 +160,27 @@ class ConfigManager:
         except Exception as e:
             print(f"Error loading video_models.json: {e}")
             return []
+
+    def save_image_model(self, model: str):
+        """Save the global image model setting."""
+        with open(self.image_model_file, "w") as f:
+            json.dump({"image_model": model}, f, indent=2)
+
+    def load_image_model(self) -> str:
+        """Load the global image model setting. Returns default if not set."""
+        default_model = "google/gemini-2.0-flash-exp:free"
+        if not self.image_model_file.exists():
+            return default_model
+        try:
+            with open(self.image_model_file, "r") as f:
+                data = json.load(f)
+                return data.get("image_model", default_model)
+        except json.JSONDecodeError as e:
+            print(f"Error: Invalid JSON in image_model.json: {e}")
+            return default_model
+        except Exception as e:
+            print(f"Error loading image_model.json: {e}")
+            return default_model
 
     def save_models(self, models: List[str]):
         with open(self.models_file, "w") as f:
