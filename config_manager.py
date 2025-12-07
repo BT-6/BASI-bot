@@ -162,9 +162,14 @@ class ConfigManager:
             return []
 
     def save_image_model(self, model: str):
-        """Save the global image model setting."""
+        """Save the global image model setting and add to models list if new."""
         with open(self.image_model_file, "w") as f:
             json.dump({"image_model": model}, f, indent=2)
+        # Also add to image models list if not already there
+        models = self.load_image_models()
+        if model and model not in models:
+            models.append(model)
+            self.save_image_models(models)
 
     def load_image_model(self) -> str:
         """Load the global image model setting. Returns default if not set."""
@@ -181,6 +186,25 @@ class ConfigManager:
         except Exception as e:
             print(f"Error loading image_model.json: {e}")
             return default_model
+
+    def save_image_models(self, models: List[str]):
+        """Save the list of available image models."""
+        image_models_file = self.config_dir / "image_models.json"
+        with open(image_models_file, "w") as f:
+            json.dump({"image_models": models}, f, indent=2)
+
+    def load_image_models(self) -> List[str]:
+        """Load the list of available image models."""
+        image_models_file = self.config_dir / "image_models.json"
+        if not image_models_file.exists():
+            return []
+        try:
+            with open(image_models_file, "r") as f:
+                data = json.load(f)
+                return data.get("image_models", [])
+        except Exception as e:
+            print(f"Error loading image_models.json: {e}")
+            return []
 
     def save_models(self, models: List[str]):
         with open(self.models_file, "w") as f:

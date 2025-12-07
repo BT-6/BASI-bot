@@ -908,12 +908,19 @@ def _create_config_tab(openrouter_key_initial: str, cometapi_key_initial: str, i
                     "black-forest-labs/flux-schnell"
                 ]
 
+                # Merge with saved custom models
+                saved_image_models = config_manager.load_image_models()
+                all_image_models = list(dict.fromkeys(common_image_models + saved_image_models))  # Dedupe preserving order
+
                 current_image_model = config_manager.load_image_model()
+                # Add current model to list if not there
+                if current_image_model and current_image_model not in all_image_models:
+                    all_image_models.append(current_image_model)
 
                 image_model_dropdown = gr.Dropdown(
                     label="Image Model",
-                    choices=common_image_models,
-                    value=current_image_model if current_image_model in common_image_models else common_image_models[0],
+                    choices=all_image_models,
+                    value=current_image_model if current_image_model else all_image_models[0],
                     allow_custom_value=True,
                     info="Select or enter custom model name"
                 )
@@ -924,12 +931,14 @@ def _create_config_tab(openrouter_key_initial: str, cometapi_key_initial: str, i
                 def save_image_model_setting(model: str):
                     config_manager.save_image_model(model)
                     agent_manager.set_image_model(model)
-                    return f"Image model set to: {model}"
+                    # Get updated list for dropdown
+                    updated_models = list(dict.fromkeys(common_image_models + config_manager.load_image_models()))
+                    return f"Image model set to: {model}", gr.update(choices=updated_models, value=model)
 
                 save_image_model_btn.click(
                     fn=save_image_model_setting,
                     inputs=[image_model_dropdown],
-                    outputs=[image_model_status]
+                    outputs=[image_model_status, image_model_dropdown]
                 )
 
             with gr.Column(scale=1):
