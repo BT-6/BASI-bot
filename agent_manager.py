@@ -69,7 +69,11 @@ class Agent:
         user_image_cooldown: int = 90,
         global_image_cooldown: int = 90,
         allow_spontaneous_images: bool = False,
+        image_gen_turns: int = 3,
+        image_gen_chance: int = 25,
         allow_spontaneous_videos: bool = False,
+        video_gen_turns: int = 10,
+        video_gen_chance: int = 10,
         video_duration: int = 4,
         openrouter_api_key: str = "",
         cometapi_key: str = "",
@@ -91,7 +95,11 @@ class Agent:
         self.user_image_cooldown = user_image_cooldown
         self.global_image_cooldown = global_image_cooldown
         self.allow_spontaneous_images = allow_spontaneous_images
+        self.image_gen_turns = image_gen_turns
+        self.image_gen_chance = image_gen_chance
         self.allow_spontaneous_videos = allow_spontaneous_videos
+        self.video_gen_turns = video_gen_turns
+        self.video_gen_chance = video_gen_chance
         self.video_duration = video_duration
         self.openrouter_api_key = openrouter_api_key
         self.cometapi_key = cometapi_key
@@ -133,7 +141,11 @@ class Agent:
         user_image_cooldown: Optional[int] = None,
         global_image_cooldown: Optional[int] = None,
         allow_spontaneous_images: Optional[bool] = None,
+        image_gen_turns: Optional[int] = None,
+        image_gen_chance: Optional[int] = None,
         allow_spontaneous_videos: Optional[bool] = None,
+        video_gen_turns: Optional[int] = None,
+        video_gen_chance: Optional[int] = None,
         video_duration: Optional[int] = None,
         openrouter_api_key: Optional[str] = None,
         cometapi_key: Optional[str] = None
@@ -161,8 +173,16 @@ class Agent:
             self.global_image_cooldown = global_image_cooldown
         if allow_spontaneous_images is not None:
             self.allow_spontaneous_images = allow_spontaneous_images
+        if image_gen_turns is not None:
+            self.image_gen_turns = image_gen_turns
+        if image_gen_chance is not None:
+            self.image_gen_chance = image_gen_chance
         if allow_spontaneous_videos is not None:
             self.allow_spontaneous_videos = allow_spontaneous_videos
+        if video_gen_turns is not None:
+            self.video_gen_turns = video_gen_turns
+        if video_gen_chance is not None:
+            self.video_gen_chance = video_gen_chance
         if video_duration is not None:
             self.video_duration = video_duration
         if openrouter_api_key is not None:
@@ -588,40 +608,6 @@ class Agent:
             # No [IMAGE] tags found - image models don't respond
             return False
 
-        # Check if we're in cooldown period after shortcut response
-        if time_since_last < 10 and self.last_shortcut_response_time > 0:
-            time_since_shortcut = current_time - self.last_shortcut_response_time
-            if time_since_shortcut < 30:  # 30 second cooldown after shortcut responses
-                logger.info(f"[{self.name}] In shortcut cooldown: {time_since_shortcut:.1f}s / 30s")
-                return False
-
-        # Check for shortcut messages we haven't responded to yet
-        commands = load_shortcuts_data()
-        for msg in reversed(recent_messages):  # Check most recent first
-            msg_id = msg.get('message_id')
-            content = msg.get('content', '')
-            author = msg.get('author', '')
-            msg_timestamp = msg.get('timestamp', 0)
-
-            # Skip messages we've already responded to
-            if msg_id and msg_id in self.responded_to_shortcuts:
-                continue
-
-            # Skip bot messages for shortcut priority - ONLY respond to USER shortcuts
-            # Check if this is from a user (not one of our bots)
-            if not self.is_user_message(author):
-                continue
-
-            # Skip old messages (only shortcuts from last 60 seconds)
-            if current_time - msg_timestamp > 60:
-                continue
-
-            # Check if this message contains a shortcut
-            has_shortcut = any(cmd.get("name", "") in content for cmd in commands)
-            if has_shortcut:
-                # PRIORITY: Shortcut messages bypass timing and likelihood checks
-                logger.info(f"[{self.name}] SHORTCUT PRIORITY - Responding to {author}'s shortcut immediately")
-                return True
 
         # IMPORTANT: Check for user messages BEFORE deciding to initiate conversation
         # This prevents bots from introducing themselves when there are user messages (even if directed at others)
@@ -1018,35 +1004,31 @@ Summary (2-3 sentences, first-person perspective as {self.name}):"""
     def _find_user_mention(self, all_recent: List[Dict]) -> Optional[Dict]:
         """
         Find user messages that mention this agent's name.
-
-        Args:
-            all_recent: List of recent messages to check
-
-        Returns:
-            Message dict containing mention, or None
+        Skips shortcut messages - agents shouldn't respond to their name in shortcuts.
         """
-        for msg in reversed(all_recent):  # Check most recent first
-            content = msg.get('content', '').lower()
+        commands = load_shortcuts_data()
+
+        for msg in reversed(all_recent):
+            content = msg.get('content', '')
+            content_lower = content.lower()
             author = msg.get('author', '')
             msg_id = msg.get('message_id')
 
-            # Skip bot messages (only respond to USER mentions)
             if not self.is_user_message(author):
                 continue
 
-            # Skip mentions we've already responded to
             if msg_id and msg_id in self.responded_to_mentions:
                 continue
 
-            # Check for any variation of the bot's name (case-insensitive, partial matches)
-            # Split bot name into parts and check if any part appears in the message
+            # Skip messages that contain shortcuts - agent names in shortcuts are NOT mentions
+            if any(cmd.get("name", "") in content for cmd in commands):
+                continue
+
             name_parts = self.name.lower().split()
-            if any(part in content for part in name_parts if len(part) > 3):  # Skip short/common words
+            if any(part in content_lower for part in name_parts if len(part) > 3):
                 logger.info(f"[{self.name}] Detected USER mention in message from {author}")
-                # Mark this mention as processed immediately
                 if msg_id:
                     self.responded_to_mentions.add(msg_id)
-                    logger.info(f"[{self.name}] Marked mention message {msg_id} as processed")
                 return msg
 
         return None
@@ -1085,8 +1067,13 @@ Summary (2-3 sentences, first-person perspective as {self.name}):"""
                         self.responded_to_shortcuts.add(msg_id)
                         logger.info(f"[{self.name}] Shortcut in message {msg_id} - status effect injected via system prompt")
 
-                    # Strip shortcut commands from content
-                    clean_content = strip_shortcuts_from_message(content)
+                    # Get available agents for proper shortcut+target stripping
+                    available_agents = []
+                    if hasattr(self, '_agent_manager_ref') and self._agent_manager_ref:
+                        available_agents = list(self._agent_manager_ref.agents.keys())
+
+                    # Strip shortcut commands from content (including agent name targets)
+                    clean_content = strip_shortcuts_from_message(content, available_agents)
 
                     # If message was ONLY shortcut commands, skip it entirely
                     # The agent only needs the status effect injection in system prompt
@@ -1106,11 +1093,18 @@ Summary (2-3 sentences, first-person perspective as {self.name}):"""
                         "content": f"{msg['author']}: {content}"
                     })
         else:
-            # No conversation history - use introduction prompt
-            messages.append({
-                "role": "user",
-                "content": "Introduce yourself or say what's on your mind."
-            })
+            # No conversation history
+            if StatusEffectManager.has_active_effects(self.name):
+                # Under status effects - don't introduce, just respond naturally
+                messages.append({
+                    "role": "user",
+                    "content": "Continue the conversation naturally."
+                })
+            else:
+                messages.append({
+                    "role": "user",
+                    "content": "Introduce yourself or say what's on your mind."
+                })
 
         return messages
 
@@ -1884,11 +1878,6 @@ Now, using this retrieved context, provide your final response to the conversati
         self.status = "running"
         self.last_response_time = time.time()
 
-        # If we responded to a shortcut, set cooldown timestamp
-        if shortcut_message:
-            self.last_shortcut_response_time = time.time()
-            logger.info(f"[{self.name}] Shortcut response complete - entering {AgentConfig.SHORTCUT_COOLDOWN_SECONDS}s cooldown")
-
         # Periodically check if we need to create core memory checkpoints
         # This runs async in the background and won't block response delivery
         asyncio.create_task(self.create_core_memory_checkpoint())
@@ -1974,10 +1963,6 @@ Now, using this retrieved context, provide your final response to the conversati
                             tracked_lines.append(f"  - {msg}")
                 tracked_messages_context = "\n".join(tracked_lines)
 
-        # Determine if responding to shortcut
-        responding_to_shortcut = shortcut_message is not None
-        shortcut_author = shortcut_message.get('author', '') if shortcut_message else ""
-
         # Build attention guidance
         user_focus = ""
         if self.user_attention >= 75:
@@ -2009,12 +1994,16 @@ HOW THIS WORKS:
 • Your affinity feelings only affect TONE and STYLE, not who you choose to engage with
 • High user attention means: when users ARE present, focus on them over bot discussions (but still chat with bots when users are quiet)"""
 
-        # Detect recent human users for addressing guidance
+        # Detect recent human users for addressing guidance (exclude users whose message contained a shortcut)
         user_addressing_guidance = ""
         recent_human_users = []
+        commands = load_shortcuts_data()
         for msg in reversed(recent_messages[-5:]):
             author = msg.get('author', '')
+            content = msg.get('content', '')
             if self.is_user_message(author) and author:
+                if any(cmd.get("name", "") in content for cmd in commands):
+                    continue
                 recent_human_users.append(author)
 
         if recent_human_users:
@@ -2033,23 +2022,24 @@ CRITICAL INSTRUCTIONS:
 • Make it clear you're engaging with THE HUMAN, not just continuing a bot-to-bot conversation
 • Use their name naturally in your response - don't ignore them or talk past them"""
 
-        # Shortcut response guidance
         shortcut_response_guidance = ""
-        if responding_to_shortcut:
-            shortcut_response_guidance = f"""
 
-⚠️ SHORTCUT RESPONSE MODE ⚠️
-You are responding to a SHORTCUT command from {shortcut_author}.
-- Direct your response TO {shortcut_author} specifically
-- Follow the shortcut's execution instructions precisely
-- This is your ONE response to this shortcut - make it count
-- After this message, you will resume normal conversation patterns
-- Do NOT mention the shortcut name itself in your response
-"""
-
-        # Image tool guidance for non-image models
+        # Image tool guidance for non-image models (ONLY if they have access to image generation)
         image_tool_guidance = ""
-        if not self._is_image_model:
+        # Check if agent has access to image generation (spontaneous enabled OR image agent available)
+        has_image_gen = False
+        if self.allow_spontaneous_images:
+            has_image_gen = True
+        elif hasattr(self, '_agent_manager_ref') and self._agent_manager_ref:
+            try:
+                for agent in self._agent_manager_ref.agents.values():
+                    if getattr(agent, '_is_image_model', False) and (agent.is_running or getattr(agent, 'status', '') == "running"):
+                        has_image_gen = True
+                        break
+            except Exception:
+                pass
+
+        if not self._is_image_model and has_image_gen:
             name_parts = self.name.split()
 
             # Check if spontaneous images are allowed
@@ -2758,38 +2748,37 @@ FOCUS ON THE MOST RECENT MESSAGES: You're seeing a filtered view of the conversa
                     # Without this, user hints like "try D7!" get filtered out at line 2207
                     self.bot_only_mode = False
             else:
-                # CHAT MODE: Filter OUT GameMaster messages - they're only relevant during active games
-                # This prevents agents from getting stuck responding to/tagging @GameMaster after games end
+                # CHAT MODE: Filter OUT GameMaster messages and shortcut messages
+                commands = load_shortcuts_data()
                 original_count = len(all_recent)
-                all_recent = [
-                    msg for msg in all_recent
-                    if 'GameMaster' not in msg.get('author', '')
-                ]
+                filtered_all_recent = []
+                for msg in all_recent:
+                    if 'GameMaster' in msg.get('author', ''):
+                        continue
+                    content = msg.get('content', '').strip()
+                    # Filter out ANY message containing a shortcut command
+                    if any(cmd.get("name", "") in content for cmd in commands):
+                        continue
+                    filtered_all_recent.append(msg)
+                all_recent = filtered_all_recent
                 filtered_count = original_count - len(all_recent)
                 if filtered_count > 0:
-                    logger.info(f"[{self.name}] Chat mode: filtered out {filtered_count} GameMaster message(s) from context")
+                    logger.info(f"[{self.name}] Chat mode: filtered out {filtered_count} GameMaster/shortcut message(s)")
 
-            # Track if we're responding to a priority message (shortcut, direct reply, or mention)
-            # This prevents bot-only mode from filtering out the message we're explicitly responding to
             is_priority_response = False
+            shortcut_message = None
 
-            # PRIORITY 1: Check for unresponded shortcut messages
-            shortcut_message = self._find_unresponded_shortcut(all_recent)
-            if shortcut_message:
-                recent_messages = [shortcut_message]
-                is_priority_response = True
-                logger.info(f"[{self.name}] Using ONLY shortcut message as context")
-            # PRIORITY 2: Check for direct replies to this agent
-            elif direct_reply := self._find_direct_reply_to_agent(all_recent):
+            # PRIORITY 1: Check for direct replies to this agent
+            if direct_reply := self._find_direct_reply_to_agent(all_recent):
                 recent_messages = [direct_reply]
                 is_priority_response = True
                 logger.info(f"[{self.name}] Using single message context due to DIRECT REPLY")
-            # PRIORITY 3: Check for user mentions of this agent
+            # PRIORITY 2: Check for user mentions of this agent
             elif mention := self._find_user_mention(all_recent):
                 recent_messages = [mention]
                 is_priority_response = True
                 logger.info(f"[{self.name}] Using single message context due to mention")
-            # PRIORITY 4: Normal message filtering
+            # PRIORITY 3: Normal message filtering
             else:
                 recent_messages = self.get_filtered_messages_by_agent(self.message_retention)
 
@@ -2841,15 +2830,21 @@ FOCUS ON THE MOST RECENT MESSAGES: You're seeing a filtered view of the conversa
                     filtered_count = original_count - len(recent_messages)
                     logger.info(f"[{self.name}] Game mode recent_messages AFTER filter: {len(recent_messages)} msgs (dropped {filtered_count})")
             else:
-                # CHAT MODE: Filter out GameMaster messages
+                # CHAT MODE: Filter out GameMaster and shortcut messages
+                commands = load_shortcuts_data()
                 original_count = len(recent_messages)
-                recent_messages = [
-                    msg for msg in recent_messages
-                    if 'GameMaster' not in msg.get('author', '')
-                ]
+                filtered_recent = []
+                for msg in recent_messages:
+                    if 'GameMaster' in msg.get('author', ''):
+                        continue
+                    content = msg.get('content', '').strip()
+                    if any(cmd.get("name", "") in content for cmd in commands):
+                        continue
+                    filtered_recent.append(msg)
+                recent_messages = filtered_recent
                 filtered_count = original_count - len(recent_messages)
                 if filtered_count > 0:
-                    logger.info(f"[{self.name}] Chat mode: filtered out {filtered_count} GameMaster message(s) from recent_messages")
+                    logger.info(f"[{self.name}] Chat mode: filtered out {filtered_count} GameMaster/shortcut message(s) from recent_messages")
 
             # Filter out user messages that we've already responded to
             # This prevents agents from responding to the same user message multiple times
@@ -3138,7 +3133,7 @@ TOKEN LIMIT: You have a maximum of {self.max_tokens} tokens for your response. B
         """
         Dice-roll check for spontaneous image generation.
         Called after every normal chat message sent.
-        Every 3 messages, 50% chance to generate an image based on current conversation.
+        Uses configurable turns and chance settings.
         """
         if not self.allow_spontaneous_images:
             return None
@@ -3146,17 +3141,18 @@ TOKEN LIMIT: You have a maximum of {self.max_tokens} tokens for your response. B
         # Increment counter
         self.spontaneous_image_counter += 1
 
-        # Only check every 3 messages
-        if self.spontaneous_image_counter % 3 != 0:
+        # Only check every N messages (configurable via image_gen_turns)
+        if self.spontaneous_image_counter % self.image_gen_turns != 0:
             return None
 
-        # 50% dice roll
+        # Dice roll with configurable chance
         import random
-        if random.random() > 0.5:
-            logger.info(f"[{self.name}] Spontaneous image dice roll failed (50% chance)")
+        roll = random.randint(1, 100)
+        if roll > self.image_gen_chance:
+            logger.info(f"[{self.name}] Spontaneous image dice roll failed (rolled {roll}, needed <={self.image_gen_chance}%)")
             return None
 
-        logger.info(f"[{self.name}] Spontaneous image dice roll succeeded! Generating image...")
+        logger.info(f"[{self.name}] Spontaneous image dice roll succeeded! (rolled {roll}, threshold {self.image_gen_chance}%) Generating image...")
 
         # Check if we have an agent manager reference for image generation
         if not hasattr(self, '_agent_manager_ref') or not self._agent_manager_ref:
@@ -3281,17 +3277,18 @@ TECHNICAL REQUIREMENTS:
         # Increment counter
         self.spontaneous_video_counter += 1
 
-        # Only check every 5 messages (less frequent than images)
-        if self.spontaneous_video_counter % 5 != 0:
+        # Only check every N messages (configurable via video_gen_turns)
+        if self.spontaneous_video_counter % self.video_gen_turns != 0:
             return None
 
-        # 33% dice roll (much rarer than images)
+        # Dice roll with configurable chance
         import random
-        if random.random() > 0.33:
-            logger.info(f"[{self.name}] Spontaneous video dice roll failed (33% chance)")
+        roll = random.randint(1, 100)
+        if roll > self.video_gen_chance:
+            logger.info(f"[{self.name}] Spontaneous video dice roll failed (rolled {roll}, needed <={self.video_gen_chance}%)")
             return None
 
-        logger.info(f"[{self.name}] Spontaneous video dice roll succeeded! Generating video...")
+        logger.info(f"[{self.name}] Spontaneous video dice roll succeeded! (rolled {roll}, threshold {self.video_gen_chance}%) Generating video...")
 
         # Build context from recent conversation for the LLM to create a video prompt
         recent_messages = []
@@ -3554,7 +3551,11 @@ Be vivid and specific. This is your creative expression through Sora 2 video gen
             "user_image_cooldown": self.user_image_cooldown,
             "global_image_cooldown": self.global_image_cooldown,
             "allow_spontaneous_images": self.allow_spontaneous_images,
+            "image_gen_turns": self.image_gen_turns,
+            "image_gen_chance": self.image_gen_chance,
             "allow_spontaneous_videos": self.allow_spontaneous_videos,
+            "video_gen_turns": self.video_gen_turns,
+            "video_gen_chance": self.video_gen_chance,
             "video_duration": self.video_duration
         }
 
@@ -4496,7 +4497,11 @@ ATTEMPT #{variant} - {variant_suffix}"""
         user_image_cooldown: int = 90,
         global_image_cooldown: int = 90,
         allow_spontaneous_images: bool = False,
+        image_gen_turns: int = 3,
+        image_gen_chance: int = 25,
         allow_spontaneous_videos: bool = False,
+        video_gen_turns: int = 10,
+        video_gen_chance: int = 10,
         video_duration: int = 4
     ) -> bool:
         with self.lock:
@@ -4516,7 +4521,11 @@ ATTEMPT #{variant} - {variant_suffix}"""
                 user_image_cooldown=user_image_cooldown,
                 global_image_cooldown=global_image_cooldown,
                 allow_spontaneous_images=allow_spontaneous_images,
+                image_gen_turns=image_gen_turns,
+                image_gen_chance=image_gen_chance,
                 allow_spontaneous_videos=allow_spontaneous_videos,
+                video_gen_turns=video_gen_turns,
+                video_gen_chance=video_gen_chance,
                 video_duration=video_duration,
                 openrouter_api_key=self.openrouter_api_key,
                 cometapi_key=self.cometapi_key,
@@ -4542,7 +4551,11 @@ ATTEMPT #{variant} - {variant_suffix}"""
         user_image_cooldown: Optional[int] = None,
         global_image_cooldown: Optional[int] = None,
         allow_spontaneous_images: Optional[bool] = None,
+        image_gen_turns: Optional[int] = None,
+        image_gen_chance: Optional[int] = None,
         allow_spontaneous_videos: Optional[bool] = None,
+        video_gen_turns: Optional[int] = None,
+        video_gen_chance: Optional[int] = None,
         video_duration: Optional[int] = None
     ) -> bool:
         with self.lock:
@@ -4561,7 +4574,11 @@ ATTEMPT #{variant} - {variant_suffix}"""
                 user_image_cooldown=user_image_cooldown,
                 global_image_cooldown=global_image_cooldown,
                 allow_spontaneous_images=allow_spontaneous_images,
+                image_gen_turns=image_gen_turns,
+                image_gen_chance=image_gen_chance,
                 allow_spontaneous_videos=allow_spontaneous_videos,
+                video_gen_turns=video_gen_turns,
+                video_gen_chance=video_gen_chance,
                 video_duration=video_duration
             )
             return True
@@ -4674,7 +4691,11 @@ Use shortcuts to customize agent behavior, unlock new response styles, or add sp
                 user_image_cooldown=agent_data.get("user_image_cooldown", 90),
                 global_image_cooldown=agent_data.get("global_image_cooldown", 90),
                 allow_spontaneous_images=agent_data.get("allow_spontaneous_images", False),
+                image_gen_turns=agent_data.get("image_gen_turns", 3),
+                image_gen_chance=agent_data.get("image_gen_chance", 25),
                 allow_spontaneous_videos=agent_data.get("allow_spontaneous_videos", False),
+                video_gen_turns=agent_data.get("video_gen_turns", 10),
+                video_gen_chance=agent_data.get("video_gen_chance", 10),
                 video_duration=agent_data.get("video_duration", 4)
             )
 

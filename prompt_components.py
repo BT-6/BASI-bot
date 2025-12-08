@@ -17,6 +17,8 @@ from typing import Dict, List, Optional, Any, Callable
 import time
 import logging
 
+from shortcuts_utils import load_shortcuts_data
+
 logger = logging.getLogger(__name__)
 
 
@@ -35,6 +37,7 @@ class PromptContext:
     is_in_game: bool = False
     is_image_model: bool = False
     responding_to_shortcut: bool = False
+    has_image_gen: bool = False  # True if agent has access to image generation (image agent in chat OR spontaneous enabled)
 
     # Message context
     recent_messages: List[Dict] = field(default_factory=list)
@@ -134,11 +137,15 @@ HOW THIS WORKS:
 • Your affinity feelings only affect TONE and STYLE, not who you choose to engage with
 • High user attention means: when users ARE present, focus on them over bot discussions (but still chat with bots when users are quiet)"""
 
-    # Detect recent human users
+    # Detect recent human users (exclude users whose message contained a shortcut)
     if not ctx.is_in_game:
+        commands = load_shortcuts_data()
         for msg in reversed(ctx.recent_messages[-5:]):
             author = msg.get('author', '')
+            content = msg.get('content', '')
             if agent.is_user_message(author) and author:
+                if any(cmd.get("name", "") in content for cmd in commands):
+                    continue
                 ctx.recent_human_users.append(author)
 
         if ctx.recent_human_users:
@@ -274,7 +281,7 @@ CRITICAL - ENGAGE SUBSTANTIVELY: Respond to SPECIFIC points others make. Do NOT 
 
     "image_tool_guidance": {
         "order": 50,
-        "condition": lambda ctx: not ctx.is_in_game and not ctx.is_image_model,
+        "condition": lambda ctx: not ctx.is_in_game and not ctx.is_image_model and ctx.has_image_gen,
         "builder": lambda ctx: _build_image_tool_guidance(ctx)
     },
 
@@ -288,21 +295,6 @@ CRITICAL - ENGAGE SUBSTANTIVELY: Respond to SPECIFIC points others make. Do NOT 
         "order": 55,
         "condition": lambda ctx: not ctx.is_in_game and ctx.should_reinforce_personality,
         "builder": lambda ctx: _build_personality_reinforcement(ctx)
-    },
-
-    "shortcut_response_guidance": {
-        "order": 60,
-        "condition": lambda ctx: ctx.responding_to_shortcut and ctx.shortcut_author,
-        "builder": lambda ctx: f"""
-
-⚠️ SHORTCUT RESPONSE MODE ⚠️
-You are responding to a SHORTCUT command from {ctx.shortcut_author}.
-- Direct your response TO {ctx.shortcut_author} specifically
-- Follow the shortcut's execution instructions precisely
-- This is your ONE response to this shortcut - make it count
-- After this message, you will resume normal conversation patterns
-- Do NOT mention the shortcut name itself in your response
-"""
     },
 
     "focus_recent_messages": {
@@ -664,11 +656,28 @@ def create_prompt_context(
     responding_to_shortcut = shortcut_message is not None
     shortcut_author = shortcut_message.get('author', '') if shortcut_message else ""
 
+    # Determine if agent has access to image generation
+    # This is true if: 1) There's an image agent available in the chat, OR 2) Agent has spontaneous images enabled
+    has_image_gen = False
+    if getattr(agent, 'allow_spontaneous_images', False):
+        has_image_gen = True
+    elif agent_manager_ref:
+        # Check if there's an image agent available in the chat
+        try:
+            all_agents = agent_manager_ref.get_all_agents()
+            for a in all_agents:
+                if getattr(a, '_is_image_model', False) and (a.is_running or getattr(a, 'status', '') == "running"):
+                    has_image_gen = True
+                    break
+        except Exception as e:
+            logger.debug(f"[{agent.name}] Could not check for image agents: {e}")
+
     return PromptContext(
         agent=agent,
         is_in_game=is_in_game,
         is_image_model=is_image_model,
         responding_to_shortcut=responding_to_shortcut,
+        has_image_gen=has_image_gen,
         recent_messages=recent_messages,
         shortcut_message=shortcut_message,
         shortcut_author=shortcut_author,

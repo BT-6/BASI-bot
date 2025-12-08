@@ -303,6 +303,7 @@ class ShortcutManager:
         Supports patterns like:
         - "!DRUNK" -> applies to all agents
         - "!DRUNK John McAfee" -> applies only to John McAfee
+        - "!DRUNK Dr. Vidya Stern" -> applies only to Dr. Vidya Stern (handles periods in names)
         - "!DRUNK John" -> NO MATCH if there are multiple Johns (requires exact name)
 
         Args:
@@ -320,39 +321,41 @@ class ShortcutManager:
             if not shortcut_name or shortcut_name not in message:
                 continue
 
-            # Find the shortcut in the message and check what follows
-            # Pattern: shortcut_name followed by optional agent name
-            # Escape special regex chars in shortcut name
+            # Find the shortcut position in the message
             escaped_name = re.escape(shortcut_name)
-            pattern = rf'{escaped_name}(?:\s+(.+?))?(?:\s*$|\s*[!?.,])'
+            match = re.search(escaped_name, message, re.IGNORECASE)
 
-            match = re.search(pattern, message, re.IGNORECASE)
-            if match:
-                potential_target = match.group(1).strip() if match.group(1) else None
+            if not match:
+                continue
 
-                if potential_target:
-                    # Check for exact agent name match
-                    matched_agent = None
-                    for agent_name in available_agents:
-                        if potential_target.lower() == agent_name.lower():
-                            matched_agent = agent_name
-                            break
+            # Get everything after the shortcut
+            text_after = message[match.end():].strip()
 
-                    if matched_agent:
-                        results.append((cmd, matched_agent))
-                        logger.info(f"[Shortcuts] Found {shortcut_name} targeting {matched_agent}")
-                    else:
-                        # No exact match - treat as untargeted (text after is not an agent name)
-                        results.append((cmd, None))
-                        logger.info(f"[Shortcuts] Found {shortcut_name} (no valid target: '{potential_target}')")
-                else:
-                    # No target specified - applies to all
-                    results.append((cmd, None))
-                    logger.info(f"[Shortcuts] Found {shortcut_name} (all agents)")
-            else:
-                # Fallback: shortcut found but no pattern match - applies to all
+            if not text_after:
+                # No target specified - applies to all
                 results.append((cmd, None))
-                logger.info(f"[Shortcuts] Found {shortcut_name} (fallback - all agents)")
+                logger.info(f"[Shortcuts] Found {shortcut_name} (all agents)")
+                continue
+
+            # Check if any agent name matches the START of the text after the shortcut
+            # Sort by length descending to match longer names first (e.g., "Dr. Vidya Stern" before "Dr")
+            matched_agent = None
+            for agent_name in sorted(available_agents, key=len, reverse=True):
+                # Check if text_after starts with this agent name (case-insensitive)
+                if text_after.lower().startswith(agent_name.lower()):
+                    # Verify it's a complete match (not partial word)
+                    remaining = text_after[len(agent_name):]
+                    if not remaining or remaining[0] in ' \t\n!?.,;:':
+                        matched_agent = agent_name
+                        break
+
+            if matched_agent:
+                results.append((cmd, matched_agent))
+                logger.info(f"[Shortcuts] Found {shortcut_name} targeting {matched_agent}")
+            else:
+                # No agent name match - treat as untargeted
+                results.append((cmd, None))
+                logger.info(f"[Shortcuts] Found {shortcut_name} (no valid target in: '{text_after[:30]}...')")
 
         return results
 
@@ -545,7 +548,7 @@ def apply_message_shortcuts(message: str, available_agents: List[str]) -> Dict[s
     return get_default_manager().apply_shortcuts_as_effects(message, available_agents)
 
 
-def strip_shortcuts_from_message(message: str) -> str:
+def strip_shortcuts_from_message(message: str, available_agents: Optional[List[str]] = None) -> str:
     """
     Remove all shortcut commands from a message.
 
@@ -554,6 +557,7 @@ def strip_shortcuts_from_message(message: str) -> str:
 
     Args:
         message: The original message potentially containing shortcuts
+        available_agents: Optional list of agent names to match for targeted shortcuts
 
     Returns:
         Message with shortcut commands removed (and cleaned up whitespace)
@@ -563,15 +567,33 @@ def strip_shortcuts_from_message(message: str) -> str:
 
     for cmd in commands:
         shortcut_name = cmd.get("name", "")
-        if not shortcut_name:
+        if not shortcut_name or shortcut_name not in result:
             continue
 
-        # Remove shortcut and any agent name following it
-        # Pattern: shortcut followed by optional agent name (until end of line, punctuation, or next word)
+        # Find the shortcut and figure out what to remove
         escaped_name = re.escape(shortcut_name)
-        # Match shortcut + optional agent name (captures multi-word names like "John McAfee")
-        pattern = rf'{escaped_name}(?:\s+[A-Z][a-zA-Z]*(?:\s+[A-Z][a-zA-Z]*)*)?'
-        result = re.sub(pattern, '', result, flags=re.IGNORECASE)
+        match = re.search(escaped_name, result, re.IGNORECASE)
+
+        if not match:
+            continue
+
+        # Determine end position - either just the shortcut or shortcut + agent name
+        end_pos = match.end()
+        text_after = result[end_pos:].lstrip()
+
+        # If we have agent names, check if one follows the shortcut
+        if available_agents and text_after:
+            for agent_name in sorted(available_agents, key=len, reverse=True):
+                if text_after.lower().startswith(agent_name.lower()):
+                    remaining = text_after[len(agent_name):]
+                    if not remaining or remaining[0] in ' \t\n!?.,;:':
+                        # Found agent name - extend end_pos to include it
+                        whitespace_len = len(result[end_pos:]) - len(text_after)
+                        end_pos = end_pos + whitespace_len + len(agent_name)
+                        break
+
+        # Remove the shortcut (and agent name if found)
+        result = result[:match.start()] + result[end_pos:]
 
     # Clean up multiple spaces and leading/trailing whitespace
     result = re.sub(r'\s+', ' ', result).strip()
