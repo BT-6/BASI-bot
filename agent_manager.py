@@ -1915,18 +1915,20 @@ Now, using this retrieved context, provide your final response to the conversati
                     agent_manager_ref=self._agent_manager_ref if hasattr(self, '_agent_manager_ref') else None,
                     is_image_model_func=is_image_model
                 )
-                full_system_prompt = build_system_prompt(ctx)
-
-                # Inject status effects (component system doesn't handle these)
+                # Get status effects BEFORE building prompt so we can inject early
                 recovery_prompt = StatusEffectManager.get_and_clear_recovery_prompt(self.name)
                 effect_prompt = StatusEffectManager.get_effect_prompt(self.name)
 
+                # Pass status effects to context so they can be injected right after personality
+                ctx.status_effect_prompt = effect_prompt
+                ctx.recovery_prompt = recovery_prompt
+
+                full_system_prompt = build_system_prompt(ctx)
+
                 if recovery_prompt:
-                    full_system_prompt += recovery_prompt
                     logger.info(f"[{self.name}] Injected recovery/sobering-up prompt (component path)")
 
                 if effect_prompt:
-                    full_system_prompt += effect_prompt
                     logger.info(f"[{self.name}] Injected active status effect prompt (component path)")
 
                 return full_system_prompt

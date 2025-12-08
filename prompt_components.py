@@ -59,6 +59,10 @@ class PromptContext:
     # Reinforcement tracking
     should_reinforce_personality: bool = False
 
+    # Status effects (injected early for high priority)
+    status_effect_prompt: str = ""
+    recovery_prompt: str = ""
+
     # References needed for building
     game_context_manager: Any = None  # GameContextManager instance
     agent_manager_ref: Any = None  # AgentManager instance
@@ -224,6 +228,12 @@ PROMPT_COMPONENTS = {
         "order": 0,
         "condition": lambda ctx: True,  # Always include
         "builder": lambda ctx: ctx.agent.system_prompt
+    },
+
+    "status_effect": {
+        "order": 1,  # RIGHT AFTER personality - high priority override
+        "condition": lambda ctx: ctx.status_effect_prompt or ctx.recovery_prompt,
+        "builder": lambda ctx: (ctx.recovery_prompt or "") + (ctx.status_effect_prompt or "")
     },
 
     "game_prompt": {
