@@ -2983,6 +2983,11 @@ TOKEN LIMIT: You have a maximum of {self.max_tokens} tokens for your response. B
             # Call LLM API with retrieval handling
             response_text = await self._call_llm_with_retrieval(messages, recent_messages)
 
+            # Check if response was blocked (e.g., spontaneous video blocked)
+            if response_text is None:
+                logger.info(f"[{self.name}] No response text returned (likely blocked spontaneous action)")
+                return None
+
             # Process response and update all metadata
             result = await self._process_response_and_update_metadata(
                 response_text=response_text,
