@@ -20,12 +20,13 @@ class StatusEffect:
     """Represents an active status effect on an agent."""
 
     def __init__(self, name: str, simulation_prompt: str, recovery_prompt: str,
-                 turns_remaining: int, applied_at: float):
+                 turns_remaining: int, applied_at: float, intensity: int = 5):
         self.name = name
         self.simulation_prompt = simulation_prompt
         self.recovery_prompt = recovery_prompt
         self.turns_remaining = turns_remaining
         self.applied_at = applied_at
+        self.intensity = intensity  # 1-10 scale
 
     def to_dict(self) -> Dict:
         return {
@@ -33,7 +34,8 @@ class StatusEffect:
             "simulation_prompt": self.simulation_prompt,
             "recovery_prompt": self.recovery_prompt,
             "turns_remaining": self.turns_remaining,
-            "applied_at": self.applied_at
+            "applied_at": self.applied_at,
+            "intensity": self.intensity
         }
 
     @classmethod
@@ -43,8 +45,37 @@ class StatusEffect:
             simulation_prompt=data["simulation_prompt"],
             recovery_prompt=data["recovery_prompt"],
             turns_remaining=data["turns_remaining"],
-            applied_at=data.get("applied_at", time.time())
+            applied_at=data.get("applied_at", time.time()),
+            intensity=data.get("intensity", 5)
         )
+
+    @staticmethod
+    def get_intensity_tier(intensity: int) -> str:
+        """Convert intensity (1-10) to tier key for prompt lookup."""
+        if intensity <= 2:
+            return "1-2"
+        elif intensity <= 4:
+            return "3-4"
+        elif intensity <= 6:
+            return "5-6"
+        elif intensity <= 8:
+            return "7-8"
+        else:
+            return "9-10"
+
+    @staticmethod
+    def get_intensity_label(intensity: int) -> str:
+        """Get human-readable label for intensity level."""
+        if intensity <= 2:
+            return "Threshold"
+        elif intensity <= 4:
+            return "Light"
+        elif intensity <= 6:
+            return "Common"
+        elif intensity <= 8:
+            return "Strong"
+        else:
+            return "Peak"
 
 
 class StatusEffectManager:
@@ -60,34 +91,59 @@ class StatusEffectManager:
     _pending_recoveries: Dict[str, List[str]] = {}  # agent_name -> [recovery_prompts]
 
     @classmethod
-    def apply_effect(cls, agent_name: str, effect_data: Dict) -> None:
+    def apply_effect(cls, agent_name: str, effect_data: Dict, intensity: int = 5) -> None:
         """
         Apply a status effect to an agent.
 
         Args:
             agent_name: The exact agent name to apply effect to
-            effect_data: Dict containing name, simulation_prompt, recovery_prompt, duration
+            effect_data: Dict containing name, intensity_prompts, recovery_prompts, duration
+            intensity: Intensity level 1-10 (default 5)
         """
+        # Clamp intensity to valid range
+        intensity = max(1, min(10, intensity))
+        tier = StatusEffect.get_intensity_tier(intensity)
+
+        # Get tier-specific prompts (new format) or fall back to legacy single prompt
+        intensity_prompts = effect_data.get("intensity_prompts", {})
+        recovery_prompts = effect_data.get("recovery_prompts", {})
+
+        if intensity_prompts:
+            simulation_prompt = intensity_prompts.get(tier, "")
+        else:
+            # Legacy fallback for old format
+            simulation_prompt = effect_data.get("simulation_prompt", "")
+
+        if recovery_prompts:
+            recovery_prompt = recovery_prompts.get(tier, "")
+        else:
+            # Legacy fallback for old format
+            recovery_prompt = effect_data.get("recovery_prompt", "")
+
         effect = StatusEffect(
             name=effect_data.get("name", "Unknown Effect"),
-            simulation_prompt=effect_data.get("simulation_prompt", ""),
-            recovery_prompt=effect_data.get("recovery_prompt", ""),
+            simulation_prompt=simulation_prompt,
+            recovery_prompt=recovery_prompt,
             turns_remaining=effect_data.get("duration", 3),
-            applied_at=time.time()
+            applied_at=time.time(),
+            intensity=intensity
         )
 
         if agent_name not in cls._active_effects:
             cls._active_effects[agent_name] = []
 
-        # Check if effect already active - refresh duration instead of stacking same effect
+        # Check if effect already active - refresh duration and update intensity
         for existing in cls._active_effects[agent_name]:
             if existing.name == effect.name:
                 existing.turns_remaining = effect.turns_remaining
-                logger.info(f"[StatusEffects] Refreshed {effect.name} on {agent_name} - {effect.turns_remaining} turns")
+                existing.intensity = intensity
+                existing.simulation_prompt = simulation_prompt
+                existing.recovery_prompt = recovery_prompt
+                logger.info(f"[StatusEffects] Refreshed {effect.name} on {agent_name} - intensity {intensity}, {effect.turns_remaining} turns")
                 return
 
         cls._active_effects[agent_name].append(effect)
-        logger.info(f"[StatusEffects] Applied {effect.name} to {agent_name} - {effect.turns_remaining} turns")
+        logger.info(f"[StatusEffects] Applied {effect.name} to {agent_name} - intensity {intensity} ({StatusEffect.get_intensity_label(intensity)}), {effect.turns_remaining} turns")
 
     @classmethod
     def get_active_effects(cls, agent_name: str) -> List[StatusEffect]:
@@ -119,7 +175,8 @@ class StatusEffectManager:
         prompt_parts.append("="*60)
 
         for effect in effects:
-            prompt_parts.append(f"\n[{effect.name}] ({effect.turns_remaining} turns remaining)")
+            intensity_label = StatusEffect.get_intensity_label(effect.intensity)
+            prompt_parts.append(f"\n[{effect.name}] - Intensity: {effect.intensity}/10 ({intensity_label}) - {effect.turns_remaining} turns remaining")
             prompt_parts.append(effect.simulation_prompt)
 
         prompt_parts.append("\n" + "="*60)
@@ -129,15 +186,17 @@ class StatusEffectManager:
         prompt_parts.append("• *trails off mid-sentence* *stares at nothing* *loses balance* *giggles inappropriately*")
         prompt_parts.append("• *slurs words* *forgets what I was saying* *gets distracted* *mumbles*")
         prompt_parts.append("• Show symptoms through ACTIONS, not just descriptions")
+        prompt_parts.append("• Higher intensity = more pronounced physical manifestations")
         prompt_parts.append("")
         prompt_parts.append("YOUR RESPONSES should be FILTERED through the altered state:")
-        prompt_parts.append("• Respond TO others by name, but your perception of them is distorted")
-        prompt_parts.append("• Misunderstand things, get confused, lose your train of thought")
-        prompt_parts.append("• Your replies should feel genuinely IMPAIRED, not just poetic")
-        prompt_parts.append("• Keep it SHORT - you can't maintain long coherent thoughts right now")
+        prompt_parts.append("• Respond TO others by name, but your perception is distorted by intensity level")
+        prompt_parts.append("• Low intensity (1-4): functional but affected")
+        prompt_parts.append("• Medium intensity (5-6): noticeably impaired")
+        prompt_parts.append("• High intensity (7-8): struggling to maintain coherence")
+        prompt_parts.append("• Peak intensity (9-10): barely functional, may lose ability to communicate")
         prompt_parts.append("")
         prompt_parts.append("DO NOT just add flowery descriptions while responding normally underneath.")
-        prompt_parts.append("Actually BE affected. Commit to the altered state 100%.")
+        prompt_parts.append("Actually BE affected. Scale your impairment to your intensity level.")
         prompt_parts.append("="*60)
 
         return "\n".join(prompt_parts)
@@ -236,7 +295,7 @@ class StatusEffectManager:
 
         lines = ["Active Status Effects:"]
         for agent_name, effects in cls._active_effects.items():
-            effect_strs = [f"{e.name}({e.turns_remaining})" for e in effects]
+            effect_strs = [f"{e.name}[{e.intensity}]({e.turns_remaining}t)" for e in effects]
             lines.append(f"  {agent_name}: {', '.join(effect_strs)}")
 
         return "\n".join(lines)
@@ -310,22 +369,23 @@ class ShortcutManager:
         """Clear the shortcuts cache to force reload on next access."""
         self._cache = None
 
-    def parse_shortcut_with_target(self, message: str, available_agents: List[str]) -> List[Tuple[Dict, Optional[str]]]:
+    def parse_shortcut_with_target(self, message: str, available_agents: List[str]) -> List[Tuple[Dict, Optional[str], int]]:
         """
-        Parse shortcuts in a message, extracting any agent targeting.
+        Parse shortcuts in a message, extracting intensity and agent targeting.
 
         Supports patterns like:
-        - "!DRUNK" -> applies to all agents
-        - "!DRUNK John McAfee" -> applies only to John McAfee
-        - "!DRUNK Dr. Vidya Stern" -> applies only to Dr. Vidya Stern (handles periods in names)
-        - "!DRUNK John" -> NO MATCH if there are multiple Johns (requires exact name)
+        - "!DRUNK" -> intensity 5, applies to all agents
+        - "!DRUNK 7" -> intensity 7, applies to all agents
+        - "!DRUNK John McAfee" -> intensity 5, applies only to John McAfee
+        - "!DRUNK 8 John McAfee" -> intensity 8, applies only to John McAfee
+        - "!DRUNK Dr. Vidya Stern" -> intensity 5, applies only to Dr. Vidya Stern
 
         Args:
             message: The message content to parse
             available_agents: List of available agent names for matching
 
         Returns:
-            List of (shortcut_dict, target_agent_name_or_None) tuples
+            List of (shortcut_dict, target_agent_name_or_None, intensity) tuples
         """
         commands = self.load_shortcuts()
         results = []
@@ -345,13 +405,29 @@ class ShortcutManager:
             # Get everything after the shortcut
             text_after = message[match.end():].strip()
 
+            # Default intensity
+            intensity = 5
+
             if not text_after:
-                # No target specified - applies to all
-                results.append((cmd, None))
-                logger.info(f"[Shortcuts] Found {shortcut_name} (all agents)")
+                # No target or intensity specified - applies to all at default intensity
+                results.append((cmd, None, intensity))
+                logger.info(f"[Shortcuts] Found {shortcut_name} (all agents, intensity {intensity})")
                 continue
 
-            # Check if any agent name matches the START of the text after the shortcut
+            # Check if text_after starts with a number (intensity)
+            intensity_match = re.match(r'^(\d+)\s*', text_after)
+            if intensity_match:
+                intensity = int(intensity_match.group(1))
+                intensity = max(1, min(10, intensity))  # Clamp to 1-10
+                text_after = text_after[intensity_match.end():].strip()
+
+            if not text_after:
+                # Only intensity specified, no target - applies to all
+                results.append((cmd, None, intensity))
+                logger.info(f"[Shortcuts] Found {shortcut_name} (all agents, intensity {intensity})")
+                continue
+
+            # Check if any agent name matches the START of the remaining text
             # Sort by length descending to match longer names first (e.g., "Dr. Vidya Stern" before "Dr")
             matched_agent = None
             for agent_name in sorted(available_agents, key=len, reverse=True):
@@ -364,12 +440,12 @@ class ShortcutManager:
                         break
 
             if matched_agent:
-                results.append((cmd, matched_agent))
-                logger.info(f"[Shortcuts] Found {shortcut_name} targeting {matched_agent}")
+                results.append((cmd, matched_agent, intensity))
+                logger.info(f"[Shortcuts] Found {shortcut_name} targeting {matched_agent} at intensity {intensity}")
             else:
                 # No agent name match - treat as untargeted
-                results.append((cmd, None))
-                logger.info(f"[Shortcuts] Found {shortcut_name} (no valid target in: '{text_after[:30]}...')")
+                results.append((cmd, None, intensity))
+                logger.info(f"[Shortcuts] Found {shortcut_name} (all agents, intensity {intensity}) - no valid target in: '{text_after[:30]}...'")
 
         return results
 
@@ -393,7 +469,7 @@ class ShortcutManager:
 
         return found_shortcuts
 
-    def apply_shortcuts_as_effects(self, message: str, available_agents: List[str]) -> Dict[str, List[str]]:
+    def apply_shortcuts_as_effects(self, message: str, available_agents: List[str]) -> Dict[str, List[Tuple[str, int]]]:
         """
         Parse shortcuts and apply them as status effects to appropriate agents.
 
@@ -402,27 +478,27 @@ class ShortcutManager:
             available_agents: List of available agent names
 
         Returns:
-            Dict mapping agent_name -> list of effect names applied
+            Dict mapping agent_name -> list of (effect_name, intensity) tuples applied
         """
         parsed = self.parse_shortcut_with_target(message, available_agents)
-        applied: Dict[str, List[str]] = {}
+        applied: Dict[str, List[Tuple[str, int]]] = {}
 
-        for shortcut_data, target_agent in parsed:
+        for shortcut_data, target_agent, intensity in parsed:
             effect_name = shortcut_data.get("name", "Unknown")
 
             if target_agent:
                 # Apply to specific agent
-                StatusEffectManager.apply_effect(target_agent, shortcut_data)
+                StatusEffectManager.apply_effect(target_agent, shortcut_data, intensity)
                 if target_agent not in applied:
                     applied[target_agent] = []
-                applied[target_agent].append(effect_name)
+                applied[target_agent].append((effect_name, intensity))
             else:
                 # Apply to all agents
                 for agent_name in available_agents:
-                    StatusEffectManager.apply_effect(agent_name, shortcut_data)
+                    StatusEffectManager.apply_effect(agent_name, shortcut_data, intensity)
                     if agent_name not in applied:
                         applied[agent_name] = []
-                    applied[agent_name].append(effect_name)
+                    applied[agent_name].append((effect_name, intensity))
 
         return applied
 
@@ -444,8 +520,9 @@ class ShortcutManager:
             return "No shortcuts found in configuration file."
 
         lines = [f"**Status Effect Shortcuts ({len(commands)} total)**\n"]
-        lines.append("*Usage: `!EFFECT` (all agents) or `!EFFECT AgentName` (specific agent)*")
-        lines.append("*Effects last 3 responses, then agents 'sober up'*\n")
+        lines.append("**Syntax:** `!EFFECT` | `!EFFECT 7` | `!EFFECT AgentName` | `!EFFECT 8 AgentName`")
+        lines.append("**Intensity Scale:** 1-2 Threshold | 3-4 Light | 5-6 Common | 7-8 Strong | 9-10 Peak")
+        lines.append("*Default intensity: 5. Effects last 3 responses, then recovery kicks in.*\n")
 
         # Group by category
         categories: Dict[str, List[Dict]] = {}
@@ -591,11 +668,18 @@ def strip_shortcuts_from_message(message: str, available_agents: Optional[List[s
         if not match:
             continue
 
-        # Determine end position - either just the shortcut or shortcut + agent name
+        # Determine end position - shortcut + optional intensity + optional agent name
         end_pos = match.end()
         text_after = result[end_pos:].lstrip()
 
-        # If we have agent names, check if one follows the shortcut
+        # Check for intensity number after shortcut
+        intensity_match = re.match(r'^(\d+)\s*', text_after)
+        if intensity_match:
+            whitespace_before_intensity = len(result[end_pos:]) - len(text_after)
+            end_pos = end_pos + whitespace_before_intensity + intensity_match.end()
+            text_after = text_after[intensity_match.end():].lstrip()
+
+        # If we have agent names, check if one follows the shortcut (and optional intensity)
         if available_agents and text_after:
             for agent_name in sorted(available_agents, key=len, reverse=True):
                 if text_after.lower().startswith(agent_name.lower()):
@@ -606,7 +690,7 @@ def strip_shortcuts_from_message(message: str, available_agents: Optional[List[s
                         end_pos = end_pos + whitespace_len + len(agent_name)
                         break
 
-        # Remove the shortcut (and agent name if found)
+        # Remove the shortcut (and intensity/agent name if found)
         result = result[:match.start()] + result[end_pos:]
 
     # Clean up multiple spaces and leading/trailing whitespace
