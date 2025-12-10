@@ -318,3 +318,7 @@ class ConfigManager:
             print(f"Error loading conversation_history.json: {e}")
             return []
 
+
+# Global instance for use throughout the application
+config_manager = ConfigManager()
+
