@@ -69,6 +69,7 @@ class IDCCConfig:
     generation_timeout_seconds: int = 300  # 5 min per clip max
     use_crossfade: bool = False  # Crossfade between clips (slower)
     crossfade_duration: float = 0.5  # Seconds of crossfade
+    spitball_round_timeout_seconds: int = 45  # Time for humans to submit in each spitball round
 
 
 class IDCCConfigManager:
@@ -276,6 +277,11 @@ class IDCCGameState:
 
     # Human scene collection
     pending_human_scenes: Dict[str, str] = field(default_factory=dict)  # username -> scene prompt
+
+    # Spitball phase human inputs
+    pending_spitball_inputs: Dict[str, str] = field(default_factory=dict)  # username -> their pitch/vote/character
+    spitball_collecting: bool = False  # True when collecting human inputs
+    spitball_round_name: str = ""  # Current round: "pitch", "vote_concept", "character", "vote_character"
 
 
 # ============================================================================
@@ -513,6 +519,113 @@ class InterdimensionalCableGame:
 
         return False
 
+    async def handle_spitball_submission(self, user_name: str, message_content: str) -> bool:
+        """
+        Handle a spitball submission from a human participant during writers' room.
+
+        Args:
+            user_name: Discord username
+            message_content: Full message content
+
+        Returns:
+            True if submission was accepted, False otherwise
+        """
+        if not self.state:
+            return False
+
+        # Only accept during spitballing phase when collecting
+        if self.state.phase != "spitballing" or not self.state.spitball_collecting:
+            return False
+
+        # Check if this user is a registered human participant
+        human_names = [p["name"] for p in self.state.participants if p["type"] == "human"]
+        if user_name not in human_names:
+            return False
+
+        # Don't accept if they already submitted this round
+        if user_name in self.state.pending_spitball_inputs:
+            return False
+
+        # Store their input
+        content = message_content.strip()
+        if content and len(content) > 5:  # Minimum 5 chars
+            self.state.pending_spitball_inputs[user_name] = content
+            logger.info(f"[IDCC:{self.game_id}] {user_name} submitted spitball ({self.state.spitball_round_name}): {content[:50]}...")
+            return True
+
+        return False
+
+    async def _wait_for_human_spitball_inputs(
+        self,
+        round_name: str,
+        human_participants: List[Dict],
+        timeout_seconds: int = None
+    ) -> Dict[str, str]:
+        """
+        Wait for human participants to submit their spitball inputs.
+
+        Args:
+            round_name: Name of round for logging ("pitch", "vote_concept", etc.)
+            human_participants: List of human participant dicts
+            timeout_seconds: How long to wait (default from config)
+
+        Returns:
+            Dict of username -> their submission
+        """
+        if timeout_seconds is None:
+            timeout_seconds = idcc_config.spitball_round_timeout_seconds
+
+        if not human_participants:
+            return {}
+
+        human_names = [p["name"] for p in human_participants]
+
+        # Clear any previous inputs and start collecting
+        self.state.pending_spitball_inputs = {}
+        self.state.spitball_collecting = True
+        self.state.spitball_round_name = round_name
+
+        # Announce waiting for humans
+        human_list = ", ".join(human_names)
+        await self._send_gamemaster_message(
+            f"⏳ **Waiting for humans:** {human_list}\n"
+            f"*You have {timeout_seconds} seconds to submit your response...*"
+        )
+
+        # Wait with periodic checks
+        start_time = time.time()
+        while time.time() - start_time < timeout_seconds:
+            # Check if all humans have submitted
+            submitted = set(self.state.pending_spitball_inputs.keys())
+            if submitted >= set(human_names):
+                logger.info(f"[IDCC:{self.game_id}] All humans submitted for {round_name}")
+                break
+
+            # Check every 2 seconds
+            await asyncio.sleep(2)
+
+            # Reminder at halfway point
+            elapsed = time.time() - start_time
+            if abs(elapsed - timeout_seconds / 2) < 2:
+                remaining = [n for n in human_names if n not in self.state.pending_spitball_inputs]
+                if remaining:
+                    await self._send_gamemaster_message(
+                        f"⏰ **{int(timeout_seconds - elapsed)}s remaining** - Still waiting for: {', '.join(remaining)}"
+                    )
+
+        # Stop collecting
+        self.state.spitball_collecting = False
+
+        # Report results
+        collected = self.state.pending_spitball_inputs.copy()
+        submitted_names = list(collected.keys())
+        if submitted_names:
+            logger.info(f"[IDCC:{self.game_id}] Collected {round_name} from humans: {submitted_names}")
+        else:
+            logger.info(f"[IDCC:{self.game_id}] No human submissions for {round_name}")
+
+        return collected
+
     # ========================================================================
     # PHASE 1: REGISTRATION
     # ========================================================================
@@ -697,28 +810,22 @@ class InterdimensionalCableGame:
         """
         Run the consensus-based writers' room to establish the Show Bible.
 
-        Four rounds with voting:
+        Four rounds with voting (humans AND bots participate):
         1. Pitch concepts (FORMAT + PREMISE + COMEDIC_HOOK)
         2. Vote on pitches + add improvement → locks concept
         3. Propose character packages (DESCRIPTION + VOICE + ARC)
         4. Vote on character packages → locks character
 
-        Result: Complete Show Bible with consensus buy-in.
+        Result: Complete Show Bible with consensus buy-in from all participants.
         """
         self.state.phase = "spitballing"
         spitball_log = []
 
-        await self._send_gamemaster_message(
-            "# 🎬 WRITERS' ROOM\n\n"
-            "Before we generate, we need to agree on what we're making.\n"
-            "**4 rounds of pitching and voting to build consensus.**\n\n"
-            "---\n"
-            "*Round 1: Pitch your concept (FORMAT + PREMISE + THE BIT)*"
-        )
-
-        # Get agent participants for spitballing (bots only)
+        # Get ALL participants - humans AND bots
+        human_participants = [p for p in self.state.participants if p["type"] == "human"]
         agent_participants = [p for p in self.state.participants if p["type"] == "agent" and p["agent_obj"]]
 
+        # Fallback to running agents if no agent participants
         if not agent_participants:
             logger.warning(f"[IDCC:{self.game_id}] No agent participants for spitballing, using fallback")
             from constants import is_image_model
@@ -729,19 +836,48 @@ class InterdimensionalCableGame:
             if available_agents:
                 agent_participants = [{"name": a.name, "type": "agent", "agent_obj": a} for a in available_agents[:3]]
 
-        writers = agent_participants[:3]  # Max 3 writers
-        writer_names = [p["name"] for p in writers]
+        # All writers = humans + up to 3 bots
+        bot_writers = agent_participants[:3]
+        all_writers = human_participants + bot_writers
+        all_writer_names = [p["name"] for p in all_writers]
 
-        if len(writers) < 2:
-            logger.error(f"[IDCC:{self.game_id}] Need at least 2 agents for consensus voting")
+        human_names = [p["name"] for p in human_participants]
+        bot_names = [p["name"] for p in bot_writers]
+
+        if len(all_writers) < 2:
+            logger.error(f"[IDCC:{self.game_id}] Need at least 2 participants for consensus voting")
             return
 
+        # Opening announcement with clear instructions for humans
+        human_instruction = ""
+        if human_participants:
+            human_instruction = (
+                f"\n\n**🎬 HUMANS ({', '.join(human_names)}):** You're part of the writers' room!\n"
+                "Type your responses directly in chat. You have 45 seconds per round.\n"
+            )
+
+        await self._send_gamemaster_message(
+            "# 🎬 WRITERS' ROOM\n\n"
+            "Before we generate, we need to agree on what we're making.\n"
+            "**4 rounds of pitching and voting to build consensus.**"
+            f"{human_instruction}\n"
+            "---\n"
+            "## Round 1: PITCH YOUR CONCEPT\n"
+            "**What to submit:** Your idea for a fake TV show/commercial.\n"
+            "```\n"
+            "FORMAT: [infomercial/news/psa/talk show/cooking/workout/trailer/documentary]\n"
+            "PREMISE: [The absurd situation or product]\n"
+            "THE BIT: [What makes it funny - the comedic hook]\n"
+            "```\n"
+            "*Example: FORMAT: Infomercial. PREMISE: A product that's just a brick you throw at problems. THE BIT: It works disturbingly well.*"
+        )
+
         # =====================================================================
-        # ROUND 1: INITIAL PITCHES
+        # ROUND 1: INITIAL PITCHES (HUMANS + BOTS)
         # =====================================================================
 
-        # Enter game mode for Round 1
-        for participant in writers:
+        # Enter game mode for bot writers
+        for participant in bot_writers:
             agent = participant["agent_obj"]
             game_context_manager.enter_game_mode(agent=agent, game_name="idcc_spitball_round1")
             game_context_manager.update_idcc_context(
@@ -750,8 +886,10 @@ class InterdimensionalCableGame:
                 num_clips=self.num_clips
             )
 
-        round1_pitches = {}  # agent_name -> pitch
-        for participant in writers:
+        round1_pitches = {}  # name -> pitch
+
+        # Get bot pitches first (they respond quickly)
+        for participant in bot_writers:
             agent = participant["agent_obj"]
             try:
                 response = await self._get_agent_idcc_response(
@@ -770,30 +908,48 @@ class InterdimensionalCableGame:
             except Exception as e:
                 logger.error(f"[IDCC:{self.game_id}] Round 1 error for {agent.name}: {e}")
 
+        # Wait for human pitches
+        if human_participants:
+            human_pitches = await self._wait_for_human_spitball_inputs("pitch", human_participants)
+            for name, pitch in human_pitches.items():
+                round1_pitches[name] = pitch
+                spitball_log.append(f"{name} (Pitch): {pitch}")
+                # Echo their submission so everyone sees it formatted
+                await self._send_gamemaster_message(f"**{name}'s Pitch:**\n{pitch}")
+                await asyncio.sleep(1)
+
         if len(round1_pitches) < 2:
             logger.error(f"[IDCC:{self.game_id}] Not enough pitches for voting")
-            for participant in writers:
+            for participant in bot_writers:
                 game_context_manager.exit_game_mode(participant["agent_obj"])
             return
 
         # =====================================================================
-        # ROUND 2: VOTE ON PITCHES
+        # ROUND 2: VOTE ON PITCHES (HUMANS + BOTS)
         # =====================================================================
 
-        await self._send_gamemaster_message(
-            "\n---\n"
-            "*Round 2: Vote for your FAVORITE pitch (not your own) + suggest an improvement*"
-        )
-        await asyncio.sleep(1)
-
-        # Format pitches for voting prompt
+        # Format pitches for display
         all_pitches_text = "\n\n".join([
             f"**{name}'s Pitch:**\n{pitch}"
             for name, pitch in round1_pitches.items()
         ])
 
-        # Update context for voting round
-        for participant in writers:
+        # Build voting prompt with clear instructions
+        pitcher_names = list(round1_pitches.keys())
+        await self._send_gamemaster_message(
+            "\n---\n"
+            "## Round 2: VOTE FOR BEST CONCEPT\n"
+            f"**Pitches submitted:** {', '.join(pitcher_names)}\n\n"
+            "**What to submit:** Vote for your favorite (NOT your own).\n"
+            "```\n"
+            "MY VOTE: [Name of pitcher you're voting for]\n"
+            "```\n"
+            "*You can also add: BECAUSE: [why you like it]*"
+        )
+        await asyncio.sleep(1)
+
+        # Update context for bot voting
+        for participant in bot_writers:
             agent = participant["agent_obj"]
             game_context_manager.update_idcc_context(
                 agent_name=agent.name,
@@ -805,19 +961,19 @@ class InterdimensionalCableGame:
             )
 
         round2_votes = {}  # voter -> voted_for
-        round2_improvements = {}  # voter -> improvement
-        for participant in writers:
+
+        # Get bot votes
+        for participant in bot_writers:
             agent = participant["agent_obj"]
             try:
                 response = await self._get_agent_idcc_response(
                     agent=agent,
-                    user_message="Vote for your favorite pitch (NOT your own) and suggest one improvement. Format: MY VOTE: [Name], MY IMPROVEMENT: [idea]"
+                    user_message="Vote for your favorite pitch (NOT your own). Format: MY VOTE: [Name], BECAUSE: [reason]"
                 )
                 if response:
-                    voted_for = self._parse_vote(response, agent.name, list(round1_pitches.keys()))
+                    voted_for = self._parse_vote(response, agent.name, pitcher_names)
                     if voted_for:
                         round2_votes[agent.name] = voted_for
-                    round2_improvements[agent.name] = response
                     spitball_log.append(f"{agent.name} (Vote): {response}")
                     await self.discord_client.send_message(
                         content=response,
@@ -828,9 +984,20 @@ class InterdimensionalCableGame:
             except Exception as e:
                 logger.error(f"[IDCC:{self.game_id}] Round 2 voting error for {agent.name}: {e}")
 
+        # Wait for human votes
+        if human_participants:
+            human_votes = await self._wait_for_human_spitball_inputs("vote_concept", human_participants)
+            for voter_name, vote_text in human_votes.items():
+                voted_for = self._parse_vote(vote_text, voter_name, pitcher_names)
+                if voted_for:
+                    round2_votes[voter_name] = voted_for
+                    spitball_log.append(f"{voter_name} (Vote): {vote_text}")
+                    await self._send_gamemaster_message(f"**{voter_name} voted for:** {voted_for}")
+                    await asyncio.sleep(1)
+
         # Tally votes for concept
         if round2_votes:
-            concept_winner, concept_votes, was_tie = self._tally_votes(round2_votes, list(round1_pitches.keys()))
+            concept_winner, concept_votes, was_tie = self._tally_votes(round2_votes, pitcher_names)
             vote_summary = ", ".join([f"{name}: {count}" for name, count in concept_votes.items()])
             tie_note = " (tie broken randomly)" if was_tie else ""
 
@@ -843,7 +1010,7 @@ class InterdimensionalCableGame:
             )
         else:
             # No valid votes - pick randomly
-            concept_winner = random.choice(list(round1_pitches.keys()))
+            concept_winner = random.choice(pitcher_names)
             winning_concept = round1_pitches[concept_winner]
             await self._send_gamemaster_message(
                 f"\n**No clear votes - randomly selected:** {concept_winner}'s pitch!"
@@ -852,17 +1019,25 @@ class InterdimensionalCableGame:
         await asyncio.sleep(2)
 
         # =====================================================================
-        # ROUND 3: CHARACTER PACKAGES
+        # ROUND 3: CHARACTER PACKAGES (HUMANS + BOTS)
         # =====================================================================
 
         await self._send_gamemaster_message(
             "\n---\n"
-            "*Round 3: Propose a CHARACTER PACKAGE (Description + Voice + Arc)*"
+            "## Round 3: CREATE THE CHARACTER\n"
+            f"**Winning concept:** {winning_concept[:150]}{'...' if len(winning_concept) > 150 else ''}\n\n"
+            "**What to submit:** Design the main character/host.\n"
+            "```\n"
+            "LOOK: [What they look like - be specific for video generation]\n"
+            "VOICE: [How they talk - accent, energy, catchphrases]\n"
+            "ARC: [How they escalate across scenes]\n"
+            "```\n"
+            "*Example: LOOK: Middle-aged man in stained lab coat, wild Einstein hair. VOICE: Manic infomercial energy, keeps saying 'But wait!' ARC: Gets increasingly unhinged as product fails.*"
         )
         await asyncio.sleep(1)
 
-        # Update context for character round
-        for participant in writers:
+        # Update context for bot character proposals
+        for participant in bot_writers:
             agent = participant["agent_obj"]
             game_context_manager.update_idcc_context(
                 agent_name=agent.name,
@@ -873,13 +1048,15 @@ class InterdimensionalCableGame:
                 turn_context=f"\n**WINNING CONCEPT ({concept_winner}):**\n{winning_concept}"
             )
 
-        round3_characters = {}  # agent_name -> character package
-        for participant in writers:
+        round3_characters = {}  # name -> character package
+
+        # Get bot character proposals
+        for participant in bot_writers:
             agent = participant["agent_obj"]
             try:
                 response = await self._get_agent_idcc_response(
                     agent=agent,
-                    user_message="Propose your CHARACTER PACKAGE for this concept. Format: CHARACTER DESCRIPTION: [visual], CHARACTER VOICE: [energy], ARC: [escalation]"
+                    user_message="Propose your CHARACTER PACKAGE for this concept. Format: LOOK: [visual], VOICE: [energy], ARC: [escalation]"
                 )
                 if response:
                     round3_characters[agent.name] = response
@@ -893,6 +1070,15 @@ class InterdimensionalCableGame:
             except Exception as e:
                 logger.error(f"[IDCC:{self.game_id}] Round 3 error for {agent.name}: {e}")
 
+        # Wait for human character proposals
+        if human_participants:
+            human_chars = await self._wait_for_human_spitball_inputs("character", human_participants)
+            for name, char_proposal in human_chars.items():
+                round3_characters[name] = char_proposal
+                spitball_log.append(f"{name} (Character): {char_proposal}")
+                await self._send_gamemaster_message(f"**{name}'s Character:**\n{char_proposal}")
+                await asyncio.sleep(1)
+
         if len(round3_characters) < 2:
             # Fallback - use first character package
             if round3_characters:
@@ -900,28 +1086,34 @@ class InterdimensionalCableGame:
                 winning_character = round3_characters[character_winner]
             else:
                 logger.error(f"[IDCC:{self.game_id}] No character packages submitted")
-                for participant in writers:
+                for participant in bot_writers:
                     game_context_manager.exit_game_mode(participant["agent_obj"])
                 return
         else:
             # =====================================================================
-            # ROUND 4: VOTE ON CHARACTER PACKAGES
+            # ROUND 4: VOTE ON CHARACTER PACKAGES (HUMANS + BOTS)
             # =====================================================================
 
+            char_names = list(round3_characters.keys())
             await self._send_gamemaster_message(
                 "\n---\n"
-                "*Round 4: Vote for the BEST character package (not your own)*"
+                "## Round 4: VOTE FOR BEST CHARACTER\n"
+                f"**Characters submitted:** {', '.join(char_names)}\n\n"
+                "**What to submit:** Vote for your favorite (NOT your own).\n"
+                "```\n"
+                "MY VOTE: [Name of character creator you're voting for]\n"
+                "```"
             )
             await asyncio.sleep(1)
 
-            # Format character packages for voting
+            # Format character packages for bot context
             all_characters_text = "\n\n".join([
                 f"**{name}'s Character:**\n{char}"
                 for name, char in round3_characters.items()
             ])
 
-            # Update context for final vote
-            for participant in writers:
+            # Update context for bot final vote
+            for participant in bot_writers:
                 agent = participant["agent_obj"]
                 game_context_manager.update_idcc_context(
                     agent_name=agent.name,
@@ -933,7 +1125,9 @@ class InterdimensionalCableGame:
                 )
 
             round4_votes = {}
-            for participant in writers:
+
+            # Get bot votes
+            for participant in bot_writers:
                 agent = participant["agent_obj"]
                 try:
                     response = await self._get_agent_idcc_response(
@@ -941,7 +1135,7 @@ class InterdimensionalCableGame:
                         user_message="Vote for the best character package (NOT your own). Format: MY VOTE: [Name]"
                     )
                     if response:
-                        voted_for = self._parse_vote(response, agent.name, list(round3_characters.keys()))
+                        voted_for = self._parse_vote(response, agent.name, char_names)
                         if voted_for:
                             round4_votes[agent.name] = voted_for
                         spitball_log.append(f"{agent.name} (Char Vote): {response}")
@@ -954,9 +1148,20 @@ class InterdimensionalCableGame:
                 except Exception as e:
                     logger.error(f"[IDCC:{self.game_id}] Round 4 voting error for {agent.name}: {e}")
 
+            # Wait for human votes
+            if human_participants:
+                human_char_votes = await self._wait_for_human_spitball_inputs("vote_character", human_participants)
+                for voter_name, vote_text in human_char_votes.items():
+                    voted_for = self._parse_vote(vote_text, voter_name, char_names)
+                    if voted_for:
+                        round4_votes[voter_name] = voted_for
+                        spitball_log.append(f"{voter_name} (Char Vote): {vote_text}")
+                        await self._send_gamemaster_message(f"**{voter_name} voted for:** {voted_for}")
+                        await asyncio.sleep(1)
+
             # Tally votes for character
             if round4_votes:
-                character_winner, char_votes, was_tie = self._tally_votes(round4_votes, list(round3_characters.keys()))
+                character_winner, char_votes, was_tie = self._tally_votes(round4_votes, char_names)
                 vote_summary = ", ".join([f"{name}: {count}" for name, count in char_votes.items()])
                 tie_note = " (tie broken randomly)" if was_tie else ""
 
@@ -967,14 +1172,14 @@ class InterdimensionalCableGame:
                     f"**🏆 WINNER{tie_note}:** {character_winner}'s character!"
                 )
             else:
-                character_winner = random.choice(list(round3_characters.keys()))
+                character_winner = random.choice(char_names)
                 winning_character = round3_characters[character_winner]
                 await self._send_gamemaster_message(
                     f"\n**No clear votes - randomly selected:** {character_winner}'s character!"
                 )
 
-        # Exit game mode for all writers
-        for participant in writers:
+        # Exit game mode for all bot writers
+        for participant in bot_writers:
             game_context_manager.exit_game_mode(participant["agent_obj"])
 
         # =====================================================================

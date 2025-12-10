@@ -467,6 +467,23 @@ Use with: `!MODEL <agent> <model_id>`"""
                         await asyncio.sleep(0.3)
                 return
 
+            # Handle IDCC spitball submissions during writers' room (humans participating in voting/pitching)
+            try:
+                from agent_games.interdimensional_cable import idcc_manager
+                if idcc_manager.is_game_active() and idcc_manager.active_game:
+                    game = idcc_manager.active_game
+                    # Check if collecting spitball inputs from humans
+                    if game.state and game.state.spitball_collecting:
+                        success = await game.handle_spitball_submission(author_name, content)
+                        if success:
+                            await message.add_reaction("✅")
+                            logger.info(f"[Discord] {author_name} submitted spitball input for IDCC ({game.state.spitball_round_name})")
+                            # Continue processing - let the message be seen by everyone
+            except ImportError:
+                pass
+            except Exception as e:
+                logger.error(f"[Discord] Error checking IDCC spitball: {e}")
+
             # Handle [SCENE] submissions for Interdimensional Cable game (only when IDCC is active)
             if "[SCENE]" in content.upper():
                 try:
