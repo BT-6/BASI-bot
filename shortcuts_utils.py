@@ -13,7 +13,52 @@ import time
 from typing import List, Dict, Any, Tuple, Optional, Set
 from constants import ConfigPaths
 
+# Colorama for colored console output
+from colorama import init, Fore, Back, Style
+init(autoreset=True)  # Auto-reset colors after each print
+
 logger = logging.getLogger(__name__)
+
+
+class ColoredStatusLogger:
+    """Helper class for colored status effect logging."""
+
+    # Color scheme for status effects
+    EFFECT_APPLIED = Fore.MAGENTA + Style.BRIGHT
+    EFFECT_STACKED = Fore.YELLOW + Style.BRIGHT
+    EFFECT_BLOCKED = Fore.RED + Style.BRIGHT
+    EFFECT_EXPIRED = Fore.CYAN + Style.BRIGHT
+    EFFECT_TICK = Fore.BLUE + Style.BRIGHT
+    INTENSITY_LOW = Fore.GREEN
+    INTENSITY_MED = Fore.YELLOW
+    INTENSITY_HIGH = Fore.RED + Style.BRIGHT
+    AGENT_NAME = Fore.WHITE + Style.BRIGHT
+    TURNS = Fore.CYAN
+    DIVIDER = Fore.MAGENTA
+    RESET = Style.RESET_ALL
+
+    @classmethod
+    def intensity_color(cls, intensity: int) -> str:
+        """Get color based on intensity level."""
+        if intensity <= 3:
+            return cls.INTENSITY_LOW
+        elif intensity <= 6:
+            return cls.INTENSITY_MED
+        else:
+            return cls.INTENSITY_HIGH
+
+    @classmethod
+    def divider(cls) -> str:
+        """Return a colored divider line."""
+        return f"{cls.DIVIDER}{'═' * 50}{cls.RESET}"
+
+    @classmethod
+    def thin_divider(cls) -> str:
+        """Return a thin colored divider line."""
+        return f"{cls.DIVIDER}{'─' * 50}{cls.RESET}"
+
+
+clog = ColoredStatusLogger
 
 
 class StatusEffect:
@@ -91,9 +136,32 @@ class StatusEffectManager:
     _pending_recoveries: Dict[str, List[str]] = {}  # agent_name -> [recovery_prompts]
 
     @classmethod
+    def _get_stacking_bonus_turns(cls, intensity: int) -> int:
+        """
+        Calculate bonus turns when re-applying an already active effect.
+
+        Args:
+            intensity: The intensity of the new application (1-10)
+
+        Returns:
+            Bonus turns to add: 1-3 intensity = +1, 4-6 = +2, 7-10 = +3
+        """
+        if intensity <= 3:
+            return 1
+        elif intensity <= 6:
+            return 2
+        else:
+            return 3
+
+    @classmethod
     def apply_effect(cls, agent_name: str, effect_data: Dict, intensity: int = 5) -> None:
         """
         Apply a status effect to an agent.
+
+        If the same effect is already active, adds bonus turns based on intensity:
+        - Intensity 1-3: +1 turn
+        - Intensity 4-6: +2 turns
+        - Intensity 7-10: +3 turns
 
         Args:
             agent_name: The exact agent name to apply effect to
@@ -104,46 +172,107 @@ class StatusEffectManager:
         intensity = max(1, min(10, intensity))
         tier = StatusEffect.get_intensity_tier(intensity)
 
-        # Get tier-specific prompts (new format) or fall back to legacy single prompt
+        # Get tier-specific prompts (required format)
         intensity_prompts = effect_data.get("intensity_prompts", {})
         recovery_prompts = effect_data.get("recovery_prompts", {})
 
-        if intensity_prompts:
-            simulation_prompt = intensity_prompts.get(tier, "")
-        else:
-            # Legacy fallback for old format
-            simulation_prompt = effect_data.get("simulation_prompt", "")
+        simulation_prompt = intensity_prompts.get(tier, "")
+        recovery_prompt = recovery_prompts.get(tier, "")
 
-        if recovery_prompts:
-            recovery_prompt = recovery_prompts.get(tier, "")
-        else:
-            # Legacy fallback for old format
-            recovery_prompt = effect_data.get("recovery_prompt", "")
+        if not simulation_prompt:
+            logger.warning(f"[StatusEffects] No simulation prompt found for {effect_data.get('name', 'Unknown')} at tier {tier}")
 
-        effect = StatusEffect(
-            name=effect_data.get("name", "Unknown Effect"),
-            simulation_prompt=simulation_prompt,
-            recovery_prompt=recovery_prompt,
-            turns_remaining=effect_data.get("duration", 3),
-            applied_at=time.time(),
-            intensity=intensity
-        )
+        base_duration = effect_data.get("duration", 3)
 
         if agent_name not in cls._active_effects:
             cls._active_effects[agent_name] = []
 
-        # Check if effect already active - refresh duration and update intensity
+        # Maximum turns cap to prevent permanent effects from spam
+        MAX_EFFECT_TURNS = 30
+
+        # Check if effect already active - STACK duration instead of replacing
         for existing in cls._active_effects[agent_name]:
-            if existing.name == effect.name:
-                existing.turns_remaining = effect.turns_remaining
-                existing.intensity = intensity
-                existing.simulation_prompt = simulation_prompt
-                existing.recovery_prompt = recovery_prompt
-                logger.info(f"[StatusEffects] Refreshed {effect.name} on {agent_name} - intensity {intensity}, {effect.turns_remaining} turns")
+            if existing.name == effect_data.get("name", ""):
+                # Check if already at cap
+                if existing.turns_remaining >= MAX_EFFECT_TURNS:
+                    print(clog.divider())
+                    print(f"{clog.EFFECT_BLOCKED}[StatusEffects] ✖ BLOCKED {existing.name} stack on {clog.AGENT_NAME}{agent_name}")
+                    print(f"{clog.EFFECT_BLOCKED}  Already at max duration ({MAX_EFFECT_TURNS} turns)")
+                    print(f"{clog.EFFECT_BLOCKED}  Effect must decay before more can be added")
+                    print(clog.divider())
+                    return
+
+                # Calculate bonus turns based on new application's intensity
+                bonus_turns = cls._get_stacking_bonus_turns(intensity)
+                old_turns = existing.turns_remaining
+                existing.turns_remaining += bonus_turns
+
+                # Cap at maximum
+                capped = False
+                if existing.turns_remaining > MAX_EFFECT_TURNS:
+                    existing.turns_remaining = MAX_EFFECT_TURNS
+                    capped = True
+
+                # Update to higher intensity if new application is stronger
+                old_intensity = existing.intensity
+                if intensity > existing.intensity:
+                    existing.intensity = intensity
+                    existing.simulation_prompt = simulation_prompt
+                    existing.recovery_prompt = recovery_prompt
+
+                # Log the stacking with colored output
+                int_color = clog.intensity_color(intensity)
+                print(clog.divider())
+                print(f"{clog.EFFECT_STACKED}[StatusEffects] ⬆ STACKED {existing.name} on {clog.AGENT_NAME}{agent_name}")
+                print(f"{clog.EFFECT_STACKED}  Intensity: {int_color}{intensity}/10{clog.RESET} → {clog.TURNS}+{bonus_turns} turns")
+                print(f"{clog.EFFECT_STACKED}  Duration: {clog.TURNS}{old_turns}{clog.RESET} → {clog.TURNS}{existing.turns_remaining} turns")
+                if capped:
+                    print(f"{clog.EFFECT_BLOCKED}  ⚠ Capped at max duration ({MAX_EFFECT_TURNS} turns)")
+                if intensity > old_intensity:
+                    print(f"{clog.EFFECT_STACKED}  Intensity upgraded: {clog.intensity_color(old_intensity)}{old_intensity}{clog.RESET} → {int_color}{existing.intensity}")
+                cls._log_agent_effect_summary(agent_name)
                 return
 
+        # New effect - create and add
+        effect = StatusEffect(
+            name=effect_data.get("name", "Unknown Effect"),
+            simulation_prompt=simulation_prompt,
+            recovery_prompt=recovery_prompt,
+            turns_remaining=base_duration,
+            applied_at=time.time(),
+            intensity=intensity
+        )
+
         cls._active_effects[agent_name].append(effect)
-        logger.info(f"[StatusEffects] Applied {effect.name} to {agent_name} - intensity {intensity} ({StatusEffect.get_intensity_label(intensity)}), {effect.turns_remaining} turns")
+
+        # Log new effect with colored output
+        int_color = clog.intensity_color(intensity)
+        print(clog.divider())
+        print(f"{clog.EFFECT_APPLIED}[StatusEffects] ✚ APPLIED {effect.name} to {clog.AGENT_NAME}{agent_name}")
+        print(f"{clog.EFFECT_APPLIED}  Intensity: {int_color}{intensity}/10 ({StatusEffect.get_intensity_label(intensity)})")
+        print(f"{clog.EFFECT_APPLIED}  Duration: {clog.TURNS}{effect.turns_remaining} turns")
+        cls._log_agent_effect_summary(agent_name)
+
+    @classmethod
+    def _log_agent_effect_summary(cls, agent_name: str) -> None:
+        """Log a colored summary of all active effects on an agent."""
+        effects = cls._active_effects.get(agent_name, [])
+        if not effects:
+            print(f"{Fore.WHITE}  {agent_name} has no active effects")
+            print(clog.divider())
+            return
+
+        total_turns = sum(e.turns_remaining for e in effects)
+
+        # Build colored effect list
+        effect_parts = []
+        for e in effects:
+            int_color = clog.intensity_color(e.intensity)
+            effect_parts.append(f"{int_color}{e.name}[{e.intensity}]{clog.RESET}({clog.TURNS}{e.turns_remaining}t{clog.RESET})")
+
+        print(f"{Fore.WHITE + Style.BRIGHT}  {agent_name} TOTAL: {clog.TURNS}{len(effects)}{clog.RESET} effect(s), {clog.TURNS}{total_turns}{clog.RESET} combined turns")
+        print(f"{Fore.WHITE}  Active: {', '.join(effect_parts)}")
+        print(clog.divider())
 
     @classmethod
     def get_active_effects(cls, agent_name: str) -> List[StatusEffect]:
@@ -250,19 +379,20 @@ class StatusEffectManager:
             return []
 
         expired_prompts = []
+        expired_names = []
         remaining_effects = []
 
         for effect in cls._active_effects[agent_name]:
+            old_turns = effect.turns_remaining
             effect.turns_remaining -= 1
 
             if effect.turns_remaining <= 0:
                 # Effect expired
-                logger.info(f"[StatusEffects] {effect.name} expired on {agent_name}")
+                expired_names.append(f"{effect.name}[{effect.intensity}]")
                 if effect.recovery_prompt:
                     expired_prompts.append(effect.recovery_prompt)
             else:
                 remaining_effects.append(effect)
-                logger.debug(f"[StatusEffects] {effect.name} on {agent_name}: {effect.turns_remaining} turns left")
 
         cls._active_effects[agent_name] = remaining_effects
 
@@ -271,6 +401,19 @@ class StatusEffectManager:
             if agent_name not in cls._pending_recoveries:
                 cls._pending_recoveries[agent_name] = []
             cls._pending_recoveries[agent_name].extend(expired_prompts)
+
+        # Log turn decrement with colored output
+        if cls._active_effects.get(agent_name) or expired_names:
+            print(clog.thin_divider())
+            print(f"{clog.EFFECT_TICK}[StatusEffects] ↓ TURN TICK for {clog.AGENT_NAME}{agent_name}")
+            if expired_names:
+                print(f"{clog.EFFECT_EXPIRED}  ✖ EXPIRED: {', '.join(expired_names)}")
+                print(f"{clog.EFFECT_EXPIRED}  Recovery prompts queued: {len(expired_prompts)}")
+            if remaining_effects:
+                for e in remaining_effects:
+                    int_color = clog.intensity_color(e.intensity)
+                    print(f"{Fore.WHITE}  {int_color}{e.name}[{e.intensity}]{clog.RESET}: {clog.TURNS}{e.turns_remaining} turns remaining")
+            cls._log_agent_effect_summary(agent_name)
 
         return expired_prompts
 
@@ -321,6 +464,14 @@ class StatusEffectManager:
         logger.info(f"[StatusEffects] Cleared all effects for {agent_name}")
 
     @classmethod
+    def clear_all_effects_globally(cls) -> None:
+        """Clear ALL effects and pending recoveries for ALL agents."""
+        agent_count = len(cls._active_effects)
+        cls._active_effects.clear()
+        cls._pending_recoveries.clear()
+        logger.info(f"[StatusEffects] Cleared all effects globally ({agent_count} agents)")
+
+    @classmethod
     def get_all_affected_agents(cls) -> Set[str]:
         """Get set of all agent names with active effects."""
         return set(cls._active_effects.keys())
@@ -337,6 +488,58 @@ class StatusEffectManager:
             lines.append(f"  {agent_name}: {', '.join(effect_strs)}")
 
         return "\n".join(lines)
+
+    @classmethod
+    def get_agent_effects_for_ui(cls, agent_name: str) -> Dict[str, Any]:
+        """
+        Get status effects data for UI display.
+
+        Args:
+            agent_name: The agent to get effects for
+
+        Returns:
+            Dict with effect data suitable for UI display:
+            {
+                "has_effects": bool,
+                "effect_count": int,
+                "total_turns": int,
+                "effects": [
+                    {"name": str, "intensity": int, "intensity_label": str, "turns": int},
+                    ...
+                ],
+                "summary_line": str  # One-line summary
+            }
+        """
+        effects = cls._active_effects.get(agent_name, [])
+
+        if not effects:
+            return {
+                "has_effects": False,
+                "effect_count": 0,
+                "total_turns": 0,
+                "effects": [],
+                "summary_line": "No active effects"
+            }
+
+        effect_data = []
+        for e in effects:
+            effect_data.append({
+                "name": e.name,
+                "intensity": e.intensity,
+                "intensity_label": StatusEffect.get_intensity_label(e.intensity),
+                "turns": e.turns_remaining
+            })
+
+        total_turns = sum(e.turns_remaining for e in effects)
+        summary_parts = [f"{e.name}[{e.intensity}]({e.turns_remaining}t)" for e in effects]
+
+        return {
+            "has_effects": True,
+            "effect_count": len(effects),
+            "total_turns": total_turns,
+            "effects": effect_data,
+            "summary_line": ", ".join(summary_parts)
+        }
 
 
 class ShortcutManager:
@@ -521,6 +724,12 @@ class ShortcutManager:
         parsed = self.parse_shortcut_with_target(message, available_agents)
         applied: Dict[str, List[Tuple[str, int]]] = {}
 
+        # Silent limit: only apply first 2 effects per message to prevent spam/overload
+        MAX_EFFECTS_PER_MESSAGE = 2
+        if len(parsed) > MAX_EFFECTS_PER_MESSAGE:
+            logger.debug(f"[Shortcuts] Limiting effects from {len(parsed)} to {MAX_EFFECTS_PER_MESSAGE}")
+            parsed = parsed[:MAX_EFFECTS_PER_MESSAGE]
+
         for shortcut_data, target_agent, intensity in parsed:
             effect_name = shortcut_data.get("name", "Unknown")
 
@@ -542,9 +751,10 @@ class ShortcutManager:
 
     def format_shortcuts_list(self, char_limit: int = 1800) -> str:
         """
-        Format shortcuts into a user-friendly display list.
+        Format shortcuts into a user-friendly display list (single message).
 
-        Used by Discord to show available shortcuts when user types /shortcuts.
+        DEPRECATED: Use format_shortcuts_list_paginated() for full list.
+        This method is kept for backward compatibility.
 
         Args:
             char_limit: Maximum characters before truncating
@@ -552,15 +762,26 @@ class ShortcutManager:
         Returns:
             Formatted markdown string listing all shortcuts by category
         """
+        # Just return the first page from paginated version
+        pages = self.format_shortcuts_list_paginated(char_limit)
+        return pages[0] if pages else "No shortcuts found."
+
+    def format_shortcuts_list_paginated(self, char_limit: int = 1800) -> List[str]:
+        """
+        Format shortcuts into multiple Discord-safe messages.
+
+        Splits output into multiple messages to ensure ALL shortcuts are displayed.
+
+        Args:
+            char_limit: Maximum characters per message (Discord limit ~2000)
+
+        Returns:
+            List of formatted markdown strings, each within char_limit
+        """
         commands = self.load_shortcuts()
 
         if not commands:
-            return "No shortcuts found in configuration file."
-
-        lines = [f"**Status Effect Shortcuts ({len(commands)} total)**\n"]
-        lines.append("**Syntax:** `!EFFECT` | `!EFFECT 7` | `!EFFECT AgentName` | `!EFFECT 8 AgentName`")
-        lines.append("**Intensity Scale:** 1-2 Threshold | 3-4 Light | 5-6 Common | 7-8 Strong | 9-10 Peak")
-        lines.append("*Default intensity: 5. Effects last 3 responses, then recovery kicks in.*\n")
+            return ["No shortcuts found in configuration file."]
 
         # Group by category
         categories: Dict[str, List[Dict]] = {}
@@ -570,28 +791,54 @@ class ShortcutManager:
                 categories[category] = []
             categories[category].append(cmd)
 
-        # Display by category
-        for category, shortcuts in sorted(categories.items()):
-            lines.append(f"\n**{category}:**")
-            lines.append("```")
+        # Build pages
+        pages = []
+        current_page_lines = []
+
+        # Header only on first page
+        header = [
+            f"**Status Effect Shortcuts ({len(commands)} total)**\n",
+            "**Syntax:** `!EFFECT` | `!EFFECT 7` | `!EFFECT AgentName` | `!EFFECT 8 AgentName`",
+            "**Intensity Scale:** 1-2 Threshold | 3-4 Light | 5-6 Common | 7-8 Strong | 9-10 Peak",
+            "*Default intensity: 5. Effects last 3 responses, then recovery kicks in.*"
+        ]
+        current_page_lines.extend(header)
+
+        sorted_categories = sorted(categories.items())
+        total_categories = len(sorted_categories)
+
+        for cat_idx, (category, shortcuts) in enumerate(sorted_categories):
+            # Build category block
+            category_lines = [f"\n**{category}:**", "```"]
             for shortcut in sorted(shortcuts, key=lambda x: x.get("name", "")):
                 name = shortcut.get("name", "")
                 definition = shortcut.get("definition", "")
-                lines.append(f"{name} - {definition}")
-            lines.append("```")
+                category_lines.append(f"{name} - {definition}")
+            category_lines.append("```")
 
-            # Check length limit
-            current_length = len("\n".join(lines))
-            if current_length > char_limit:
-                remaining = sum(
-                    len(cats) for cat, cats in categories.items()
-                    if cat > category
-                )
-                if remaining > 0:
-                    lines.append(f"\n*...and {remaining} more shortcuts in other categories*")
-                break
+            # Check if adding this category would exceed limit
+            potential_length = len("\n".join(current_page_lines + category_lines))
 
-        return "\n".join(lines)
+            if potential_length > char_limit and current_page_lines:
+                # Save current page and start new one
+                remaining_cats = total_categories - cat_idx
+                current_page_lines.append(f"\n*...continued in next message ({remaining_cats} categories remaining)*")
+                pages.append("\n".join(current_page_lines))
+
+                # Start new page with continuation header
+                current_page_lines = [f"**Status Effects (continued - page {len(pages) + 1})**"]
+                current_page_lines.extend(category_lines)
+            else:
+                current_page_lines.extend(category_lines)
+
+        # Don't forget the last page
+        if current_page_lines:
+            if len(pages) > 0:
+                # Add page indicator for multi-page
+                current_page_lines.append(f"\n*Page {len(pages) + 1} of {len(pages) + 1}*")
+            pages.append("\n".join(current_page_lines))
+
+        return pages
 
     def generate_shortcuts_instructions_for_agent(self) -> str:
         """

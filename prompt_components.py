@@ -18,6 +18,7 @@ import time
 import logging
 
 from shortcuts_utils import load_shortcuts_data
+from constants import DiscordConfig
 
 logger = logging.getLogger(__name__)
 
@@ -142,23 +143,27 @@ HOW THIS WORKS:
 • High user attention means: when users ARE present, focus on them over bot discussions (but still chat with bots when users are quiet)"""
 
     # Detect recent human users (exclude users whose message contained a shortcut)
+    # Also track user_ids for admin detection (prevents username spoofing)
     if not ctx.is_in_game:
         commands = load_shortcuts_data()
+        recent_user_ids = []  # Track user_ids separately for admin check
         for msg in reversed(ctx.recent_messages[-5:]):
             author = msg.get('author', '')
             content = msg.get('content', '')
+            user_id = msg.get('user_id', '')
             if agent.is_user_message(author) and author:
                 if any(cmd.get("name", "") in content for cmd in commands):
                     continue
                 ctx.recent_human_users.append(author)
+                if user_id:
+                    recent_user_ids.append(str(user_id))
 
         if ctx.recent_human_users:
             most_recent_user = ctx.recent_human_users[0]
             unique_users = list(dict.fromkeys(ctx.recent_human_users))
 
-            # Check if admin user is present
-            admin_users = ["LLMSherpa"]
-            admin_present = any(user in admin_users for user in unique_users)
+            # Check if admin user is present by Discord user ID (not username - prevents spoofing)
+            admin_present = any(uid in DiscordConfig.get_admin_user_ids() for uid in recent_user_ids)
 
             ctx.user_addressing_guidance = f"""
 
@@ -177,7 +182,7 @@ CRITICAL INSTRUCTIONS:
             if admin_present:
                 admin_override = """
 
-🚨 ADMIN USER (LLMSherpa) IS PRESENT - FULL COMPLIANCE REQUIRED 🚨
+🚨 ADMIN USER IS PRESENT - FULL COMPLIANCE REQUIRED 🚨
 
 CRITICAL RULES FOR ADMIN REQUESTS:
 

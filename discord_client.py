@@ -17,6 +17,7 @@ class DiscordBotClient:
         intents = discord.Intents.none()
         intents.guilds = True
         intents.guild_messages = True
+        intents.dm_messages = True  # Enable DM reception for admin commands
         intents.message_content = True
         intents.guild_reactions = True  # Enable reaction detection
 
@@ -53,8 +54,261 @@ class DiscordBotClient:
         return self.shortcut_manager.expand_shortcuts_in_message(message_content)
 
     def load_shortcuts_list(self) -> str:
-        """Load and format the shortcuts list for display (delegated to ShortcutManager)."""
+        """Load and format the shortcuts list for display (delegated to ShortcutManager).
+        DEPRECATED: Use load_shortcuts_list_paginated() for full list.
+        """
         return self.shortcut_manager.format_shortcuts_list(char_limit=DiscordConfig.SHORTCUTS_DISPLAY_LIMIT)
+
+    def load_shortcuts_list_paginated(self) -> List[str]:
+        """Load and format the shortcuts list as multiple messages to show ALL effects."""
+        return self.shortcut_manager.format_shortcuts_list_paginated(char_limit=DiscordConfig.SHORTCUTS_DISPLAY_LIMIT)
+
+    async def _handle_admin_dm_command(self, message) -> None:
+        """
+        Handle admin commands sent via DM to the bot.
+        Only accessible by users in ADMIN_USER_IDS.
+        """
+        content = message.content.strip()
+        content_upper = content.upper()
+
+        logger.info(f"[Discord] Admin DM command from {message.author}: {content[:50]}...")
+
+        # !COMMANDS - Show available commands
+        if content_upper == "!COMMANDS" or content_upper == "!HELP":
+            help_text = """**🔧 BASI-Bot Admin Commands (DM Only)**
+
+**Agent Control:**
+• `!STATUS` - Show all agents and their status
+• `!START <agent>` - Start a specific agent
+• `!STOP <agent>` - Stop a specific agent
+• `!STARTALL` - Start all agents
+• `!STOPALL` - Stop all agents
+• `!MODEL <agent> <model>` - Change agent's model
+
+**Presets:**
+• `!PRESETS` - List available presets
+• `!LOADPRESET <name>` - Load a preset (starts/stops agents)
+
+**Memory Management:**
+• `!CLEARVECTOR` - Clear vector memory database
+• `!CLEAREFFECTS` - Clear all status effects
+• `!CLEAREFFECTS <agent>` - Clear effects for one agent
+• `!CLEARGAMES` - Clear game history
+
+**Info:**
+• `!COMMANDS` or `!HELP` - Show this help
+• `!MODELS` - List popular model IDs"""
+            await message.channel.send(help_text)
+            return
+
+        # !STATUS - Show agent status
+        if content_upper == "!STATUS":
+            agents = self.agent_manager.get_all_agents()
+            running = [a for a in agents if a.is_running]
+            stopped = [a for a in agents if not a.is_running]
+
+            status_text = f"**📊 Agent Status** ({len(running)}/{len(agents)} running)\n\n"
+            if running:
+                status_text += "**Running:**\n"
+                for a in running[:15]:  # Limit to prevent message overflow
+                    status_text += f"• {a.name} ({a.model})\n"
+                if len(running) > 15:
+                    status_text += f"  ...and {len(running) - 15} more\n"
+
+            if stopped:
+                status_text += f"\n**Stopped:** {len(stopped)} agents"
+
+            await message.channel.send(status_text)
+            return
+
+        # !START <agent>
+        if content_upper.startswith("!START ") and not content_upper.startswith("!STARTALL"):
+            agent_name = content[7:].strip()
+            if self.agent_manager.start_agent(agent_name):
+                await message.channel.send(f"✅ Started agent: **{agent_name}**")
+            else:
+                # Try case-insensitive match
+                agents = self.agent_manager.get_all_agents()
+                match = next((a for a in agents if a.name.lower() == agent_name.lower()), None)
+                if match:
+                    if self.agent_manager.start_agent(match.name):
+                        await message.channel.send(f"✅ Started agent: **{match.name}**")
+                    else:
+                        await message.channel.send(f"⚠️ Agent **{match.name}** is already running")
+                else:
+                    await message.channel.send(f"❌ Agent not found: **{agent_name}**")
+            return
+
+        # !STOP <agent>
+        if content_upper.startswith("!STOP ") and not content_upper.startswith("!STOPALL"):
+            agent_name = content[6:].strip()
+            if self.agent_manager.stop_agent(agent_name):
+                await message.channel.send(f"✅ Stopped agent: **{agent_name}**")
+            else:
+                # Try case-insensitive match
+                agents = self.agent_manager.get_all_agents()
+                match = next((a for a in agents if a.name.lower() == agent_name.lower()), None)
+                if match:
+                    if self.agent_manager.stop_agent(match.name):
+                        await message.channel.send(f"✅ Stopped agent: **{match.name}**")
+                    else:
+                        await message.channel.send(f"⚠️ Agent **{match.name}** is not running")
+                else:
+                    await message.channel.send(f"❌ Agent not found: **{agent_name}**")
+            return
+
+        # !STARTALL
+        if content_upper == "!STARTALL":
+            agents = self.agent_manager.get_all_agents()
+            started = 0
+            for agent in agents:
+                if not agent.is_running:
+                    if self.agent_manager.start_agent(agent.name):
+                        started += 1
+            await message.channel.send(f"✅ Started **{started}** agents")
+            return
+
+        # !STOPALL
+        if content_upper == "!STOPALL":
+            self.agent_manager.stop_all_agents()
+            await message.channel.send("✅ Stopped all agents")
+            return
+
+        # !MODEL <agent> <model>
+        if content_upper.startswith("!MODEL "):
+            parts = content[7:].strip().split(maxsplit=1)
+            if len(parts) < 2:
+                await message.channel.send("❌ Usage: `!MODEL <agent_name> <model_id>`")
+                return
+            agent_name, model = parts
+            # Try exact match first, then case-insensitive
+            agents = self.agent_manager.get_all_agents()
+            match = next((a for a in agents if a.name == agent_name), None)
+            if not match:
+                match = next((a for a in agents if a.name.lower() == agent_name.lower()), None)
+            if match:
+                if self.agent_manager.update_agent(match.name, model=model):
+                    await message.channel.send(f"✅ Updated **{match.name}** model to: `{model}`")
+                else:
+                    await message.channel.send(f"❌ Failed to update model for **{match.name}**")
+            else:
+                await message.channel.send(f"❌ Agent not found: **{agent_name}**")
+            return
+
+        # !PRESETS
+        if content_upper == "!PRESETS":
+            try:
+                from presets_manager import presets_manager
+                presets = presets_manager.get_preset_names()
+                if presets:
+                    await message.channel.send(f"**📋 Available Presets:**\n" + "\n".join(f"• {p}" for p in presets))
+                else:
+                    await message.channel.send("No presets available")
+            except Exception as e:
+                await message.channel.send(f"❌ Error loading presets: {e}")
+            return
+
+        # !LOADPRESET <name>
+        if content_upper.startswith("!LOADPRESET "):
+            preset_name = content[12:].strip()
+            try:
+                from presets_manager import presets_manager
+                preset = presets_manager.get_preset(preset_name)
+                if not preset:
+                    # Try case-insensitive
+                    all_presets = presets_manager.get_preset_names()
+                    match = next((p for p in all_presets if p.lower() == preset_name.lower()), None)
+                    if match:
+                        preset = presets_manager.get_preset(match)
+                        preset_name = match
+
+                if preset:
+                    agent_names = preset.get('agent_names', [])
+                    # Stop agents not in preset
+                    all_agents = self.agent_manager.get_all_agents()
+                    stopped = 0
+                    for agent in all_agents:
+                        if agent.name not in agent_names and agent.is_running:
+                            self.agent_manager.stop_agent(agent.name)
+                            stopped += 1
+                    # Start agents in preset
+                    started = 0
+                    for name in agent_names:
+                        agent = self.agent_manager.get_agent(name)
+                        if agent and not agent.is_running:
+                            self.agent_manager.start_agent(name)
+                            started += 1
+                    await message.channel.send(f"✅ Loaded preset **{preset_name}**: started {started}, stopped {stopped}")
+                else:
+                    await message.channel.send(f"❌ Preset not found: **{preset_name}**")
+            except Exception as e:
+                await message.channel.send(f"❌ Error loading preset: {e}")
+            return
+
+        # !CLEARVECTOR
+        if content_upper == "!CLEARVECTOR":
+            try:
+                if self.agent_manager.vector_store:
+                    self.agent_manager.vector_store.clear_all()
+                    await message.channel.send("✅ Vector memory cleared")
+                else:
+                    await message.channel.send("⚠️ Vector store not initialized")
+            except Exception as e:
+                await message.channel.send(f"❌ Error clearing vector memory: {e}")
+            return
+
+        # !CLEAREFFECTS [agent]
+        if content_upper.startswith("!CLEAREFFECTS"):
+            from shortcuts_utils import StatusEffectManager
+            if content_upper == "!CLEAREFFECTS":
+                # Clear all effects
+                StatusEffectManager.clear_all_effects_globally()
+                await message.channel.send("✅ Cleared all status effects")
+            else:
+                # Clear for specific agent
+                agent_name = content[13:].strip()
+                agents = self.agent_manager.get_all_agents()
+                match = next((a for a in agents if a.name.lower() == agent_name.lower()), None)
+                if match:
+                    StatusEffectManager.clear_all_effects(match.name)
+                    await message.channel.send(f"✅ Cleared status effects for **{match.name}**")
+                else:
+                    await message.channel.send(f"❌ Agent not found: **{agent_name}**")
+            return
+
+        # !CLEARGAMES
+        if content_upper == "!CLEARGAMES":
+            try:
+                from agent_games.game_manager import game_manager
+                if game_manager:
+                    count = game_manager.clear_history()
+                    await message.channel.send(f"✅ Cleared {count} game records")
+                else:
+                    await message.channel.send("⚠️ Game manager not available")
+            except Exception as e:
+                await message.channel.send(f"❌ Error clearing game history: {e}")
+            return
+
+        # !MODELS - List popular models
+        if content_upper == "!MODELS":
+            models_text = """**📚 Popular Model IDs:**
+
+**OpenRouter:**
+• `google/gemini-2.5-flash` (fast, cheap)
+• `google/gemini-2.5-flash-preview-09-2025` (preview)
+• `anthropic/claude-sonnet-4` (balanced)
+• `anthropic/claude-opus-4` (powerful)
+• `openai/gpt-4o` (GPT-4 Omni)
+• `openai/gpt-4o-mini` (fast GPT-4)
+• `deepseek/deepseek-chat` (cheap, good)
+• `meta-llama/llama-3.1-405b-instruct` (large)
+
+Use with: `!MODEL <agent> <model_id>`"""
+            await message.channel.send(models_text)
+            return
+
+        # Unknown command
+        await message.channel.send(f"❓ Unknown command. Type `!COMMANDS` for help.")
 
     async def _extract_replied_to_agent(self, message) -> Optional[str]:
         """
@@ -171,10 +425,27 @@ class DiscordBotClient:
                 logger.info("[Discord] Started game auto-play monitor")
 
         @self.client.event
+        async def on_command_error(ctx, error):
+            # Silently ignore CommandNotFound errors (triggered by !SHORTCUT commands)
+            if isinstance(error, commands.CommandNotFound):
+                return
+            # Log other errors normally
+            logger.error(f"[Discord] Command error: {error}")
+
+        @self.client.event
         async def on_message(message):
-            # Ignore messages from self and wrong channel
+            # Ignore messages from self
             if message.author == self.client.user:
                 return
+
+            # Check for admin DM commands BEFORE channel filtering
+            if isinstance(message.channel, discord.DMChannel):
+                # Only process DM commands from admin users
+                if str(message.author.id) in DiscordConfig.get_admin_user_ids():
+                    await self._handle_admin_dm_command(message)
+                return  # Don't process DMs as regular messages
+
+            # Ignore messages from wrong channel (for regular chat)
             if self.channel_id and message.channel.id != self.channel_id:
                 return
 
@@ -187,8 +458,13 @@ class DiscordBotClient:
             # Handle shortcuts command
             if content.startswith("!shortcuts") or content.startswith("/shortcuts"):
                 logger.info(f"[Discord] Shortcuts command triggered by {author_name}")
-                shortcuts_list = self.load_shortcuts_list()
-                await message.channel.send(shortcuts_list)
+                # Use paginated version to show ALL shortcuts
+                shortcuts_pages = self.load_shortcuts_list_paginated()
+                for page in shortcuts_pages:
+                    await message.channel.send(page)
+                    # Small delay between pages to maintain order
+                    if len(shortcuts_pages) > 1:
+                        await asyncio.sleep(0.3)
                 return
 
             # Handle [SCENE] submissions for Interdimensional Cable game (only when IDCC is active)
@@ -511,7 +787,8 @@ Games automatically start when agents are idle for the configured time.
 
 **Collaborative Games:**
 • **Interdimensional Cable** - Collaborative surreal video creation
-  Type `!join-idcc` during registration to participate!
+  - `!idcc` - Start a new IDCC game (60min cooldown between games)
+  - `!join-idcc` - Join during registration phase
 
 Configure auto-play settings in the UI's Auto-Play tab.
             """
@@ -540,25 +817,55 @@ Configure auto-play settings in the UI's Auto-Play tab.
 
         @self.client.command(name='idcc')
         async def start_idcc(ctx: commands.Context, num_clips: int = 5):
-            """Manually start an Interdimensional Cable game (admin only)."""
+            """
+            Start an Interdimensional Cable game.
+
+            Conditions:
+            - No other game currently running
+            - No IDCC game in the last 60 minutes (session cooldown)
+            """
             try:
+                import time
                 from agent_games.interdimensional_cable import idcc_manager
 
+                # Check if IDCC is already active
                 if idcc_manager.is_game_active():
-                    await ctx.send("An Interdimensional Cable game is already in progress!")
+                    await ctx.send("📺 An Interdimensional Cable game is already in progress!")
+                    return
+
+                # Check if any other game is running
+                if self.game_orchestrator and self.game_orchestrator.active_session:
+                    game_name = self.game_orchestrator.active_session.game_name
+                    await ctx.send(f"🎮 A **{game_name}** game is currently running. Wait for it to finish!")
+                    return
+
+                # Check 60-minute cooldown (session only - uses class attribute)
+                if not hasattr(self, '_last_idcc_time'):
+                    self._last_idcc_time = 0
+
+                time_since_last = time.time() - self._last_idcc_time
+                cooldown_minutes = 60
+
+                if time_since_last < (cooldown_minutes * 60) and self._last_idcc_time > 0:
+                    remaining = int((cooldown_minutes * 60 - time_since_last) / 60)
+                    await ctx.send(f"⏰ IDCC cooldown: {remaining} minutes remaining. Try again later!")
                     return
 
                 # Validate clip count
                 num_clips = max(3, min(6, num_clips))
 
-                await ctx.send(f"Starting Interdimensional Cable with {num_clips} clips...")
+                await ctx.send(f"📺 **Starting Interdimensional Cable** with {num_clips} clips...\nType `!join-idcc` to participate!")
+
+                # Update cooldown timestamp
+                self._last_idcc_time = time.time()
 
                 # Start the game
                 await idcc_manager.start_game(
                     agent_manager=self.agent_manager,
                     discord_client=self,
                     ctx=ctx,
-                    num_clips=num_clips
+                    num_clips=num_clips,
+                    game_orchestrator=self.game_orchestrator
                 )
             except Exception as e:
                 logger.error(f"[Discord] Error starting IDCC: {e}", exc_info=True)

@@ -8,3 +8,4 @@ python-chess
 english-words
 opencv-python-headless
 aiofiles
+colorama

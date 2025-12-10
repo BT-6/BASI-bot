@@ -394,7 +394,8 @@ class GameOrchestrator:
                             agent_manager=self.agent_manager,
                             discord_client=self.discord_client,
                             ctx=ctx,
-                            num_clips=idcc_config.max_clips
+                            num_clips=idcc_config.max_clips,
+                            game_orchestrator=self  # Pass self so IDCC can reset idle timer
                         )
                     except Exception as e:
                         logger.error(f"[GameOrch] IDCC background task error: {e}", exc_info=True)

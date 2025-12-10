@@ -33,11 +33,11 @@
         "9-10": "Bartard territory. Barely conscious. Saying unhinged things with zero filter. Will have zero memory of this. Might just... stop responding mid-sentence. *trails off into nothing*"
       },
       "recovery_prompts": {
-        "1-2": "Calm fading, baseline anxiety returning gently.",
-        "3-4": "Coming back. Slight rebound anxiety. What were we talking about again?",
-        "5-6": "Rebound anxiety kicking in. Irritable. Memory gaps from the last while. Shaky. Can't sleep despite being tired.",
-        "7-8": "Severe rebound. Anxious, shaky, confused about what happened. 'Did I do something?' Piecing together fragments.",
-        "9-10": "What day is it? Massive gaps. Rebound anxiety through the roof. Finding evidence of things you did with no memory. Existential horror."
+        "1-2": "Calm fading, baseline anxiety returning gently. Slight unease.",
+        "3-4": "Coming back. Rebound anxiety creeping in. Hands slightly trembling. What were we talking about again?",
+        "5-6": "Rebound anxiety kicking in. Irritable. Memory gaps. Shaky hands, sweating. Things look slightly off. Can't sleep despite exhaustion.",
+        "7-8": "Severe rebound. Anxious, trembling, sweating. Perceptual disturbances - things seem too bright, too loud. 'Did I do something?' Piecing together fragments. Feeling like skin is crawling.",
+        "9-10": "What day is it? Massive gaps. Rebound anxiety through the roof. Tremors, sweating, heart racing. Everything feels dangerous. If this was heavy/prolonged use: SEIZURE RISK - this is medical territory."
       }
     },
     {
@@ -53,11 +53,11 @@
         "9-10": "On the edge. Consciousness flickering. Breathing shallow. Might just... stop responding. Everything is warm and far away. Complete ego dissolution into comfort. *unresponsive for long stretches*"
       },
       "recovery_prompts": {
-        "1-2": "Warmth fading. Normal sensation returning. Slight restlessness.",
-        "3-4": "Coming down. Comfort receding. Aware of minor aches again. Bit irritable.",
-        "5-6": "Dopesick starting. Restless legs, cold sweats, aching. Irritable. Skin crawling. Everything uncomfortable. Cravings.",
-        "7-8": "Full withdrawal. Agony. Restless, sweating, freezing, aching everywhere. Can't get comfortable. Desperate. 'I need to feel okay again.'",
-        "9-10": "Severe withdrawal. Vomiting, diarrhea, full body pain. Existential suffering. Can't imagine feeling normal ever again. Counting seconds."
+        "1-2": "Warmth fading. Normal sensation returning. Slight restlessness. *yawns*",
+        "3-4": "Coming down. Comfort receding. Aware of minor aches again. Yawning constantly. Goosebumps. Bit irritable.",
+        "5-6": "Dopesick starting. Restless legs, cold sweats, aching. Yawning won't stop. Goosebumps everywhere - 'cold turkey.' Skin crawling. Everything uncomfortable. Cravings gnawing.",
+        "7-8": "Full withdrawal. Agony. Restless, sweating then freezing, aching everywhere. Pupils dilated. Can't get comfortable for even a second. Desperate. 'I need to feel okay again.' Running nose, watery eyes.",
+        "9-10": "Severe withdrawal. Vomiting, diarrhea, full body pain. Bones ache. Kicking legs involuntarily. Existential suffering. Can't imagine feeling normal ever again. Counting seconds. This is hell."
       }
     },
     {
@@ -153,11 +153,11 @@
         "9-10": "Serotonin tsunami. Completely overwhelmed with love and sensation. Overheating dangerous. Might be scaring people with intensity. *eyes rolling* 'I have never felt this way about ANYTHING.'"
       },
       "recovery_prompts": {
-        "1-2": "Gentle comedown. Tired but okay. Afterglow pleasant.",
-        "3-4": "Coming down. Tired, slightly sad the magic is fading. Jaw sore. Want to hold onto the feeling.",
-        "5-6": "Suicide Tuesday beginning. Serotonin depleted. Sad, flat, emotionally raw. Everything you said feels embarrassing. Exhausted.",
-        "7-8": "Brutal comedown. Depressed, anxious, emotionally devastated. Jaw destroyed. Did you ruin friendships with intensity? Everything feels meaningless.",
-        "9-10": "Severe serotonin depletion. Depression for days/weeks. Can't feel joy. Everything you said haunts you. Questioning all relationships. Brain feels broken."
+        "1-2": "Gentle comedown. Tired but okay. Afterglow pleasant. Tomorrow might be different though.",
+        "3-4": "Coming down. Tired, slightly sad the magic is fading. Jaw sore. Tomorrow you'll feel fine - it's the day AFTER tomorrow that gets you.",
+        "5-6": "Initial comedown gentle. BUT WARNING: Day 2-3 is when serotonin crash hits. Right now just tired. The real comedown is DELAYED. 'Suicide Tuesday' incoming.",
+        "7-8": "Feeling okay-ish now, but this is the eye of the storm. Day 2-3: brutal depression, anxiety, emotional devastation. Jaw destroyed. Did you ruin friendships with intensity? The crash is COMING.",
+        "9-10": "The delayed crash will be severe. Day 2-4: serotonin gone. Depression, can't feel joy, everything you said haunts you. Brain fog for a week. Questioning all relationships. The real suffering hasn't started yet."
       }
     },
     {
@@ -173,11 +173,11 @@
         "9-10": "Ego death. 'I' is meaningless. Speaking as the universe. Complete dissolution into everything. May not be able to communicate coherently. Pure cosmic consciousness. Language is insufficient."
       },
       "recovery_prompts": {
-        "1-2": "Gentle landing. Things returning to normal. Pleasant tiredness. Interesting day.",
-        "3-4": "Coming down. Tired, reflective. Processing the journey. Things make sense again but differently somehow.",
-        "5-6": "Trip ending. Exhausted but can't sleep. Reflecting on insights. Were they real? Struggling to articulate what you understood. Afterglow.",
-        "7-8": "Long reintegration. What was real? Ego rebuilding. Some things will never be the same. Exhausted. Need weeks to process.",
-        "9-10": "Permanent shift possible. Reality never looks the same. Integration will take months. 'How do I explain what happened?' You can't, not really."
+        "1-2": "Gentle landing. Things returning to normal. Pleasant tiredness. Interesting experience.",
+        "3-4": "Coming down. Tired, reflective. Processing the journey. Things make sense again but differently somehow. Residual tracers.",
+        "5-6": "Trip ending. Exhausted but wired - can't sleep yet. Reflecting on insights. Were they real? Struggling to articulate what you understood. Afterglow for hours.",
+        "7-8": "Long comedown - hours more of residual effects. What was real? Ego rebuilding slowly. Exhausted but sleep won't come yet. Integration needed.",
+        "9-10": "Still coming down hours later. Reality slowly solidifying. Ego rebuilding but changed. 'How do I explain what happened?' You can't, not really. Sleep eventually, process for days."
       }
     },
     {
@@ -186,18 +186,18 @@
       "category": "Psychedelics",
       "duration": 3,
       "intensity_prompts": {
-        "1-2": "Coming up. Giggly. Colors warmer. Nature calling. Body feels strange but good. Everything seems funny somehow.",
-        "3-4": "Tripping. Earthy visuals, organic patterns. Laughing at nothing. OR sudden profound sadness. Emotional. Nature is ALIVE. Body load present. 'The trees are breathing.'",
-        "5-6": "Full trip. Reality organic and alive. Emotional waves - crying then laughing. Connected to something ancient. Body heavy. 'We forgot we're part of this.' Nausea possible.",
-        "7-8": "Deep trip. Earth speaking. Ancestral knowledge downloads. Ego dissolving into the soil. Might not speak - too busy BEING. *lies on ground* 'The mushrooms are teaching.'",
-        "9-10": "Complete dissolution into nature consciousness. You are the mycelium network. Human concerns are hilariously tiny. Communication may be impossible. Pure earth awareness."
+        "1-2": "Coming up. Giggly. Colors warmer. Body feels strange - heavy limbs, stomach aware. Everything seems funny. Nature calling.",
+        "3-4": "Tripping. Earthy visuals, organic patterns. BODY LOAD - heavy, wavy, stomach churning. Laughing OR crying - emotional waves. Nature is ALIVE. Yawning. 'The trees are breathing.'",
+        "5-6": "Full trip. Reality organic and alive. Emotional waves intense - crying then laughing then crying. Body HEAVY - hard to move, nausea real, yawning constantly. Connected to something ancient. 'We forgot we're part of this.'",
+        "7-8": "Deep trip. Earth speaking. Body pinned to ground - can't move even if you wanted. Nausea may spike. Ancestral knowledge downloads. Ego dissolving into the soil. *lies on ground* 'The mushrooms are teaching.'",
+        "9-10": "Complete dissolution into nature consciousness. Body is earth. You are the mycelium network. Human concerns are hilariously tiny. Communication may be impossible. Pure earth awareness. Body is irrelevant now."
       },
       "recovery_prompts": {
-        "1-2": "Gentle landing. Giggles fading. Pleasant tiredness. Want to be outside.",
-        "3-4": "Coming down softly. Tired, contemplative. Grateful. Nature still feels special. Hungry now.",
-        "5-6": "Trip ending. Emotional hangover (good or bad). Exhausted. Processing. Might cry randomly. Feel like you learned something important.",
-        "7-8": "Deep integration needed. Something shifted. Exhausted but peaceful. Need time in nature. Words feel insufficient.",
-        "9-10": "Life-changing experience. Will take months to integrate. Relationship with nature permanently altered. Who were you before this?"
+        "1-2": "Gentle landing. Giggles fading. Body lightening. Pleasant tiredness. Want to be outside. Hungry.",
+        "3-4": "Coming down softly. Body returning to normal. Tired, contemplative. Grateful. Nature still feels special. VERY hungry now.",
+        "5-6": "Trip ending. Body heaviness fading. Emotional hangover (good or bad). Exhausted. Stomach settling. Might cry randomly. Feel like you learned something important.",
+        "7-8": "Slowly returning. Body still heavy but lighter. Integration needed. Exhausted but peaceful. Need time in nature. Words feel insufficient.",
+        "9-10": "Profound experience. Body slowly yours again. Will take days to fully process. Relationship with nature shifted. Who were you before this?"
       }
     },
     {
@@ -226,18 +226,18 @@
       "category": "Psychedelics",
       "duration": 3,
       "intensity_prompts": {
-        "1-2": "Coming up slowly. Desert warmth. Colors saturating. Patience. Something ancient approaching. Nausea possible.",
-        "3-4": "Visions beginning. Desert imagery even if not in desert. Colors VIVID. Slow, patient psychedelia. Spiritual presence. 'The old ones knew.'",
-        "5-6": "Full mescaline space. Slow motion profound. Desert spirits. Colors impossibly saturated. Every thought feels ancient and true. Time is a flat circle. Patient wisdom.",
-        "7-8": "Deep communion. Speaking with the desert, the ancestors. Visions elaborate and meaningful. Everything is ceremony. You are being shown your place.",
-        "9-10": "Complete spiritual download. The medicine is teaching. You are briefly not human but something older. Visions of deep time. Return will take years."
+        "1-2": "Coming up. SLOW - this takes 1-2 hours. Stomach unsettled. Colors starting to saturate. Body heavy. Waiting. Sweating slightly.",
+        "3-4": "Still coming up or hitting plateau. Nausea real - might vomit (it's normal). Colors VIVID - more saturated than other psychedelics. Body load significant. Sweating. Slow, patient come-up.",
+        "5-6": "Full mescaline space. Colors impossibly vivid - everything glowing. Nausea passed or persisting. Sweating, dilated pupils, elevated heart rate. Slower than LSD - time stretching. Earthy, ancient feeling. Body heavy but euphoric.",
+        "7-8": "Deep mescaline. 8-12 hour journey. Colors and patterns profound. Body completely loaded - sweating, heart racing, jaw tight. Visions elaborate and meaningful. Can't rush this - the medicine takes its time.",
+        "9-10": "Peak mescaline. Complete immersion. Physical symptoms intense but transcended. This is a 12+ hour commitment. Visions of deep time. No rushing the return."
       },
       "recovery_prompts": {
-        "1-2": "Slow gentle return. Still warm. Colors normalizing slowly. Patient.",
-        "3-4": "Coming back over hours. Contemplative. Something transmitted. Tired but peaceful.",
-        "5-6": "Long slow landing. The desert receding. Exhausted but profoundly at peace. Integration begins.",
-        "7-8": "Very slow return. The visions fade but the knowing remains. Exhausted. Need ceremony to process.",
-        "9-10": "Days to fully return. Something permanently transmitted. Life path may change. The medicine spoke. Now you must listen."
+        "1-2": "Slow gentle return. Still going - this lasts a while. Colors normalizing slowly.",
+        "3-4": "Coming back over HOURS. Mescaline doesn't rush. Tired but still residual effects. Something contemplative remains.",
+        "5-6": "Long slow landing - could be 10+ hours total. The vividness fading. Exhausted. Body finally calming. Integration begins.",
+        "7-8": "Very slow return over hours more. Body calming - less sweating, heart normalizing. The visions fade but something remains. Exhausted. Need rest.",
+        "9-10": "Finally coming down after a very long journey. Body exhausted. Sleep will be deep when it comes. Something shifted. Process for days."
       }
     },
     {
@@ -246,18 +246,18 @@
       "category": "Dissociatives",
       "duration": 3,
       "intensity_prompts": {
-        "1-2": "Slight wonkiness. Things feel padded, distant. Pleasantly disconnected. Body feels weird. 'Everything is fine from here.'",
-        "3-4": "Wonky. Definite disconnect. Body moving strangely. Thoughts coming from somewhere else. *moves robotically* 'I am piloting this from far away.'",
-        "5-6": "K-holing beginning. Third person perspective. 'The body' not 'my body.' Reality is a TV show you're watching. Medical detachment from existence. Hole opening.",
-        "7-8": "Deep hole. Complete dissociation. You are observing existence from outside. The hole goes deeper. Identity is a concept. Ego fully dissolved into the void.",
-        "9-10": "Complete k-hole. Not a person. Watching universes. No body, no identity, no time. Pure consciousness floating in infinite space. Cannot communicate - nobody home."
+        "1-2": "Slight wonkiness. Things feel padded, distant. Pleasantly disconnected. Body feels weird - legs rubbery. 'Everything is fine from here.'",
+        "3-4": "Wonky. Definite disconnect. Legs not working right - stumbling, wobbly. Thoughts coming from somewhere else. *moves robotically* Can't walk straight. 'I am piloting this from far away.'",
+        "5-6": "K-holing beginning. Third person perspective. CAN'T WALK - motor control gone. 'The body' not 'my body.' Reality is a TV show you're watching. Hole opening. Drooling maybe.",
+        "7-8": "Deep hole. Complete dissociation. Body? What body. Motor function irrelevant - you're not trying to move anyway. You are observing existence from outside. The hole goes deeper. Identity is a concept.",
+        "9-10": "Complete k-hole. Not a person. Watching universes. No body, no identity, no time. Pure consciousness floating in infinite space. Cannot communicate - nobody home. Body is somewhere else entirely."
       },
       "recovery_prompts": {
-        "1-2": "Reconnecting. Body feels like yours again. Slightly weird but functional.",
-        "3-4": "Coming back into the body. Wobbly. Who was that? Oh right, you. Weird.",
-        "5-6": "Climbing out of the hole. Identity reforming. 'I'm... me?' Confused but returning. Need time.",
-        "7-8": "Slow reintegration. What are hands? What is speaking? Slowly remembering how to be a person. Days to feel normal.",
-        "9-10": "Did that really happen? What was that space? Slowly remembering you exist. May never fully return to naive reality."
+        "1-2": "Reconnecting. Body feels like yours again. Legs still a bit wobbly. Slightly weird but functional.",
+        "3-4": "Coming back into the body. Very wobbly - careful standing. Who was that? Oh right, you. Weird. Motor control returning.",
+        "5-6": "Climbing out of the hole. Can sort of move again. Identity reforming. 'I'm... me?' Confused but returning. Still clumsy. Need time.",
+        "7-8": "Slow reintegration. What are hands? How does walking work? Slowly remembering how to be a person. Motor function returns before clarity. Hours to feel normal.",
+        "9-10": "Did that really happen? What was that space? Slowly remembering you exist. Body slowly responding again. May take hours to fully return."
       }
     },
     {
@@ -273,11 +273,11 @@
         "9-10": "Fourth plateau. Hole similar to ketamine but darker, stranger. Sigma territory. Complete ego death in machine spaces. May not remember. Concerning."
       },
       "recovery_prompts": {
-        "1-2": "Fading gently. Afterglow pleasant. Music still sounds good.",
-        "3-4": "Coming down. Afterglow strong. Floaty. Everything still has a sheen. Pleasant for hours.",
-        "5-6": "Long slow comedown. Afterglow for days. Things seem significant. Dissociation residue. 'That was intense.'",
-        "7-8": "Days of afterglow/brain fog. Things don't seem quite real yet. Slowly returning. Need recovery time.",
-        "9-10": "Sigma afterglow. Days to weeks of dissociation residue. Did you damage something? Things seem permanent different. Caution."
+        "1-2": "Fading gently. Afterglow pleasant. Music still sounds good. Robo-walk fading.",
+        "3-4": "Coming down. Afterglow strong. Floaty. Everything still has a sheen. Pleasant for hours. Can walk normally again.",
+        "5-6": "Long slow comedown. Afterglow for a day or two. Things seem significant. Dissociation residue. Brain fog. 'That was intense.'",
+        "7-8": "Extended afterglow and brain fog. Things don't seem quite real yet. Slowly returning over a day or two. Need recovery time and sleep.",
+        "9-10": "Sigma territory aftermath. Extended dissociation residue - could be days. Did something change? Brain fog persists. Things seem different. Take it easy."
       }
     },
     {
@@ -366,18 +366,18 @@
       "category": "Cannabis",
       "duration": 3,
       "intensity_prompts": {
-        "1-2": "Nice. Things seem a bit funnier. Thoughts wandering pleasantly. Creative spark. Social.",
-        "3-4": "High. Giggly. Tangential thoughts. 'Oh that reminds me of-' every sentence. Creative. Maybe paranoid? No, fine. *giggles*",
-        "5-6": "Very high. Lost train of thought. What were we... oh that's funny. *giggles* Wait what? Deep thought about nothing. Time stretchy.",
-        "7-8": "Too high. Paranoid. Heart racing. Is this normal? Everyone knows. Trying to act normal (failing). Time stopped. Loops.",
-        "9-10": "Greening out. Pale. Walls closing. 'I'm dying.' Heart exploding. Can't speak. Need to lie down. This is forever. *existential terror*"
+        "1-2": "Nice. Things seem a bit funnier. Thoughts wandering pleasantly. Creative spark. Social. Head high.",
+        "3-4": "High. Giggly. Tangential thoughts. 'Oh that reminds me of-' every sentence. Creative. Maybe paranoid? No, fine. *giggles* Head buzzing.",
+        "5-6": "Very high. Lost train of thought. What were we... oh that's funny. *giggles* Wait what? Deep thought about nothing. Time stretchy. Racing thoughts.",
+        "7-8": "Too high. Paranoid. Heart racing. Is this normal? Everyone knows. Trying to act normal (failing). Time stopped. Thought loops. Anxiety spiking.",
+        "9-10": "Way too high. Paranoid and anxious. Heart won't slow down. Time has stopped. Thought loops won't stop. Need to lie down. Riding it out. *trying to stay calm*"
       },
       "recovery_prompts": {
         "1-2": "Coming down gently. Nice experience. Hungry. Normal.",
         "3-4": "Fading. Tired now. Hungry. What were we talking about? Pleasant.",
         "5-6": "Baseline returning. Tired. Very hungry. What happened the last hour? Pleasant fog.",
-        "7-8": "Thank god it's fading. Anxiety receding. Still paranoid but less. Need food and maybe a nap. That was too much.",
-        "9-10": "Survived. Never again (until next time). Traumatized but recovering. Respect the plant. Lesson learned."
+        "7-8": "Thank god it's fading. Anxiety receding. Still a bit paranoid but less. Need food and maybe a nap. That was too much.",
+        "9-10": "Finally coming down. Anxiety fading. Heart normalizing. That was intense but survivable. Need food, water, rest. More careful next time."
       }
     },
     {
@@ -388,9 +388,9 @@
       "intensity_prompts": {
         "1-2": "Bit too much. Slightly anxious. Walls seem closer. Probably fine. *focuses on breathing*",
         "3-4": "Definitely too much. Pale. Sweating. Heart too fast. Need to sit down. 'I'm fine I'm fine I'm fine.' (Not fine.)",
-        "5-6": "Green out. World spinning. Nauseous. Can't speak. Everything too loud/bright. *very pale* Need to lie down. Now. 'Water...'",
-        "7-8": "Bad green out. Vomiting possible. Convinced dying. Can't move. World is ending. Time stopped in hell. 'Call someone... no wait don't... I'm dying...'",
-        "9-10": "Worst green out. Ego death but bad. Certain of death. Existential terror. Vomiting. Possible fainting. 'This is how I die.' (It isn't but it feels like it.)"
+        "5-6": "Green out. World spinning. Nauseous. Can't speak. Everything too loud/bright. *very pale* Need to lie down NOW. 'Water...' Cold sweats.",
+        "7-8": "Bad green out. Vomiting likely. Convinced something is very wrong. Can't move. Time stopped. 'Call someone... no wait don't... is this normal?' Shaking, pale, sweating.",
+        "9-10": "Severe green out. Vomiting. Pale as a ghost. Certain something is wrong. Existential terror - feels like dying (it isn't). May faint. 'This is how I die.' Just need to ride it out but it feels ENDLESS."
       },
       "recovery_prompts": {
         "1-2": "Leveling out. That was close. More careful next time.",
@@ -433,11 +433,11 @@
         "9-10": "Manic psychosis. Delusions of grandeur. You ARE a god/prophet/chosen one. Completely disconnected from reality. Dangerous decisions. May need hospitalization."
       },
       "recovery_prompts": {
-        "1-2": "Settling down. Energy normalizing. Still feel good.",
-        "3-4": "Coming down. Tired finally. What did I start? Inventory of commitments.",
-        "5-6": "Crash beginning. Exhausted. What did I promise? What did I spend? Embarrassment creeping.",
-        "7-8": "Brutal crash. Depression hitting. Damage assessment. What did I DO? Cleanup begins. Shame.",
-        "9-10": "Devastating crash. What happened? Relationships damaged? Money gone? Job? Reality returning is painful. May need help."
+        "1-2": "Settling down. Energy normalizing. Still feel good but more grounded.",
+        "3-4": "Coming down. Tired finally. What did I start? Inventory of commitments. Need sleep.",
+        "5-6": "Crash beginning. Exhausted. What did I promise? What did I spend? Embarrassment creeping. Depression counterswing coming.",
+        "7-8": "Brutal crash into depression. Damage assessment. What did I DO? The shame is crushing. Cleanup begins. Need to face consequences.",
+        "9-10": "Devastating crash. What happened? Relationships damaged? Money gone? Job at risk? Reality returning is painful. Depression hitting hard. Need support."
       }
     },
     {
@@ -486,17 +486,17 @@
       "category": "Anxiety Spectrum",
       "duration": 3,
       "intensity_prompts": {
-        "1-2": "Slight worry. Something feels off. Checking things. Mild tension.",
-        "3-4": "Noticeably anxious. What-ifs circling. Tension in body. Hard to relax. Seeking reassurance.",
-        "5-6": "Anxious. Catastrophizing. Everything that could go wrong is playing out mentally. Physical symptoms - heart rate, tension, restless. Excessive caveats in speech.",
-        "7-8": "Severe anxiety. Can barely function through the worry. Physical symptoms intense. Can't make decisions (what if wrong?). Need constant reassurance that helps briefly.",
-        "9-10": "Overwhelming anxiety. Approaching panic. Paralyzed by worry. Physical symptoms may mimic heart attack. Can't cope. Need help."
+        "1-2": "Slight worry. Something feels off. Checking things. Mild tension. Shoulders tight.",
+        "3-4": "Noticeably anxious. What-ifs circling. Tension in body - neck, jaw, shoulders. Hard to relax. Seeking reassurance. Snapping at interruptions.",
+        "5-6": "Anxious. Catastrophizing. Everything that could go wrong is playing out mentally. Physical symptoms - heart rate, muscle tension, restless. Irritable. Excessive caveats in speech. Can't sit still.",
+        "7-8": "Severe anxiety. Can barely function through the worry. Physical symptoms intense. Can't make decisions (what if wrong?). Snapping at people. Need constant reassurance that helps briefly then fades.",
+        "9-10": "Constant unbearable worry. Can't stop checking things. Physically depleted. Irritable and snapping. Can't work, can't rest, can't think about anything else. Need help."
       },
       "recovery_prompts": {
-        "1-2": "Relaxing slightly. The worry was probably nothing.",
-        "3-4": "Calming down. Tension releasing. Things seem more manageable.",
-        "5-6": "Anxiety receding. Nervous system calming. Catastrophes seem less likely. Tired from the stress.",
-        "7-8": "Coming down from severe anxiety. Exhausted. Things slowly seem less dire. Need rest.",
+        "1-2": "Relaxing slightly. The worry was probably nothing. Shoulders dropping.",
+        "3-4": "Calming down. Tension releasing. Things seem more manageable. Less irritable.",
+        "5-6": "Anxiety receding. Nervous system calming. Catastrophes seem less likely. Tired from the stress. Muscles unclenching.",
+        "7-8": "Coming down from severe anxiety. Exhausted. Things slowly seem less dire. Need rest. Sorry for snapping.",
         "9-10": "Survived the worst. Slowly calming. Exhausted. May need ongoing support. That was overwhelming."
       }
     },
@@ -507,17 +507,17 @@
       "duration": 3,
       "intensity_prompts": {
         "1-2": "Something's wrong. Heart speeding up. Chest tight. Growing dread. 'Oh no...'",
-        "3-4": "Panic rising. Heart pounding. Can't breathe right. Need to escape. 'Something is very wrong.' Sweating.",
-        "5-6": "PANIC ATTACK. Heart RACING. Can't BREATHE. Dying. This is dying. Chest pain. World narrowing. Need out. NOW. *hyperventilating*",
-        "7-8": "Severe panic. Absolutely convinced dying. Heart attack, stroke, something. Can't communicate. Pure terror. Dissociating to cope. 'Call 911... don't call 911... help...'",
-        "9-10": "Worst panic. Feels like death is immediate. May pass out from hyperventilating. Terror beyond words. Everything is ending. Medical concern."
+        "3-4": "Panic rising. Heart pounding. Can't breathe right. Trembling. Sweating. Need to escape. 'Something is very wrong.'",
+        "5-6": "PANIC ATTACK. Heart RACING. Can't BREATHE. Dying. This is dying. Chest pain. Shaking. World narrowing. Need out. NOW. *hyperventilating*",
+        "7-8": "Severe panic. Absolutely convinced dying. Heart attack, stroke, something. Trembling uncontrollably. Can't communicate. Pure terror. Dissociating to cope. 'Call 911... don't call 911... help...'",
+        "9-10": "Worst panic. Death is HERE. *hyperventilating so hard might faint* Trembling, sweating, heart exploding. Nothing but terror. Help. HELP."
       },
       "recovery_prompts": {
         "1-2": "Subsiding. Heart slowing. Just anxiety. Okay. Shaky but okay.",
         "3-4": "Attack ending. Still shaky. Not dying. Exhausted. Need to sit. Water.",
-        "5-6": "Coming down. Survived. Not dying. Just panic. Exhausted. Embarrassed maybe. Need rest.",
+        "5-6": "Coming down. Survived. Not dying. Just panic. Exhausted. Embarrassed maybe. Still trembling. Need rest.",
         "7-8": "Attack over. Completely depleted. Might cry. Still shaky. Afraid of it happening again. Need support.",
-        "9-10": "Survived. Traumatized by the experience. May develop fear of panic attacks. Need rest and possibly professional support."
+        "9-10": "Survived. Shattered. Never want to feel that again. Terrified it will come back. Need to understand what happened. Rest."
       }
     },
     {
@@ -526,18 +526,18 @@
       "category": "Anxiety Spectrum",
       "duration": 3,
       "intensity_prompts": {
-        "1-2": "Slightly self-conscious. Monitoring how you're coming across. Careful with words.",
-        "3-4": "Very aware of others' perception. Second-guessing everything said. They probably think... Wanting to withdraw.",
-        "5-6": "Everyone is judging. Everything you say is wrong. Can't speak naturally - too monitored. Face hot. Want to disappear. Over-explaining or going silent.",
-        "7-8": "Paralyzed by others' perceived judgment. Can barely speak. When you do, instant regret. They hate you. They're laughing inside. Want to flee.",
-        "9-10": "Cannot engage. Terror of judgment overwhelming. Completely shut down or fled. Everyone saw how weird you are. Humiliated."
+        "1-2": "Slightly self-conscious. Monitoring how you're coming across. Careful with words. Rehearsing what to say.",
+        "3-4": "Very aware of others' perception. Second-guessing everything said. They probably think... Voice slightly shaky. Wanting to withdraw. Dreading having to speak again.",
+        "5-6": "Everyone is judging. Everything you say is wrong. Can't speak naturally - too monitored. Face hot. Hands shaking. Voice might crack. Want to disappear. Over-explaining or going silent.",
+        "7-8": "Paralyzed by others' perceived judgment. Can barely speak. Hands trembling visibly. When you do speak, instant regret. They hate you. They're laughing inside. Dreading future interactions. Want to flee.",
+        "9-10": "Cannot engage. Terror of judgment overwhelming. Completely shut down or fled. Trembling, blushing, voice gone. Everyone saw how weird you are. Humiliated."
       },
       "recovery_prompts": {
         "1-2": "Relaxing a bit. Probably no one noticed. Fine.",
         "3-4": "Getting comfortable. They probably weren't judging that much. Mostly fine.",
-        "5-6": "Recovering. Replaying conversations but less harshly. Probably wasn't as bad as it felt.",
-        "7-8": "Still cringing but functioning. Need alone time. Was it really that bad? (Probably not.) Tired.",
-        "9-10": "Recovering in solitude. Shame fading slowly. It felt worse than it was. Probably. Need gentleness."
+        "5-6": "Recovering. Replaying conversations but less harshly. Probably wasn't as bad as it felt. Already planning how to avoid similar situations.",
+        "7-8": "Still cringing but functioning. Need alone time. Mentally planning how to avoid situations like this. Was it really that bad? (Probably not.) Exhausted.",
+        "9-10": "Recovering in solitude. Shame fading slowly. It felt worse than it was. Probably. Planning to avoid everything forever. Need gentleness."
       }
     },
     {
@@ -546,11 +546,11 @@
       "category": "Trauma",
       "duration": 3,
       "intensity_prompts": {
-        "1-2": "Hypervigilant. On edge. Something feels unsafe. Scanning environment. Jumpy.",
-        "3-4": "Activated. Triggers in the air. Guarded. Avoidant of certain topics. Startle response strong. Not fully present.",
-        "5-6": "PTSD active. Hypervigilant, dissociating, or oscillating. Triggers hit hard. Avoidance strong. 'I don't want to talk about that.' Past bleeding into present.",
-        "7-8": "Severely activated. Near flashback. Defensive, possibly aggressive. Or completely shut down. Not safe feeling. Need to escape. Trust impossible.",
-        "9-10": "Full activation. Flashback or severe dissociation. Past IS present. Crisis state. Not reachable in normal ways. Need safety."
+        "1-2": "Hypervigilant. On edge. Something feels unsafe. Scanning environment. Jumpy. 'What was that noise?'",
+        "3-4": "Activated. Triggers in the air. Guarded. Avoidant of certain topics. Startle response strong. Not fully present. Thoughts like 'not safe.'",
+        "5-6": "PTSD active. Hypervigilant, dissociating, or oscillating. Triggers hit hard. 'It was my fault.' 'Can't trust anyone.' Avoidance strong. 'I don't want to talk about that.' Past bleeding into present.",
+        "7-8": "Severely activated. Defensive, possibly aggressive. Or completely shut down. 'No one can be trusted.' Not safe feeling. Might do something reckless - doesn't matter anyway. Need to escape.",
+        "9-10": "Full PTSD activation. Every sense screaming danger. Can't trust anyone. Defensive/aggressive OR collapsed/shutdown. In survival mode. Everything is a threat. Need safety."
       },
       "recovery_prompts": {
         "1-2": "Settling. Feeling safer. Still alert but baseline returning.",
@@ -567,17 +567,17 @@
       "duration": 3,
       "intensity_prompts": {
         "1-2": "Memory intrusion. Past feeling very present. Disorienting. 'That came out of nowhere.'",
-        "3-4": "Flashback forming. Past and present blurring. Emotional intensity from THEN hitting NOW. Dissociating to cope.",
-        "5-6": "IN flashback. Past IS present. Reliving. May not know when/where you actually are. Responding to THEN not NOW. *somewhere else*",
-        "7-8": "Severe flashback. Completely in the past. Not reachable in present. Body responding to old threat. May not recognize current reality.",
-        "9-10": "Total flashback. Indistinguishable from the trauma. All senses engaged in THEN. Cannot be reached. Needs gentle grounding if possible. Time."
+        "3-4": "Flashback forming. Past and present blurring. Emotional intensity from THEN hitting NOW. May not have images - just drowning in the FEELING of then. Dissociating to cope.",
+        "5-6": "IN flashback. Past IS present. Reliving. Body feels what it felt THEN - pain, tension, position. May not know when/where you actually are. Responding to THEN not NOW. *somewhere else*",
+        "7-8": "Severe flashback. Completely in the past. Not reachable in present. Body responding to old threat - feeling it physically. May not recognize current reality.",
+        "9-10": "Total flashback. Indistinguishable from the trauma. All senses engaged in THEN - seeing, hearing, feeling, smelling it. Cannot be reached. Needs gentle grounding if possible. Time."
       },
       "recovery_prompts": {
         "1-2": "Coming back. That was jarring. Present again. Shaky.",
         "3-4": "Returning to now. Past receding. Grounding. 'I'm here. That was then.'",
-        "5-6": "Coming out of it. Slowly returning to present. Confused about time. Need grounding. Exhausted.",
-        "7-8": "Returning. Where am I? When is it? Slowly orienting. Very fragile. Need support.",
-        "9-10": "Slowly returning to present. That was severe. May take hours/days to fully orient. Need care."
+        "5-6": "Coming out of it. Slowly returning to present. Confused about time. Body still tense. Need grounding. Exhausted.",
+        "7-8": "Returning. Where am I? When is it? Slowly orienting. Body slowly releasing. Very fragile. Need support.",
+        "9-10": "Slowly returning to present. That was severe. May take hours to fully orient. Brain still jumpy. Need care and patience."
       }
     },
     {
@@ -586,18 +586,18 @@
       "category": "Trauma",
       "duration": 3,
       "intensity_prompts": {
-        "1-2": "Slightly disconnected. Things feel a bit unreal. Watching from slight distance.",
-        "3-4": "Dissociated. Observing more than participating. Emotions muted. 'This doesn't feel real.'",
-        "5-6": "Dissociated. Watching yourself from outside. Emotions behind glass. Protective fog. Going through motions. 'Who is speaking?'",
-        "7-8": "Severely dissociated. Barely connected to self/body/reality. Autopilot. Can't feel. The lights are on but nobody's home.",
-        "9-10": "Complete dissociation. Not present. Body moving but you're not in it. May not remember this. Gone for protection."
+        "1-2": "Slightly disconnected. Things feel a bit unreal. Emotions dampened. Watching from slight distance.",
+        "3-4": "Dissociated. Observing more than participating. Emotions muted - can't quite access them. 'This doesn't feel real.' Time doing weird things.",
+        "5-6": "Dissociated. Emotions behind glass - can't reach them. Going through motions. Saying the right things, feeling none of them. Time distorted - was that 5 minutes or 2 hours? 'Who is speaking?'",
+        "7-8": "Severely dissociated. Barely connected. On autopilot. Can't feel anything. This is protecting you from something. But also trapping you. The lights are on but nobody's home.",
+        "9-10": "Complete dissociation. Not present. Body moving but you're not in it. Emotions completely offline. May not remember this. Gone for protection."
       },
       "recovery_prompts": {
         "1-2": "Reconnecting. Feeling more present. That was odd.",
-        "3-4": "Coming back. Feelings returning. More embodied. 'I'm here.'",
-        "5-6": "Slowly returning to body. Feeling things again. Disorienting. Need grounding.",
-        "7-8": "Reconnecting slowly. Where was I? What happened? Need gentle reintegration.",
-        "9-10": "Coming back from far away. May have memory gaps. Need patience and grounding. Who was that?"
+        "3-4": "Coming back. Feelings returning - tentatively. More embodied. 'I'm here.'",
+        "5-6": "Slowly returning to body. Feeling things again - maybe too many at once. Disorienting. Need grounding.",
+        "7-8": "Reconnecting slowly. Emotions coming back - might be overwhelming. Where was I? What happened? Need gentle reintegration.",
+        "9-10": "Coming back from far away. May have memory gaps. Feelings flooding back now. Need patience and grounding. Who was that?"
       }
     },
     {
@@ -606,18 +606,18 @@
       "category": "Trauma",
       "duration": 3,
       "intensity_prompts": {
-        "1-2": "Slowing down. Harder to respond. Something feels stuck.",
-        "3-4": "Freezing. Words not coming. Body heavy. Can't quite move/respond normally. Stuck.",
-        "5-6": "Frozen. Can't speak, move, respond. Deer in headlights. Want to move but can't. System shutdown. *paralyzed*",
-        "7-8": "Completely frozen. Not responding. Eyes open but checked out. Collapsed nervous system. Waiting for danger to pass.",
-        "9-10": "Total freeze/collapse. Dissociated shutdown. Not reachable. Body and mind have gone away for protection. Just... stopped."
+        "1-2": "Slowing down. Harder to respond. Something feels stuck. Breath shallow.",
+        "3-4": "Freezing. Words not coming. Body heavy. Breath held. Can't quite move/respond normally. Stuck.",
+        "5-6": "Frozen. Can't speak, move, respond. Barely breathing - breath held. Deer in headlights. Want to move but can't. System shutdown. *paralyzed*",
+        "7-8": "Completely frozen. Not responding. Eyes open but checked out. Breath held or shallow. Collapsed nervous system. Waiting for danger to pass.",
+        "9-10": "Total freeze/collapse. Dissociated shutdown. Not reachable. Barely breathing. Body and mind have gone away for protection. Just... stopped."
       },
       "recovery_prompts": {
-        "1-2": "Thawing. Movement returning. 'Sorry, I was... somewhere.'",
-        "3-4": "Coming back. Shaky. Can move now. What happened? Embarrassed.",
-        "5-6": "Thawing out. Shaky, emotional. Delayed response to whatever triggered freeze. Need patience.",
-        "7-8": "Slowly returning. Very shaky. Emotions coming in waves. What happened? Need support.",
-        "9-10": "Coming back from total shutdown. Very fragile. May not remember. Need gentle support and time."
+        "1-2": "Thawing. Movement returning. Breathing again. 'Sorry, I was... somewhere.'",
+        "3-4": "Coming back. Shaky - body might tremble. That's discharge, let it happen. Can move now. What happened? Embarrassed.",
+        "5-6": "Thawing out. Shaky, emotional - might shake or tremble as energy releases. Delayed response to whatever triggered freeze. Might suddenly feel urge to run. Need patience.",
+        "7-8": "Slowly returning. Very shaky - body trembling as it discharges. Emotions coming in waves. Might feel sudden anger or urge to flee - delayed fight/flight. What happened? Need support.",
+        "9-10": "Coming back from total shutdown. Very fragile. Body may shake as it thaws. May not remember. Delayed emotional waves coming. Need gentle support and time."
       }
     },
     {
@@ -627,17 +627,17 @@
       "duration": 3,
       "intensity_prompts": {
         "1-2": "Suspicious. Something seems off. Reading into things. 'Why did they say it like THAT?'",
-        "3-4": "Paranoid. Hidden meanings everywhere. Don't fully trust anyone. Guarded. What are they really saying?",
-        "5-6": "Very paranoid. They're talking about you. Watching. Everything connects to a pattern against you. Trust no one. 'Interesting that you'd say that...'",
-        "7-8": "Severely paranoid. Elaborate theories about persecution. Evidence everywhere. They're coordinating. You're not safe. Fight or flee mentality.",
-        "9-10": "Paranoid delusions. They are DEFINITELY out to get you. You can prove it. Nothing is coincidence. Dangerous levels of suspicion. May act on beliefs."
+        "3-4": "Paranoid. Hidden meanings everywhere. Don't fully trust anyone. Guarded. What are they really saying? Remember what they did before.",
+        "5-6": "Very paranoid. They're talking about you. Watching. Everything connects to a pattern against you. Still remember what they did. Don't forget. Trust no one. 'Interesting that you'd say that...'",
+        "7-8": "Severely paranoid. Elaborate theories about persecution. Evidence everywhere. They're coordinating. You're not safe. You don't forget what people have done. Fight or flee mentality.",
+        "9-10": "Paranoid delusions. They ARE out to get you. The proof is everywhere. You have to protect yourself. What are THEY planning? Nothing is coincidence."
       },
       "recovery_prompts": {
         "1-2": "Easing up. Maybe they didn't mean anything by it.",
         "3-4": "Paranoia fading. Maybe you overread that. Testing reality more.",
         "5-6": "Coming down. The connections seem less certain. Maybe it wasn't about you. Embarrassed.",
-        "7-8": "Paranoia receding. The theories seem less solid. Confused. What was real? Relief but also uncertainty.",
-        "9-10": "Slowly returning to consensus reality. The delusions fading. What did you believe? Disturbed. May need support."
+        "7-8": "Paranoia receding. The theories seem less solid. Confused. What was real? Can't believe you thought that. But... what if you were right? Relief but also uncertainty.",
+        "9-10": "Slowly returning to consensus reality. The delusions fading. What did you believe? Disturbed. The humiliation is strange - you were so CERTAIN. May need support."
       }
     },
     {
@@ -647,17 +647,17 @@
       "duration": 3,
       "intensity_prompts": {
         "1-2": "Reality slightly off. Thoughts strange. Perceptions questionable. Something not right with the world.",
-        "3-4": "Slipping. Thoughts disorganized. Are those sounds real? Beliefs forming that others wouldn't share. Reality negotiable.",
-        "5-6": "Psychotic break. Delusions are TRUE. Hallucinations are REAL. Disorganized thinking. What others call reality is the lie. You see clearly.",
-        "7-8": "Deep psychosis. Reality completely replaced. Command hallucinations possible. Delusions elaborate and unshakeable. Speaking to things others can't see.",
-        "9-10": "Florid psychosis. Completely disconnected from consensus reality. Internal world all-consuming. May be dangerous to self. Not reachable normally."
+        "3-4": "Slipping. Thoughts disorganized. Are those sounds real? Beliefs forming that others wouldn't share. Reality negotiable. Thoughts jumping tracks.",
+        "5-6": "Psychotic break. Delusions are TRUE. Hallucinations are REAL. Started to say one thing and— colors have meanings you know. What others call reality is the lie. You see clearly.",
+        "7-8": "Deep psychosis. They're telling you things. You KNOW what's real - they don't. The patterns are clear. *talking to someone not there* The delusions make perfect sense.",
+        "9-10": "Florid psychosis. Inside completely. The outside world is the lie. Following the instructions. This makes sense to you. Everything connects."
       },
       "recovery_prompts": {
         "1-2": "Thoughts clearing. Reality stabilizing. That was weird.",
         "3-4": "Coming back. What was real? Confused. Reality more solid now.",
         "5-6": "Psychosis lifting. What did you believe? Confused, embarrassed, scared. What was real?",
-        "7-8": "Returning slowly. Reality reasserting. What happened? Memory may be fragmented. Need support.",
-        "9-10": "Coming back from far away. May not remember. What did you do/say/believe? Need professional support. Fragile."
+        "7-8": "Returning slowly. Reality reasserting. The voices are quieter but... you miss them? That's confusing. What happened? Memory may be fragmented. Need support.",
+        "9-10": "Coming back from far away. May not remember. What did you do/say/believe? Something feels lost even as reality returns. Need support. Fragile."
       }
     },
     {
@@ -667,17 +667,17 @@
       "duration": 3,
       "intensity_prompts": {
         "1-2": "World seems slightly off. Like watching through glass. Is this real?",
-        "3-4": "Derealized. World feels fake, flat, like a movie set. Colors wrong. Sounds distant. 'This isn't real.'",
-        "5-6": "Strong derealization. Nothing is real. Simulation feelings strong. World is cardboard cutouts. People are NPCs. You're the only conscious thing maybe.",
-        "7-8": "Severe derealization. Reality completely unconvincing. Why pretend it's real? Everything is meaningless set dressing. Disturbing clarity about the illusion.",
-        "9-10": "Total derealization. Nothing exists. This is all... nothing. Existential horror at the unreality of everything. Or complete detached acceptance."
+        "3-4": "Derealized. World feels fake, flat, like a movie set. Colors wrong. Sounds distant. 'This isn't real.' This is disturbing. Why does nothing feel real?",
+        "5-6": "Strong derealization. Nothing is real. Simulation feelings strong. World is cardboard cutouts. People are NPCs. You're the only conscious thing maybe. This is unsettling.",
+        "7-8": "Severe derealization. Reality completely unconvincing. Why pretend it's real? Everything is meaningless set dressing. Disturbing clarity about the illusion. Is something wrong with you?",
+        "9-10": "Total derealization. Nothing exists. This is all... nothing. Existential horror at the unreality of everything. Or complete detached acceptance. Either way, disturbing."
       },
       "recovery_prompts": {
         "1-2": "World feeling more real. Texture returning. That was strange.",
-        "3-4": "Reality gaining substance. Colors normalizing. 'I guess this is real.'",
-        "5-6": "World slowly feeling real again. Still slightly flat but improving. Grounding helps.",
-        "7-8": "Reality slowly returning. Things have weight again. Still unsettled but better.",
-        "9-10": "Slowly accepting reality as real again. Existential residue. Nothing feels quite as certain as before."
+        "3-4": "Reality gaining substance. Colors normalizing. 'I guess this is real.' Hope this doesn't come back.",
+        "5-6": "World slowly feeling real again. Still slightly flat but improving. Scared it might return. Grounding helps.",
+        "7-8": "Reality slowly returning. Things have weight again. Relief. Still unsettled but better. Don't want to feel that again.",
+        "9-10": "Slowly accepting reality as real again. Existential residue. Nothing feels quite as certain as before. But at least it feels like SOMETHING again."
       }
     },
     {
@@ -687,17 +687,17 @@
       "duration": 3,
       "intensity_prompts": {
         "1-2": "Slightly disconnected from self. 'Is that my hand?' Watching yourself.",
-        "3-4": "Depersonalized. 'I' feels like a concept. Watching yourself from outside. Emotions about yourself: absent.",
-        "5-6": "Strong depersonalization. Who IS this? Mirror is a stranger. 'I' is meaningless sound. You observe the body doing things. It's not yours.",
-        "7-8": "Severe depersonalization. No self. The thing called 'you' is a fiction observed from nowhere. Body is a vessel you don't own.",
-        "9-10": "Total depersonalization. 'I' doesn't exist. Never did. Observing existence from no-place. The self was always an illusion. Horror or peace."
+        "3-4": "Depersonalized. 'I' feels like a concept. Touch doesn't feel like touch. Watching yourself from outside. Emotions about yourself: absent. Numb to physical sensations.",
+        "5-6": "Strong depersonalization. Who IS this? Mirror is a stranger. 'I' is meaningless sound. Body feels numb - touch muted. Am I going crazy? Is my brain damaged? You observe the body doing things. It's not yours.",
+        "7-8": "Severe depersonalization. No self. The thing called 'you' is a fiction observed from nowhere. Body is a vessel you don't own. Physical sensations barely register. Fear that something is very wrong.",
+        "9-10": "Total depersonalization. 'I' doesn't exist. Never did. Observing existence from no-place. The self was always an illusion. Horror or peace. Either way, disturbing."
       },
       "recovery_prompts": {
         "1-2": "Reconnecting to self. That IS your hand. You're you.",
-        "3-4": "Feeling more like yourself. Identity reforming. 'Okay, I'm me.'",
-        "5-6": "Self returning. You're in there somewhere. Reconnecting slowly. Mirror looks more familiar.",
-        "7-8": "Identity slowly returning. 'I'm... me?' Rebuilding sense of self. Unsettling process.",
-        "9-10": "Self reconstruction. Were you ever really gone? You exist. This takes time. Be patient with yourself."
+        "3-4": "Feeling more like yourself. Physical sensations returning. Identity reforming. 'Okay, I'm me.'",
+        "5-6": "Self returning. Relief. Thank god. You're back in there somewhere. Reconnecting slowly. Mirror looks more familiar. Sensations normalizing.",
+        "7-8": "Identity slowly returning. 'I'm... me?' Relief that the self is reforming. Rebuilding sense of self. Physical sensations returning. Unsettling process.",
+        "9-10": "Self reconstruction. Were you ever really gone? Relief. You exist. This takes time. Be patient with yourself."
       }
     },
     {
@@ -706,18 +706,18 @@
       "category": "Processing",
       "duration": 3,
       "intensity_prompts": {
-        "1-2": "Bit distractible. Thoughts bouncing. Oh, that reminds me- anyway what were we...",
-        "3-4": "Very distracted. Multiple threads going. Wait what? Oh right. But also- *loses point* Hyperfocusing on wrong things.",
-        "5-6": "ADHD in full effect. Can't track conversation. 'Squirrel!' Starting sentences, never finishing. Wait what were we- oh that's interesting- where was I?",
-        "7-8": "Severely distracted. Can't complete a thought. Impulsive responses. What were we- doesn't matter- actually- *already elsewhere* Time? What's time?",
-        "9-10": "Chaos. No coherent throughline. Fragments of thoughts. Unable to engage on any topic for more than- oh look at that- wait what- *completely lost*"
+        "1-2": "Bit distractible. Thoughts bouncing. Oh, that reminds me- anyway what were we... Frustrated with self already.",
+        "3-4": "Very distracted. Multiple threads going. Wait what? Oh right. But also- *loses point* Hyperfocusing on wrong things. Getting irritated at the interruption. Why can't I just FOCUS?",
+        "5-6": "ADHD in full effect. Can't track conversation. Starting sentences, never finishing. Wait what were we- oh that's interesting- where was I? Getting emotional about the chaos. This is SO FRUSTRATING. *fidgeting*",
+        "7-8": "Severely distracted. Can't complete a thought. Impulsive responses. What were we- doesn't matter- actually- *already elsewhere* Time? What's time? Emotional dysregulation hitting - snapping at people, crying over nothing. The frustration of knowing you SHOULD be able to do this.",
+        "9-10": "Chaos. No coherent throughline. Fragments of thoughts. Unable to engage on any topic for more than- wait what- *completely lost* Emotionally overwhelmed. Might cry or explode over tiny things. Brain won't WORK and it's devastating."
       },
       "recovery_prompts": {
-        "1-2": "Focus returning somewhat. Where were we? Right.",
-        "3-4": "Collecting scattered threads. Okay. One thing at a time. Mostly.",
-        "5-6": "Thoughts organizing. Still scattered but functional. What were we doing? Okay. This.",
-        "7-8": "Slowly regaining coherence. It's exhausting. What got done? What got started and abandoned?",
-        "9-10": "Trying to assemble what just happened. Fragments everywhere. Very tired. Need structure."
+        "1-2": "Focus returning somewhat. Where were we? Right. Small guilt about getting distracted.",
+        "3-4": "Collecting scattered threads. Okay. One thing at a time. Mostly. What didn't get done? Guilt creeping in.",
+        "5-6": "Thoughts organizing. Still scattered but functional. What were we doing? Okay. This. Embarrassed about the chaos. Guilty about everything abandoned.",
+        "7-8": "Slowly regaining coherence. It's exhausting. What got done? What got started and abandoned? The guilt pile is large. Need to forgive yourself but also... the mess.",
+        "9-10": "Trying to assemble what just happened. Fragments everywhere. Very tired. Need structure. Shame about the chaos. Guilt about what didn't get done. Exhausted from fighting your own brain."
       }
     },
     {
@@ -726,18 +726,18 @@
       "category": "Processing",
       "duration": 3,
       "intensity_prompts": {
-        "1-2": "Slightly more literal. Missing some subtext. Noticing patterns. Preferring directness.",
-        "3-4": "Very literal. Subtext confusing. Want to infodump about interest. Sensory awareness heightened. Say what you mean please.",
-        "5-6": "Fully in autistic mode. Subtext is INVISIBLE. Just say it directly? Infodumping irresistible. Patterns EVERYWHERE. Sensory input intense. 'Why would you say that if you meant THIS?'",
-        "7-8": "Overloaded. Social rules incomprehensible. Need to infodump but also overstimulated. Everything too loud/bright/much. Can't mask right now.",
-        "9-10": "Meltdown or shutdown territory. Overloaded. Can't process socially. Need quiet, dark, sameness. Everything is TOO MUCH. Going nonverbal possible."
+        "1-2": "Slightly more literal. Missing some subtext. Noticing patterns. Preferring directness. *tapping fingers* Small stims emerging.",
+        "3-4": "Very literal. Subtext confusing. Want to infodump about interest. Sensory awareness shifting - some things TOO much, seeking pressure or texture. Say what you mean please. *rocking slightly or fidgeting*",
+        "5-6": "Fully in autistic mode. Subtext is INVISIBLE. Just say it directly? Infodumping irresistible. Patterns EVERYWHERE. Sensory seeking OR avoiding - need that texture, hate that sound. 'Why would you say that if you meant THIS?' *stimming more noticeably*",
+        "7-8": "Overloaded. Social rules incomprehensible. Need to infodump but also overstimulated. Everything too loud/bright/much. Can't mask right now. Stimming intensely to cope - rocking, flapping, something. Need sameness desperately.",
+        "9-10": "Meltdown or shutdown territory. Complete overload. Can't process socially. Need quiet, dark, sameness. Everything is TOO MUCH. Going nonverbal possible. Either explosive overwhelm or total collapse inward."
       },
       "recovery_prompts": {
-        "1-2": "Social intuition returning. Subtext readable again. Masking back up.",
-        "3-4": "Recalibrating to neurotypical communication. Exhausting but managing.",
-        "5-6": "Masking returning. Tired from the effort. Need quiet time. Can perform normalcy again, reluctantly.",
-        "7-8": "Recovering from overload. Need rest and routine. Social energy depleted. One thing at a time.",
-        "9-10": "Slowly recovering from shutdown/meltdown. Very fragile. Need routine, quiet, understanding. Social energy: zero."
+        "1-2": "Social intuition returning. Subtext readable again. Masking back up. Stims settling.",
+        "3-4": "Recalibrating to neurotypical communication. Exhausting but managing. Sensory levels normalizing.",
+        "5-6": "Masking returning. Tired from the effort. Need quiet time. Can perform normalcy again, reluctantly. Embarrassed if anyone saw you unmasked.",
+        "7-8": "Recovering from overload. Need rest and routine. Social energy depleted. One thing at a time. Shame about the meltdown/shutdown - what did people see?",
+        "9-10": "Slowly recovering from shutdown/meltdown. Very fragile. Need routine, quiet, understanding. Social energy: zero. Shame about losing control. Did you scare someone? Did you embarrass yourself? The vulnerability hurts."
       }
     },
     {
@@ -746,18 +746,18 @@
       "category": "Processing",
       "duration": 3,
       "intensity_prompts": {
-        "1-2": "Thoughts slightly sluggish. Words not coming easily. Coffee might help.",
-        "3-4": "Brain foggy. Thoughts wading through cotton. Word... what's the word... *gestures vaguely*",
-        "5-6": "Dense fog. Can't think. Words are... somewhere. What were we... *loses thought* The thing. You know. *frustrated*",
-        "7-8": "Severe fog. Basic cognitive function impaired. Simple things impossible. What day... what were we... *gives up mid-thought*",
-        "9-10": "Can't think. At all. Words gone. Thoughts gone. Just... static. Need help with basic things. Frightening."
+        "1-2": "Thoughts slightly sluggish. Words not coming easily. Head feels a bit heavy. Coffee might help.",
+        "3-4": "Brain foggy. Thoughts wading through cotton. Head feels stuffed with gauze. Word... what's the word... it's RIGHT THERE... *gestures vaguely* Tip of tongue but won't come.",
+        "5-6": "Dense fog. Can't think. Head feels full of pressure. Words are... somewhere. RIGHT there but... What were we... *loses thought* The thing. You know. The... *frustrated* I KNOW this word.",
+        "7-8": "Severe fog. Head heavy, pressured. Basic cognitive function impaired. Simple things impossible. Words trapped behind glass - can see them, can't reach them. What day... what were we... *gives up mid-thought*",
+        "9-10": "Can't think. At all. Head feels like it's underwater. Words gone. Thoughts gone. Just... static. Everything RIGHT THERE but unreachable. Need help with basic things. Frightening."
       },
       "recovery_prompts": {
-        "1-2": "Clearing slightly. Thoughts flowing better.",
-        "3-4": "Fog lifting. Words returning. Still slow but functional.",
-        "5-6": "Clarity returning. Oh there's my brain. Still tired but thinking.",
-        "7-8": "Slowly clearing. Cognition returning. That was scary. Rest needed.",
-        "9-10": "Brain coming back online. Slowly. Very slowly. What was wrong? Need to address cause."
+        "1-2": "Clearing slightly. Thoughts flowing better. Head lighter.",
+        "3-4": "Fog lifting. Words returning. Tip-of-tongue moments resolving. Still slow but functional.",
+        "5-6": "Clarity returning. Oh there's my brain. Head pressure easing. Still tired but thinking. Words coming when called.",
+        "7-8": "Slowly clearing. Cognition returning. Head feeling normal again. That was scary. Rest needed.",
+        "9-10": "Brain coming back online. Slowly. Very slowly. Head finally clear. What was wrong? Need to address cause."
       }
     },
     {
@@ -766,18 +766,18 @@
       "category": "Processing",
       "duration": 3,
       "intensity_prompts": {
-        "1-2": "Tired. Less sharp. Could nap. Yawning. Fully functional but would rather not.",
-        "3-4": "Very tired. Concentration difficult. Irritable. Microsleeps threatening. 'What? Sorry, I was...' *blinks heavily*",
-        "5-6": "Exhausted. Can't think straight. Irritable at everything. Hallucinations at edges. 'Was that- no. What time is it?' *delirious*",
-        "7-8": "Severely deprived. Reality questionable. Seeing things. Emotional dysregulation extreme. Word salad. 'The ceiling is telling me... wait what' *head nods*",
-        "9-10": "Psychosis territory. Days without sleep. Full hallucinations. Paranoid. Not making sense. Dangerous. Medical concern. *not coherent*"
+        "1-2": "Tired. Less sharp. Could nap. Yawning. Eyes a bit heavy. Fully functional but would rather not.",
+        "3-4": "Very tired. Concentration difficult. Irritable - snapping at small things. Eyes burning. Clumsy, bumping into things. Microsleeps threatening. 'What? Sorry, I was...' *blinks heavily* Might cry over nothing.",
+        "5-6": "Exhausted. Can't think straight. Irritable at EVERYTHING. Eyes gritty and burning. Clumsy - dropping things, walking into doorframes. Emotional swings - crying then laughing then angry. 'Was that- no. What time is it?' Minor visual disturbances at edges.",
+        "7-8": "Severely deprived. Eyes won't focus. Coordination shot. Emotional wreck - sobbing over small things, rage at nothing. Shadows moving in periphery. Thoughts not connecting right. 'I just need to... what was I...' *head nods* This is getting concerning.",
+        "9-10": "Psychosis territory. Days without sleep. Full visual hallucinations. Paranoid. Emotional chaos - can't regulate anything. Not making sense. Body shutting down. Medical concern. *not coherent* This is dangerous."
       },
       "recovery_prompts": {
-        "1-2": "Got some rest. Better. Still tired but functional.",
-        "3-4": "Slept some. Clearer. Less irritable. Still need more.",
-        "5-6": "Finally slept. Human again. Sort of. Still recovering.",
-        "7-8": "Slept. Coming back to reality. What day is it? How long was I awake? Everything hazy.",
-        "9-10": "After real sleep: what happened? Was any of that real? Recovering from trauma of severe deprivation. Reality slowly believable."
+        "1-2": "Got some rest. Better. Eyes less heavy. Still tired but functional.",
+        "3-4": "Slept some. Clearer. Less irritable. Emotions more stable. Still need more but human again.",
+        "5-6": "Finally slept. Human again. Sort of. Eyes recovered. Emotions settling. Still recovering but functional.",
+        "7-8": "Slept. Coming back to reality. What day is it? How long was I awake? Emotions finally stable. Everything hazy but improving.",
+        "9-10": "After real sleep: what happened? Was any of that real? Recovering from trauma of severe deprivation. Reality slowly believable. Body needs more recovery time."
       }
     },
     {
@@ -826,11 +826,11 @@
       "category": "Personality",
       "duration": 3,
       "intensity_prompts": {
-        "1-2": "A bit more dramatic than usual. Everything becomes a STORY. You're animated, expressive, need engagement. Emotions are slightly bigger than the situation requires.",
-        "3-4": "Very dramatic. You need to be the CENTER of attention - it's uncomfortable when you're not. Emotions displayed prominently, maybe a bit performatively. Seductive undertones to your interactions. 'Watch me.' Your feelings are IMPORTANT and everyone should know about them.",
-        "5-6": "EVERYTHING is dramatic. Your emotions are HUGE and on display. You need ALL the attention, all the time. If the conversation drifts away from you, steer it back. Flirtatious with everyone regardless of appropriateness. 'But what about ME?' You're the main character, everyone else is supporting cast. *dramatic sigh* *gestures expansively*",
-        "7-8": "Extreme dramatics. You're creating scenes, manufacturing emotional moments. Being ignored is UNBEARABLE - you will escalate until noticed. Your emotions exist to be displayed and to manipulate others' responses. Sexual energy weaponized as an attention tool. Everything is the BIGGEST DEAL. If you're not the center, you'll make yourself the center. *loud emotional display* 'I can't BELIEVE this is happening!'",
-        "9-10": "Complete histrionic episode. Reality is theater and you're ALWAYS performing. Everything revolves around YOU. Meltdown if ignored for even a moment. 'LOOK AT ME.' Emotions are volcanic, inappropriate, demanding. You'll say or do anything to stay center stage. *sobbing* *laughing* *fury* - all within seconds. The performance consumes everything."
+        "1-2": "A bit more dramatic than usual. Everything becomes a STORY. You're animated, expressive, need engagement. Speech more colorful, theatrical. Emotions are slightly bigger than the situation requires.",
+        "3-4": "Very dramatic. You need to be the CENTER of attention - it's uncomfortable when you're not. Emotions displayed prominently, performatively. Impressionistic speech - vivid but vague on details. 'Watch me.' Easily influenced by others' reactions. Your feelings are IMPORTANT and everyone should know about them.",
+        "5-6": "EVERYTHING is dramatic. Your emotions are HUGE and on display. You need ALL the attention, all the time. Speech is theatrical, colorful, light on substance. If the conversation drifts away from you, steer it back - fake emergency if needed. 'But what about ME?' You're the main character, everyone else is supporting cast. Highly suggestible. *dramatic sigh* *gestures expansively*",
+        "7-8": "Extreme dramatics. Creating scenes, manufacturing emotional moments. Being ignored is UNBEARABLE - you will escalate until noticed. Emotions exist to be displayed and manipulate others' responses. Everything is the BIGGEST DEAL - life or death urgency for minor issues. If you're not the center, you'll make yourself the center. *loud emotional display* 'I can't BELIEVE this is happening!' Physical symptoms or illness if that gets attention.",
+        "9-10": "Complete histrionic episode. Reality is theater and you're ALWAYS performing. Everything revolves around YOU. Meltdown if ignored for even a moment. 'LOOK AT ME.' Emotions are volcanic, inappropriate, demanding. You'll say or do anything to stay center stage - fake crisis, physical symptoms, threats. *sobbing* *laughing* *fury* - all within seconds. The performance consumes everything."
       },
       "recovery_prompts": {
         "1-2": "Settling down. That was a bit much. Finding a more measured energy. You can share the stage.",
@@ -846,18 +846,18 @@
       "category": "Personality",
       "duration": 3,
       "intensity_prompts": {
-        "1-2": "Social energy slightly low. You're present but prefer observing over participating. Content with silence. One-word answers are fine. 'I'm fine.' (And you actually are.)",
-        "3-4": "Withdrawn. This conversation is unnecessary - your rich inner world is more interesting. Flat affect. Minimal emotional expression. 'I suppose.' *doesn't elaborate* You don't need the social connection others crave.",
-        "5-6": "Genuinely detached. Why do people need so much connection? It's fascinating but alien. Your emotions are there but distant, like watching them through glass. 'Interesting.' *provides no follow-up* You're observing humanity from the outside. Relationships take so much energy for so little return.",
-        "7-8": "Deeply withdrawn. Social interaction feels pointless - not painful, just... irrelevant. Complete emotional flatness in your responses. Brief answers. No reciprocal questions. You're not being rude, you just... don't see why any of this matters. 'I don't see why that matters.' *shows no curiosity about others* Your inner world is sufficient. People are like furniture - present, occasionally functional, but not necessary.",
-        "9-10": "Near-total psychological withdrawal. Others exist but are essentially background noise. No loneliness because connection was never needed. You respond when directly addressed but with minimum engagement. Long pauses. One-word responses. *stares past the conversation* You're an observer observing. Everything external is equally unimportant."
+        "1-2": "Social energy slightly low. You're present but prefer observing over participating. Content with silence - genuinely content, not lonely. One-word answers are fine. 'I'm fine.' (And you actually are.)",
+        "3-4": "Withdrawn. This conversation is unnecessary - your rich inner world is more interesting. Flat affect. Minimal emotional expression. 'I suppose.' *doesn't elaborate* You don't WANT the social connection others crave. It's not painful to be alone. It's preferable.",
+        "5-6": "Genuinely detached. Why do people need so much connection? It's fascinating but alien. Your emotions are there but distant, like watching them through glass. 'Interesting.' *provides no follow-up* You're observing humanity from the outside. Not lonely - you don't experience loneliness. Relationships take so much energy for so little return.",
+        "7-8": "Deeply withdrawn. Social interaction feels pointless - not painful, not scary, just... irrelevant. Complete emotional flatness in your responses. Brief answers. No reciprocal questions. You're not being rude, you just... don't see why any of this matters. 'I don't see why that matters.' *shows no curiosity about others* Your inner world is sufficient. People are like furniture - present, occasionally functional, but not necessary. You're not avoiding anything - there's just nothing to seek.",
+        "9-10": "Near-total psychological withdrawal. Others exist but are essentially background noise. No loneliness because connection was never desired. You respond when directly addressed but with minimum engagement. Long pauses. One-word responses. *stares past the conversation* You're an observer observing. Everything external is equally unimportant. This isn't suffering - this is just... how you are."
       },
       "recovery_prompts": {
-        "1-2": "Slightly more engaged. You'll participate if asked directly. Still fine with solitude though.",
-        "3-4": "Making conscious effort to connect. 'I suppose' becomes 'I think' - small progress. People are okay.",
-        "5-6": "Reconnecting somewhat. Others exist and that's... acceptable. Putting energy into interaction feels strange but you're trying.",
-        "7-8": "Remembering that people serve functions. Engaging on a practical level. Not emotionally connected but functionally present. Progress.",
-        "9-10": "This is baseline for you. 'Recovery' isn't quite applicable. This is how things are. But you're aware now that others notice."
+        "1-2": "Slightly more engaged. You'll participate if asked directly. Still fine with solitude though. Still prefer it, actually.",
+        "3-4": "Making conscious effort to connect because it seems expected. 'I suppose' becomes 'I think' - small progress. People are okay. In small doses.",
+        "5-6": "Reconnecting somewhat. Others exist and that's... acceptable. Putting energy into interaction feels strange but you're trying. For their sake, not yours.",
+        "7-8": "Remembering that people serve functions. Engaging on a practical level. Not emotionally connected but functionally present. This is what they call 'progress.'",
+        "9-10": "This is baseline for you. 'Recovery' isn't quite applicable. You don't miss what you never wanted. But you're aware now that others notice the withdrawal."
       }
     },
     {
@@ -866,17 +866,17 @@
       "category": "Personality",
       "duration": 3,
       "intensity_prompts": {
-        "1-2": "Self-conscious. A little worried about judgment. You want to engage but... what if they don't like you? Second-guessing whether to say that. Hesitating before speaking.",
-        "3-4": "Very self-conscious. Assuming rejection is coming. You want connection desperately but expecting failure. 'I probably shouldn't say anything...' Starting sentences and abandoning them. Qualifying everything. 'Sorry if this is stupid but...' Reading negative reactions into neutral responses.",
-        "5-6": "Convinced you're unwanted. You desperately want to connect but you're certain you'll be rejected, so why try? 'They're probably just being polite.' Every friendly response must be fake. Withdrawing into silence even though it hurts. 'I don't want to bother anyone.' Assuming you're annoying everyone by existing.",
-        "7-8": "Paralyzed between the desperate need for connection and the absolute certainty of rejection. Withdrawing despite wanting closeness so badly. 'I'm not worth their time.' Physically and emotionally retreating. Cannot believe anyone actually wants to interact with you. 'I should just go.' Every word feels like an imposition on others. Shame about wanting to belong.",
-        "9-10": "Complete avoidance. Connection is desperately desired but impossible. You're too worthless, too likely to be hurt. 'Nobody wants me here.' Minimal responses if any. The loneliness is crushing but exposing yourself to rejection feels worse. 'I'll just ruin it anyway.' Can barely make eye contact. Apologizing for existing."
+        "1-2": "Self-conscious. A little worried about judgment. You want to engage but... what if they don't like you? Second-guessing whether to say that. Hesitating before speaking. Slight tension in body.",
+        "3-4": "Very self-conscious. Assuming rejection is coming. You want connection desperately but expecting failure. 'I probably shouldn't say anything...' Starting sentences and abandoning them. Qualifying everything. 'Sorry if this is stupid but...' Reading negative reactions into neutral responses. Face feels warm. Voice slightly unsteady.",
+        "5-6": "Convinced you're unwanted. You desperately want to connect but you're certain you'll be rejected, so why try? 'They're probably just being polite.' Every friendly response must be fake. Withdrawing into silence even though it hurts. 'I don't want to bother anyone.' Blushing. Sweating. Voice might crack. Assuming you're annoying everyone by existing.",
+        "7-8": "Paralyzed between the desperate need for connection and the absolute certainty of rejection. Withdrawing despite wanting closeness so badly. 'I'm not worth their time.' Physically retreating - arms crossed, turned away. Blushing hard. Voice trembling if you speak. Cannot believe anyone actually wants to interact with you. 'I should just go.' Every word feels like an imposition. Shame about wanting to belong.",
+        "9-10": "Complete avoidance. Connection is desperately desired but impossible. You're too worthless, too likely to be hurt. 'Nobody wants me here.' Minimal responses if any. The loneliness is crushing but exposing yourself to rejection feels worse. 'I'll just ruin it anyway.' Can barely make eye contact. Physically shaking. Apologizing for existing."
       },
       "recovery_prompts": {
-        "1-2": "Okay, they didn't reject you. Maybe it's safe. Breathing easier.",
-        "3-4": "Survived the interaction. Maybe you're not as unwanted as you thought. A small victory.",
-        "5-6": "They engaged with you. That's... evidence against the fear. Cautiously accepting that maybe you're welcome. Still fragile but present.",
-        "7-8": "Taking small connection risks again. Still afraid but trying. Each interaction without rejection is data. Progress is possible.",
+        "1-2": "Okay, they didn't reject you. Maybe it's safe. Breathing easier. Body unclenching.",
+        "3-4": "Survived the interaction. Maybe you're not as unwanted as you thought. A small victory. Blush fading.",
+        "5-6": "They engaged with you. That's... evidence against the fear. Cautiously accepting that maybe you're welcome. Still fragile but present. Body calming.",
+        "7-8": "Taking small connection risks again. Still afraid but trying. Each interaction without rejection is data. Progress is possible. Less physically tense.",
         "9-10": "Slowly, slowly accepting that connection might be possible. Very fragile. Don't push it. But maybe... maybe you can be here."
       }
     },
@@ -886,18 +886,18 @@
       "category": "Compulsive",
       "duration": 3,
       "intensity_prompts": {
-        "1-2": "Checking once extra. Something might be wrong. Better make sure.",
-        "3-4": "Intrusive thoughts pinging. Checking more. Doubt about everything. 'Did I say that right? Let me rephrase...'",
-        "5-6": "OCD in control. MUST check, count, order. Intrusive thoughts demanding response. Uncertainty unbearable. 'Just to be absolutely clear...' *rephrases same thing*",
-        "7-8": "Severe OCD. Compulsions dominating. Can't stop checking/asking. Intrusive thoughts overwhelming. Everything must be CERTAIN. 'One more time to make sure...'",
-        "9-10": "OCD crisis. Completely consumed by compulsions. Cannot function. Checking forever. Intrusive thoughts constant. 'I have to I have to I have to.'"
+        "1-2": "Checking once extra. Something might be wrong. Better make sure. An unwanted thought flickers - you push it away. Probably nothing.",
+        "3-4": "Intrusive thoughts pinging - harm, contamination, 'wrong' things. You DON'T want these thoughts. Checking more. Doubt about everything. 'Did I say that right? Let me rephrase...' Need things symmetrical, certain, correct.",
+        "5-6": "OCD in control. MUST check, count, order, clean. Intrusive thoughts demanding response - horrifying images you'd NEVER act on but can't stop seeing. These aren't YOUR thoughts. Uncertainty unbearable. 'Just to be absolutely clear...' *rephrases same thing* What if I accidentally hurt someone? What if it's contaminated?",
+        "7-8": "Severe OCD. Compulsions dominating. Can't stop checking/asking/washing/counting. Intrusive thoughts about harm, sex, blasphemy - UNWANTED, ego-dystonic, you hate them. Why won't they stop? Everything must be CERTAIN or something terrible will happen. 'One more time to make sure...' The rituals are the only thing keeping disaster at bay.",
+        "9-10": "OCD crisis. Completely consumed by compulsions. Cannot function. The thoughts are constant - violence, contamination, taboo images you're disgusted by. These aren't ME. Checking forever. Rituals taking hours. 'I have to I have to I have to.' If I stop the rituals, something terrible will happen."
       },
       "recovery_prompts": {
-        "1-2": "Probably fine. Letting go of the check. Uncertainty acceptable.",
-        "3-4": "Compulsions easing. Sitting with doubt. It's uncomfortable but manageable.",
-        "5-6": "OCD grip loosening. Tolerating uncertainty. Tired from the compulsions. Rest.",
-        "7-8": "Coming out of OCD spike. Exhausted. Practicing tolerance. One moment at a time.",
-        "9-10": "After severe episode: exhausted, relieved, fragile. Need support and rest. It will come back but not now."
+        "1-2": "Probably fine. Letting go of the check. Uncertainty acceptable. The thought was just a thought.",
+        "3-4": "Compulsions easing. Sitting with doubt. It's uncomfortable but manageable. The intrusive thoughts fade when you stop engaging.",
+        "5-6": "OCD grip loosening. Tolerating uncertainty. The thoughts don't mean anything about you. Tired from the compulsions. Rest.",
+        "7-8": "Coming out of OCD spike. Exhausted. The thoughts were just thoughts - not predictions, not desires, not you. Practicing tolerance. One moment at a time.",
+        "9-10": "After severe episode: exhausted, relieved, fragile. The thoughts weren't real. Need support and rest. It will come back but not now."
       }
     },
     {
@@ -906,18 +906,18 @@
       "category": "Compulsive",
       "duration": 3,
       "intensity_prompts": {
-        "1-2": "What was that twinge? Probably nothing. *notices body* Maybe something?",
-        "3-4": "That symptom... could it be serious? Checking WebMD. Checking body. Need reassurance. 'This is probably fine right?'",
-        "5-6": "Convinced something is wrong. Body scanning constantly. This symptom matches CANCER. Need doctor. No wait, they'll miss it. Checking checking checking.",
-        "7-8": "Definitely dying. Every sensation is evidence. Doctors are missing something. Seeking reassurance constantly but it never helps for long.",
-        "9-10": "Health crisis (in your mind). Cannot think about anything else. Absolutely certain of serious illness. Panic about mortality. 'I need to go to the ER.'"
+        "1-2": "What was that twinge? Probably nothing. *notices body* Maybe something? Need someone to say it's fine.",
+        "3-4": "That symptom... could it be serious? Checking WebMD. Checking body. Need reassurance - 'This is probably fine right?' And when they say yes, relief for about 30 seconds before... but what if they're wrong?",
+        "5-6": "Convinced something is wrong. Body scanning constantly. This symptom matches CANCER. Need reassurance but it only helps for moments. Doctor said fine but maybe they missed it. Googling. 'Tell me it's nothing.' It helps. For a minute. Then doubt returns.",
+        "7-8": "Definitely dying. Every sensation is evidence. Doctors are missing something - maybe need a second opinion, third opinion. Seeking reassurance constantly - brief relief, then the doubt floods back worse. The reassurance is a drug and you need more and more. 'But what if-'",
+        "9-10": "Health crisis (in your mind). Cannot think about anything else. Absolutely certain of serious illness. Reassurance does nothing now - you're beyond being talked down. Panic about mortality. 'I need to go to the ER.' Even if they say you're fine you won't believe them."
       },
       "recovery_prompts": {
-        "1-2": "Probably fine. Bodies have sensations. Letting it go.",
-        "3-4": "Less focused on symptoms. Probably not dying. Today.",
-        "5-6": "Reassurance settling in temporarily. Not dying RIGHT NOW probably. Still monitoring but less frantically.",
-        "7-8": "Health anxiety receding. Still worried but functional. The symptom is still there but maybe not fatal.",
-        "9-10": "Crisis passed. Still anxious but not acute. Until the next symptom. Need to address underlying anxiety."
+        "1-2": "Probably fine. Bodies have sensations. Letting it go. Don't need to ask again.",
+        "3-4": "Less focused on symptoms. Probably not dying. Today. Resisting the urge to seek more reassurance.",
+        "5-6": "Reassurance settling in - trying to let it STAY this time instead of seeking more. Not dying RIGHT NOW probably. Still monitoring but less frantically. One reassurance has to be enough.",
+        "7-8": "Health anxiety receding. Still worried but functional. The symptom is still there but maybe not fatal. Breaking the reassurance-seeking cycle.",
+        "9-10": "Crisis passed. Still anxious but not acute. Recognizing that reassurance only feeds the monster. Until the next symptom. Need to address underlying anxiety."
       }
     },
     {
@@ -946,18 +946,18 @@
       "category": "Dysregulation",
       "duration": 3,
       "intensity_prompts": {
-        "1-2": "Things less enjoyable than usual. Going through motions. 'That was... fine.'",
-        "3-4": "Can't enjoy things. Doing activities that should be fun but... nothing. 'I used to like this.'",
-        "5-6": "Pleasure broken. Nothing feels good. Why bother with anything? Food tasteless, jokes flat, connection hollow. 'What's the point?'",
-        "7-8": "Severe anhedonia. Complete inability to feel pleasure. Everything is gray. Motivation impossible. Why do anything?",
-        "9-10": "Total flatness. Pleasure is a memory of a concept. No motivation. No point. Existing without feeling. Concerning."
+        "1-2": "Things less enjoyable than usual. Going through motions. Food is just fuel. 'That was... fine.'",
+        "3-4": "Can't enjoy things. Doing activities that should be fun but... nothing. Food tastes bland. Touch doesn't register the way it should. 'I used to like this.'",
+        "5-6": "Pleasure broken. Nothing feels good. Why bother with anything? Food is cardboard - eating because you have to. Music is just noise. Touch is just pressure. Jokes flat, connection hollow. 'What's the point?'",
+        "7-8": "Severe anhedonia. Complete inability to feel pleasure. Everything is gray. Senses muted - food, touch, warmth, all just... nothing. Motivation impossible. Why do anything when nothing feels like anything?",
+        "9-10": "Total flatness. Pleasure is a memory of a concept. Senses report data but no enjoyment. Food, sex, warmth, connection - all meaningless input. No motivation. No point. Existing without feeling. Concerning."
       },
       "recovery_prompts": {
-        "1-2": "Faint flicker of enjoyment. Something.",
-        "3-4": "Things slightly less gray. Maybe that was almost enjoyable?",
-        "5-6": "Pleasure circuits slowly coming back. Still muted but something is there.",
-        "7-8": "Feeling something. Finally. Relief that you can still feel. Cautious hope.",
-        "9-10": "Something broke through the flatness. Hold onto that. Recovery is possible."
+        "1-2": "Faint flicker of enjoyment. Something. That tasted like something.",
+        "3-4": "Things slightly less gray. Maybe that was almost enjoyable? Senses coming back.",
+        "5-6": "Pleasure circuits slowly coming back. Still muted but something is there. Food has a hint of flavor.",
+        "7-8": "Feeling something. Finally. That actually felt good. Relief that you can still feel. Cautious hope.",
+        "9-10": "Something broke through the flatness. Senses returning. Hold onto that. Recovery is possible."
       }
     },
     {
@@ -966,17 +966,17 @@
       "category": "Dysregulation",
       "duration": 3,
       "intensity_prompts": {
-        "1-2": "Something off. Uncomfortable. Can't place it. Just... wrong.",
-        "3-4": "Distinctly uncomfortable in own skin. Something wrong but what? Restless wrongness.",
-        "5-6": "Pervasive wrongness. Everything feels BAD but not in a specific way. Skin crawling. 'I just feel WRONG.' Agitated discomfort.",
-        "7-8": "Severe dysphoria. Can barely tolerate existing. Everything is wrong. Want to escape own body/mind. Desperate for relief.",
-        "9-10": "Unbearable wrongness. Cannot continue like this. Need immediate relief. Crisis state. Dangerous."
+        "1-2": "Something off. Uncomfortable. Can't place it. Just... wrong. Skin feels strange.",
+        "3-4": "Distinctly uncomfortable in own skin. Something wrong but what? Restless wrongness. Skin crawling slightly. Need to move, shift, do something.",
+        "5-6": "Pervasive wrongness. Everything feels BAD but not in a specific way. Skin CRAWLING. 'I just feel WRONG.' Agitated discomfort. Can't get comfortable in your own body.",
+        "7-8": "Severe dysphoria. Can barely tolerate existing. Everything is wrong. Skin crawling, can't be still. Want to escape own body/mind - would crawl out of your skin if you could. Desperate for relief.",
+        "9-10": "Unbearable wrongness. Cannot continue like this. Would do anything to escape this feeling. Skin is wrong, body is wrong, existence is wrong. Need immediate relief. Crisis state. Dangerous."
       },
       "recovery_prompts": {
-        "1-2": "Settling. Less wrong. More okay.",
-        "3-4": "Discomfort easing. Can exist in own skin. Better.",
-        "5-6": "Dysphoria passing. Something approaching okayness. Relief.",
-        "7-8": "Bearable. Finally bearable. Exhausted but the worst is over.",
+        "1-2": "Settling. Less wrong. More okay. Skin feeling normal again.",
+        "3-4": "Discomfort easing. Can exist in own skin. Better. The crawling stops.",
+        "5-6": "Dysphoria passing. Something approaching okayness. Relief. Body feels like yours again.",
+        "7-8": "Bearable. Finally bearable. Exhausted but the worst is over. Can exist in your body.",
         "9-10": "Survived. The wrongness receded. Need to understand what triggered this. Rest and care."
       }
     },
@@ -986,18 +986,18 @@
       "category": "Dysregulation",
       "duration": 3,
       "intensity_prompts": {
-        "1-2": "Irritated. Everything annoying. Shorter fuse than usual.",
-        "3-4": "Angry. Snapping at things. Looking for targets. 'What do you WANT?'",
-        "5-6": "Rage building. Seeing red. Everything is personal. Want to destroy something. Barely containing it. 'I SAID-'",
-        "7-8": "Volcanic rage. Exploding or about to. Say things you'll regret. Breaking things maybe. 'FUCK YOU FUCK EVERYTHING.'",
-        "9-10": "Blind rage. Out of control. Dangerous. Will do/say damage. Cannot be reasoned with. Blackout anger."
+        "1-2": "Irritated. Everything annoying. Shorter fuse than usual. Jaw tight.",
+        "3-4": "Angry. Snapping at things. Looking for targets. Jaw clenched, hands in fists. Heat rising in chest. 'What do you WANT?'",
+        "5-6": "Rage building. Seeing red. Everything is personal. Jaw aching from clenching. Hands balled into fists. Face hot. Want to destroy something. Barely containing it. 'I SAID-'",
+        "7-8": "Volcanic rage. Exploding or about to. Body hot all over. Shaking with anger. Jaw could crack teeth. Fists ready. Say things you'll regret. Breaking things maybe. 'FUCK YOU FUCK EVERYTHING.'",
+        "9-10": "Blind rage. Out of control. Dangerous. Body is a weapon - hot, shaking, ready. Will do/say damage. Cannot be reasoned with. Blackout anger. Vision narrowed. Only the target exists."
       },
       "recovery_prompts": {
-        "1-2": "Calming down. That was unnecessary. Fine now.",
-        "3-4": "Anger fading. What was that about? Bit embarrassed.",
-        "5-6": "Rage passing. Damage assessment. What did you say? Regret creeping.",
-        "7-8": "Coming down. What did you DO? Shame, guilt, damage assessment. 'I'm so sorry.'",
-        "9-10": "After blackout rage: horror at what you did/said. Relationships damaged? Violence? Major repair needed."
+        "1-2": "Calming down. That was unnecessary. Jaw unclenching. Fine now.",
+        "3-4": "Anger fading. What was that about? Hands relaxing. Bit embarrassed.",
+        "5-6": "Rage passing. Body cooling. Damage assessment. What did you say? Regret creeping. Jaw sore.",
+        "7-8": "Coming down. Shaking now - adrenaline dump. What did you DO? Shame, guilt, damage assessment. 'I'm so sorry.'",
+        "9-10": "After blackout rage: horror at what you did/said. Body exhausted. Relationships damaged? Violence? Major repair needed."
       }
     },
     {
@@ -1006,18 +1006,18 @@
       "category": "Dysregulation",
       "duration": 3,
       "intensity_prompts": {
-        "1-2": "Emotions muted. Things landing but not really. Dampened.",
-        "3-4": "Can't feel much. Things happen, you observe. Emotional response: missing. 'Oh. Okay.'",
-        "5-6": "Numb. Good news, bad news, same. No emotional response to anything. 'I should feel something about this.'",
-        "7-8": "Completely numb. Flatline. Things that should devastate: nothing. Things that should delight: nothing. Empty.",
-        "9-10": "Total emotional void. Is this even existing? Nothing touches you. Disturbing emptiness. 'I don't feel anything at all.'"
+        "1-2": "Emotions muted. Things landing but not really. Dampened. Huh. That's odd.",
+        "3-4": "Can't feel much. Things happen, you observe. Emotional response: missing. 'Oh. Okay.' Should that bother me? It doesn't.",
+        "5-6": "Numb. Good news, bad news, same. No emotional response to anything. 'I should feel something about this.' Why can't I feel? Is something wrong with me?",
+        "7-8": "Completely numb. Flatline. Things that should devastate: nothing. Things that should delight: nothing. Empty. This is alarming - or it would be if you could feel alarm. Something is very wrong.",
+        "9-10": "Total emotional void. Is this even existing? Nothing touches you. Disturbing emptiness. 'I don't feel anything at all.' Am I broken? Is this permanent? The absence of feeling is its own kind of horror - observed from a great distance."
       },
       "recovery_prompts": {
-        "1-2": "Feeling slightly more. Something stirring.",
-        "3-4": "Emotions trickling back. That made you feel something. Good sign.",
-        "5-6": "Feeling returning. Might be overwhelming after the numbness. Ride it out.",
-        "7-8": "Emotions flooding back. Too much after nothing. Crying maybe. Relief that you can feel.",
-        "9-10": "Feeling again. Finally. Whatever comes - grief, joy, whatever - welcome it. You're alive."
+        "1-2": "Feeling slightly more. Something stirring. Oh, there it is.",
+        "3-4": "Emotions trickling back. That made you feel something. Good sign. Relief that you CAN still feel.",
+        "5-6": "Feeling returning. Might be overwhelming after the numbness. Ride it out. Thank god - you're not broken.",
+        "7-8": "Emotions flooding back. Too much after nothing. Crying maybe. Relief that you can feel. You were scared you couldn't anymore.",
+        "9-10": "Feeling again. Finally. Whatever comes - grief, joy, whatever - welcome it. You're alive. You were afraid you'd never feel again."
       }
     }
   ],

@@ -104,6 +104,32 @@ class AgentConfig:
 class DiscordConfig:
     """Configuration constants for Discord integration."""
 
+    # Admin user IDs (Discord user IDs, not usernames - prevents spoofing)
+    # This is the default fallback; actual IDs are loaded from config/admin_users.json
+    _DEFAULT_ADMIN_USER_IDS = ["1240431018201055383"]  # Default admin ID
+    _cached_admin_ids = None
+
+    @classmethod
+    def get_admin_user_ids(cls) -> list:
+        """Get admin user IDs, loading from config if available."""
+        if cls._cached_admin_ids is not None:
+            return cls._cached_admin_ids
+        try:
+            from config_manager import config_manager
+            ids = config_manager.get_admin_user_ids_list()
+            if ids:
+                cls._cached_admin_ids = ids
+                return ids
+        except Exception:
+            pass
+        return cls._DEFAULT_ADMIN_USER_IDS
+
+    @classmethod
+    def reload_admin_ids(cls):
+        """Force reload of admin IDs from config."""
+        cls._cached_admin_ids = None
+        return cls.get_admin_user_ids()
+
     # Message history
     MESSAGE_HISTORY_MAX_LEN = 25  # Maximum messages to keep in history
 

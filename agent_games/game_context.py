@@ -44,6 +44,7 @@ class AgentGameState:
     idcc_previous_prompt: Optional[str] = None  # Previous scene's prompt for continuity
     idcc_scene_number: Optional[int] = None  # Current scene number
     idcc_num_clips: Optional[int] = None  # Total number of clips
+    idcc_shot_direction: Optional[str] = None  # Format-appropriate shot direction for this scene
 
 
 class GameContextManager:
@@ -222,7 +223,8 @@ class GameContextManager:
         show_bible: Optional[str] = None,
         previous_prompt: Optional[str] = None,
         scene_number: Optional[int] = None,
-        num_clips: Optional[int] = None
+        num_clips: Optional[int] = None,
+        shot_direction: Optional[str] = None
     ) -> None:
         """
         Update IDCC-specific context for an agent.
@@ -234,6 +236,7 @@ class GameContextManager:
             previous_prompt: Previous scene's prompt for continuity
             scene_number: Current scene number (1-indexed)
             num_clips: Total number of clips
+            shot_direction: Format-appropriate shot direction for this scene
         """
         if agent_name not in self.active_games:
             logger.warning(f"[GameContext] Cannot update IDCC context for {agent_name} - not in game mode")
@@ -260,6 +263,10 @@ class GameContextManager:
         if num_clips is not None:
             state.idcc_num_clips = num_clips
 
+        if shot_direction is not None:
+            state.idcc_shot_direction = shot_direction
+            logger.debug(f"[GameContext] Updated shot direction for {agent_name}: {shot_direction[:50]}...")
+
     def get_game_prompt_for_agent(self, agent_name: str) -> str:
         """
         Get the game-specific prompt for an agent.
@@ -284,6 +291,7 @@ class GameContextManager:
                 "{previous_prompt}": game_state.idcc_previous_prompt or "N/A - this is the first scene",
                 "{scene_number}": str(game_state.idcc_scene_number or 1),
                 "{num_clips}": str(game_state.idcc_num_clips or 4),
+                "{shot_direction}": game_state.idcc_shot_direction or "Wide establishing shot - set the scene",
             }
             for key, value in replacements.items():
                 prompt = prompt.replace(key, value)

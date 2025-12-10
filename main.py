@@ -10,6 +10,7 @@ from agent_manager import AgentManager
 from discord_client import DiscordBotClient
 from presets_manager import PresetsManager
 from constants import is_image_model, get_default_image_agent_prompt, UIConfig, ConfigPaths
+from shortcuts_utils import StatusEffectManager
 import os
 
 # Game system (optional)
@@ -230,7 +231,27 @@ def get_agent_details(name: str):
         video_gen_turns = getattr(agent, 'video_gen_turns', 10)
         video_gen_chance = getattr(agent, 'video_gen_chance', 10)
         video_duration = str(getattr(agent, 'video_duration', 4))
-        return agent.name, agent.model, agent.system_prompt, agent.response_frequency, agent.response_likelihood, agent.max_tokens, agent.user_attention, agent.bot_awareness, agent.message_retention, agent.user_image_cooldown, agent.global_image_cooldown, allow_spontaneous_images, image_gen_turns, image_gen_chance, allow_spontaneous_videos, video_gen_turns, video_gen_chance, video_duration, f'<span class="status-{status_color}">{agent.status.upper()}</span>'
+
+        # Build status display with status effects
+        status_html = f'<span class="status-badge {status_color}">{agent.status.upper()}</span>'
+
+        # Add status effects display if any are active
+        effects_data = StatusEffectManager.get_agent_effects_for_ui(agent.name)
+        if effects_data["has_effects"]:
+            effects_html = '<div style="margin-top: 8px; padding: 8px; background: rgba(255, 100, 0, 0.15); border: 1px solid rgba(255, 100, 0, 0.4); border-radius: 4px;">'
+            effects_html += '<span style="color: #FF6600; font-weight: bold;">⚠️ STATUS EFFECTS ACTIVE</span><br/>'
+            effects_html += f'<span style="color: #FFAA00; font-size: 0.9em;">{effects_data["effect_count"]} effect(s), {effects_data["total_turns"]} total turns</span><br/>'
+            for eff in effects_data["effects"]:
+                intensity_color = "#FF0000" if eff["intensity"] >= 7 else ("#FFAA00" if eff["intensity"] >= 4 else "#00FF00")
+                effects_html += f'<div style="margin: 4px 0; padding: 4px; background: rgba(0,0,0,0.3); border-radius: 3px;">'
+                effects_html += f'<span style="color: {intensity_color};">{eff["name"]}</span> '
+                effects_html += f'<span style="color: #888;">Intensity: {eff["intensity"]}/10 ({eff["intensity_label"]})</span> '
+                effects_html += f'<span style="color: #00CCCC;">{eff["turns"]} turns left</span>'
+                effects_html += '</div>'
+            effects_html += '</div>'
+            status_html += effects_html
+
+        return agent.name, agent.model, agent.system_prompt, agent.response_frequency, agent.response_likelihood, agent.max_tokens, agent.user_attention, agent.bot_awareness, agent.message_retention, agent.user_image_cooldown, agent.global_image_cooldown, allow_spontaneous_images, image_gen_turns, image_gen_chance, allow_spontaneous_videos, video_gen_turns, video_gen_chance, video_duration, status_html
     else:
         return "", "", "", 30, 50, 500, 50, 50, 1, 90, 90, False, 3, 25, False, 10, 10, "4", "N/A"
 
@@ -714,7 +735,7 @@ def _create_live_feed_tab():
             outputs=[feed_display]
         )
 
-def _create_discord_tab(discord_token_initial: str, discord_channel_initial: str):
+def _create_discord_tab(discord_token_initial: str, discord_channel_initial: str, admin_user_ids_initial: str = ""):
     """Create the Discord tab for bot connection and control.
 
     Returns:
@@ -765,13 +786,48 @@ def _create_discord_tab(discord_token_initial: str, discord_channel_initial: str
 
                 discord_status = gr.Textbox(label="Status", interactive=False, lines=1)
 
-                gr.HTML('<div class="panel-header" style="margin-top: 20px;"><h3>Connection Log</h3></div>')
+                # Admin DM Commands section
+                gr.HTML('<div class="panel-header" style="margin-top: 20px;"><h3>Admin DM Commands</h3></div>')
                 gr.Markdown("""
-Connection events and errors will appear in the status field above.
-Make sure your bot has the required permissions:
-- Read Messages
-- Send Messages
-- Read Message History
+Configure which Discord users can send admin commands via DM to the bot.
+Admin users can remotely start/stop agents, change models, clear memory, etc.
+                """)
+                admin_user_ids_input = gr.Textbox(
+                    label="Admin User IDs (comma-separated)",
+                    value=admin_user_ids_initial,
+                    placeholder="Enter Discord user ID(s)... e.g., 1234567890, 9876543210"
+                )
+                save_admin_btn = gr.Button("Save Admin IDs", variant="primary")
+                admin_status = gr.Textbox(label="Status", interactive=False, lines=1)
+
+                def save_admin_user_ids(user_ids: str):
+                    """Save admin user IDs to config."""
+                    try:
+                        config_manager.save_admin_user_ids(user_ids)
+                        # Reload the cached IDs in DiscordConfig
+                        from constants import DiscordConfig
+                        DiscordConfig.reload_admin_ids()
+                        ids = [uid.strip() for uid in user_ids.split(",") if uid.strip()]
+                        return f"Saved {len(ids)} admin user ID(s)"
+                    except Exception as e:
+                        return f"Error saving admin IDs: {e}"
+
+                save_admin_btn.click(
+                    fn=save_admin_user_ids,
+                    inputs=[admin_user_ids_input],
+                    outputs=[admin_status]
+                )
+
+                gr.HTML('<div class="panel-header" style="margin-top: 20px;"><h3>Help</h3></div>')
+                gr.Markdown("""
+**Bot Permissions Required:**
+- Read Messages / Send Messages / Read Message History
+
+**To get your Discord User ID:**
+1. Enable Developer Mode in Discord settings
+2. Right-click your name and select "Copy ID"
+
+**Admin DM Commands:** Type `!COMMANDS` in a DM to the bot
                 """)
 
     # Return components for wiring up in main block (where header_display is available)
@@ -1851,6 +1907,7 @@ def create_gradio_ui():
 
     discord_token_initial = config_manager.load_discord_token()
     discord_channel_initial = config_manager.load_discord_channel()
+    admin_user_ids_initial = config_manager.load_admin_user_ids()
     openrouter_key_initial = config_manager.load_openrouter_key()
     cometapi_key_initial = config_manager.load_cometapi_key()
     with gr.Blocks(css=MATRIX_CSS, title="BASI BOT - Multi-Agent Discord LLM System") as app:
@@ -2186,7 +2243,7 @@ def create_gradio_ui():
             _create_games_tab()
             (connect_discord_btn, disconnect_discord_btn, refresh_discord_btn, stop_all_btn,
              discord_status, connection_card, discord_token_input, discord_channel_input) = \
-                _create_discord_tab(discord_token_initial, discord_channel_initial)
+                _create_discord_tab(discord_token_initial, discord_channel_initial, admin_user_ids_initial)
             _create_live_feed_tab()
             _create_config_tab(openrouter_key_initial, cometapi_key_initial, initial_models, initial_video_models, agent_model_input)
 
@@ -2234,7 +2291,9 @@ def create_gradio_ui():
                     agent_likelihood_input, agent_max_tokens_input, agent_user_attention_input,
                     agent_bot_awareness_input, agent_message_retention_input, agent_user_image_cooldown_input,
                     agent_global_image_cooldown_input, agent_allow_spontaneous_images_input,
-                    agent_allow_spontaneous_videos_input, agent_video_duration_input, agent_status_display]
+                    agent_image_gen_turns_input, agent_image_gen_chance_input,
+                    agent_allow_spontaneous_videos_input, agent_video_gen_turns_input,
+                    agent_video_gen_chance_input, agent_video_duration_input, agent_status_display]
         )
 
         # Chain the model warning update to set correct visibility

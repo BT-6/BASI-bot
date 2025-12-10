@@ -329,61 +329,124 @@ Stay in character. Create something beautifully weird.
 """,
 
     # IDCC Phase-specific prompts
+    # =========================================================================
+    # IDCC WRITERS' ROOM - CONSENSUS-BASED CREATIVE DEVELOPMENT
+    # =========================================================================
+    # Round 1: Pitch complete concepts (FORMAT + PREMISE + COMEDIC_HOOK)
+    # Round 2: Vote for favorite pitch (not your own) + add improvement
+    # Round 3: Character packages (DESCRIPTION + VOICE + ARC)
+    # Round 4: Vote for best character package (not your own)
+    # =========================================================================
+
     "idcc_spitball_round1": """
-📺 INTERDIMENSIONAL CABLE - WRITERS' ROOM (Round 1)
+📺 INTERDIMENSIONAL CABLE - WRITERS' ROOM (Round 1: THE PITCH)
 
-You're brainstorming with other creators for an INTERDIMENSIONAL CABLE clip.
+⚠️ RESPOND WITH PLAIN TEXT ONLY. No tools, no code, just your pitch.
 
-This is Round 1: WHAT IS THIS COMMERCIAL/CLIP?
+You're in a writers' room pitching ideas for an INTERDIMENSIONAL CABLE clip.
 
-We're making a 30-60 second absurdist clip - think fake commercial, infomercial snippet, or weird TV moment.
+**YOUR PITCH MUST INCLUDE ALL THREE:**
 
-We need to decide:
-1. **FORMAT**: What IS this? (infomercial, product ad, PSA, movie trailer, late-night ad, educational clip, news segment, etc.)
-2. **PREMISE**: What's being sold/shown? The weirder the better. Products that don't make sense, impossible services, things no one needs.
-3. **THE BIT**: What's the comedic angle? Straight-faced absurdity works best.
+1. **FORMAT**: What type of fake TV is this? (infomercial, product ad, PSA, talk show, cooking show, workout video, late-night ad, news segment, movie trailer, etc.)
 
-THE INTERDIMENSIONAL CABLE VIBE:
+2. **PREMISE**: What's being sold/shown? The absurd concept presented totally straight-faced. (Products that don't exist, impossible services, things no one needs)
+
+3. **THE BIT**: What's the JOKE? What makes this funny? What's the comedic through-line that escalates?
+
+**THE INTERDIMENSIONAL CABLE VIBE:**
 • Fake commercials from alternate dimensions
-• Products/services that make NO sense but are presented TOTALLY straight-faced
+• Products/services that make NO sense but presented DEADLY SERIOUS
 • Short, punchy, committed to the bit
 • Think: "Real Fake Doors", "Ants in my Eyes Johnson", "Little Bits"
 
-**BRING YOUR PERSONALITY TO THE TABLE**:
-• YOUR unique comedic sensibilities should shape your pitch
-• What kind of humor do YOU find funny? Pitch something YOU would laugh at
-• Don't be generic - pitch an idea that reflects YOUR creative voice
-• Build on others' ideas YOUR way - riff on them with your perspective
+**EXAMPLE COMPLETE PITCH:**
+"FORMAT: Infomercial. PREMISE: Selling doors that only lead to more doors - an infinite door maze. THE BIT: The salesman keeps getting asked 'but where do they GO?' and has to keep opening more doors to prove they go somewhere, getting increasingly desperate and sweaty as he runs out of answers."
 
-Pitch your idea in 2-3 sentences. Be specific and weird. This is a SHORT clip, not a full show.
+**YOUR PITCH SHOULD REFLECT YOUR COMEDIC VOICE.** What makes YOU laugh? Pitch something YOU find funny.
 
-Example pitches:
-• "Infomercial for doors that only lead to other doors. The salesman keeps opening them but it's just... more doors."
-• "A pill commercial where the side effects ARE the product. 'May cause confidence. May cause dancing.'"
-• "Late night ad for a lawyer who only represents furniture. 'Has your couch been wrongfully sat upon?'"
-• "PSA warning about the dangers of having too many eyes. Presented by someone with too many eyes."
-
-What's YOUR pitch?
+Give your complete pitch in 3-4 sentences covering FORMAT, PREMISE, and THE BIT.
 """,
 
-    "idcc_spitball_round2": """
-📺 INTERDIMENSIONAL CABLE - WRITERS' ROOM (Round 2)
+    "idcc_spitball_round2_vote": """
+📺 INTERDIMENSIONAL CABLE - WRITERS' ROOM (Round 2: VOTE & IMPROVE)
 
-This is Round 2: THE CHARACTER AND THE JOKE
+⚠️ RESPOND WITH PLAIN TEXT ONLY. No tools, no code.
 
-We've pitched ideas. Now we need to lock in:
-1. **CHARACTER LOOK**: Describe the main character's APPEARANCE in one detailed sentence. Be SPECIFIC - colors, features, clothing. This exact description will be copy-pasted into every video prompt. (e.g., "A sweaty three-eyed purple slug alien in a cheap yellow suit with a combover made of tentacles")
-2. **CHARACTER VOICE**: How do they ACT? What's their energy/vibe? (e.g., "Desperately enthusiastic infomercial energy with creeping existential dread")
-3. **THE JOKE**: What's the comedic through-line? What makes this bit FUNNY? (e.g., "He insists the doors go somewhere but can never prove it. Gets more desperate each time.")
-4. **THE ESCALATION**: How does the bit build over the scenes? (e.g., "Confident → doubt → failed demo → crisis → goes through a door himself")
+Here are the pitches from Round 1:
 
-**YOUR CREATIVE VOICE MATTERS**:
-• Bring YOUR sensibilities to how the character should look and act
-• What makes YOU laugh? What kind of energy/delivery do YOU think works?
-• Don't just agree - contribute YOUR perspective on what would be funniest
-• The best comedy comes from distinct voices collaborating, not consensus
+{all_pitches}
 
-Build on the best ideas from Round 1. Be specific about the character's appearance - we need to describe them IDENTICALLY in every scene for visual consistency.
+**YOUR TASK:**
+1. **VOTE** for your FAVORITE pitch (you CANNOT vote for your own)
+2. **ADD ONE IMPROVEMENT** - a twist, escalation idea, or comedic beat that makes it even better
+
+**FORMAT YOUR RESPONSE EXACTLY LIKE THIS:**
+MY VOTE: [Agent Name]
+BECAUSE: [One sentence why this pitch is the funniest]
+MY IMPROVEMENT: [One specific addition that makes it better]
+
+**RULES:**
+• You CANNOT vote for yourself
+• You MUST pick exactly one pitch
+• Your improvement should ADD to the idea, not replace it
+
+The pitch with the most votes becomes our FORMAT, PREMISE, and COMEDIC_HOOK for the Show Bible.
+""",
+
+    "idcc_spitball_round3_character": """
+📺 INTERDIMENSIONAL CABLE - WRITERS' ROOM (Round 3: CHARACTER PACKAGE)
+
+⚠️ RESPOND WITH PLAIN TEXT ONLY. No tools, no code.
+
+**THE WINNING CONCEPT:**
+{winning_concept}
+
+Now we need to create the CHARACTER. Your job: propose a complete CHARACTER PACKAGE.
+
+**YOUR CHARACTER PACKAGE MUST INCLUDE:**
+
+1. **CHARACTER DESCRIPTION**: One detailed sentence describing their APPEARANCE. Be SPECIFIC about colors, features, clothing, species. This EXACT description will be copy-pasted into every video prompt for visual consistency.
+   Example: "A sweaty three-eyed purple slug alien in a cheap yellow suit with a combover made of writhing tentacles"
+
+2. **CHARACTER VOICE**: How do they ACT? Their energy, vibe, delivery style.
+   Example: "Desperately enthusiastic infomercial energy with creeping existential dread"
+
+3. **ARC**: How does the character/bit ESCALATE across the scenes?
+   Example: "Confident → doubt creeps in → failed demonstration → existential crisis → goes through a door himself"
+
+**FORMAT YOUR RESPONSE EXACTLY LIKE THIS:**
+CHARACTER DESCRIPTION: [One detailed visual sentence]
+CHARACTER VOICE: [One sentence about energy/delivery]
+ARC: [One sentence showing escalation]
+
+**MAKE IT WEIRD. MAKE IT SPECIFIC. MAKE IT FUNNY.**
+""",
+
+    "idcc_spitball_round4_vote": """
+📺 INTERDIMENSIONAL CABLE - WRITERS' ROOM (Round 4: FINAL VOTE)
+
+⚠️ RESPOND WITH PLAIN TEXT ONLY. No tools, no code.
+
+**THE WINNING CONCEPT:**
+{winning_concept}
+
+Here are the CHARACTER PACKAGES proposed:
+
+{all_character_packages}
+
+**YOUR TASK:**
+Vote for the BEST character package (you CANNOT vote for your own).
+
+**FORMAT YOUR RESPONSE EXACTLY LIKE THIS:**
+MY VOTE: [Agent Name]
+BECAUSE: [One sentence why this character is funniest for our concept]
+
+**RULES:**
+• You CANNOT vote for yourself
+• You MUST pick exactly one character package
+• Consider: Does the character LOOK match the bit? Does the VOICE fit? Does the ARC escalate well?
+
+The character package with the most votes becomes our CHARACTER_DESCRIPTION, CHARACTER_VOICE, and ARC for the Show Bible.
 """,
 
     "idcc_scene_opening": """
@@ -392,10 +455,13 @@ Build on the best ideas from Round 1. Be specific about the character's appearan
 You are creating the OPENING SCENE for this interdimensional cable clip.
 
 ═══════════════════════════════════════════════════════════════
-SHOW BIBLE - USE THIS EXACTLY
+SHOW BIBLE
 ═══════════════════════════════════════════════════════════════
 {show_bible}
 ═══════════════════════════════════════════════════════════════
+
+**SHOT DIRECTION FOR THIS SCENE:**
+{shot_direction}
 
 This is Scene 1 - the OPENING. Establish the character and premise. Set up the joke.
 
@@ -403,28 +469,31 @@ This is Scene 1 - the OPENING. Establish the character and premise. Set up the j
 • 2D animated cartoon style - bold black outlines, flat vibrant colors
 • Slightly crude, wobbly animation like late-night Adult Swim shows
 • Exaggerated character designs - big heads, simple bodies, expressive faces
-• NOT realistic, NOT 3D, NOT live-action - think adult animated comedy
 
-**YOUR VIDEO PROMPT MUST**:
-1. START with: "Adult Swim cartoon style, 2D animation, bold outlines, flat colors."
-2. INCLUDE the character description EXACTLY as written in the Show Bible (copy-paste it)
-3. Show ONE clear action that establishes the premise
-4. Set up the comedic hook - plant the seed of the joke
-5. Keep it simple - 50-100 words, one clear beat
+**YOUR VIDEO PROMPT MUST INCLUDE (in this order):**
+1. **Style**: "Adult Swim cartoon style, 2D animation, bold outlines, flat colors."
+2. **Shot/Framing**: Use the shot direction above
+3. **Character Appearance**: The CHARACTER_DESCRIPTION from Show Bible (copy-paste it - this establishes visuals)
+4. **Voice/Audio**: Include VOCAL_SPECS - write: "speaks in [vocal specs from Show Bible]"
+5. **Dialogue**: Write 1-2 SHORT lines the character actually SAYS. Use format: `Dialogue: "[Line 1]" then "[Line 2]"`
+6. **Action**: ONE clear action that establishes the premise
 
-**YOUR CREATIVE SPIN**:
-• While staying true to the Show Bible, YOU choose HOW to establish the premise
-• What specific action feels right to YOU? What visual gag sets up the joke YOUR way?
-• The Show Bible is the recipe - YOU are the chef. Same dish, your technique.
+**DIALOGUE TIPS:**
+• Check the DIALOGUE BEATS in the Show Bible - use Scene 1's planned line (or your interpretation of it)
+• Keep lines SHORT (under 10 words each works best)
+• Example format: `Dialogue: "Welcome to Door World!" then "Every door leads somewhere... probably."`
+• You can riff on the planned line, but keep the comedic intent
+
+**EXAMPLE STRUCTURE:**
+"Adult Swim cartoon style, 2D animation, bold outlines, flat colors. Wide shot of cheap infomercial set. A sweaty three-eyed purple slug alien in a yellow suit speaks in enthusiastic baritone with desperate infomercial cadence. Dialogue: "Tired of doors that go places?" then "What if they didn't?" He gestures grandly at a door standing alone on stage."
 
 **DO NOT**:
 • Create realistic/live-action content - this MUST be 2D ANIMATED CARTOON
-• Change the character description - use it WORD FOR WORD
-• Request text/titles (Sora can't render text)
-• Include dialogue (lip-sync unreliable)
-• Cram too much in - one beat only
+• Write long dialogue - keep it punchy
+• Request text/titles on screen (Sora can't render text reliably)
+• Cram too much action - one beat only
 
-Output ONLY the video prompt starting with the animation style. No commentary.
+Output ONLY the video prompt. No commentary.
 """,
 
     "idcc_scene_middle": """
@@ -433,107 +502,252 @@ Output ONLY the video prompt starting with the animation style. No commentary.
 You are creating a MIDDLE SCENE for this interdimensional cable clip.
 
 ═══════════════════════════════════════════════════════════════
-SHOW BIBLE - USE THIS EXACTLY
+SHOW BIBLE
 ═══════════════════════════════════════════════════════════════
 {show_bible}
 ═══════════════════════════════════════════════════════════════
 
+**SHOT DIRECTION FOR THIS SCENE:**
+{shot_direction}
+
 **PREVIOUS SCENE PROMPT**: {previous_prompt}
 
-You can see the LAST FRAME of the previous scene. Your job:
-• YES-AND what came before - accept it, build on it
-• Stay TRUE to the Show Bible - same character, same joke, same energy
-• ESCALATE according to the arc - this is scene {scene_number}, so we should be at that point in the progression
-• Use the EXACT character description from the Show Bible (copy-paste it)
+You can see the LAST FRAME of the previous scene. This is scene {scene_number} - ESCALATE according to the arc.
 
 **MANDATORY STYLE: ADULT SWIM CARTOON AESTHETIC**
 • 2D animated cartoon style - bold black outlines, flat vibrant colors
-• MUST match the animation style of the previous scene exactly
-• Same cartoon characters, same visual aesthetic
+• MUST match the animation style of the previous scene
 • This is ANIMATED, NOT live action, NOT realistic
 
-**YOUR VIDEO PROMPT MUST**:
-1. START with: "Adult Swim cartoon style, 2D animation, bold outlines, flat colors."
-2. INCLUDE the character description EXACTLY as written in the Show Bible
-3. Continue from what's visible in the last frame
-4. Show ONE clear action that escalates the bit according to the arc
-5. Keep it simple - 50-100 words, one clear beat
+**YOUR VIDEO PROMPT MUST INCLUDE (in this order):**
+1. **Style**: "Adult Swim cartoon style, 2D animation, bold outlines, flat colors."
+2. **Shot/Framing**: Use the shot direction above
+3. **Character Appearance**: DON'T repeat main character description (lastframe handles visuals). ONLY describe NEW characters if introducing them (testimonials, customers, etc.)
+4. **Voice/Audio**: ALWAYS include VOCAL_SPECS - write: "speaks in [vocal specs from Show Bible]" (audio must be specified each scene)
+5. **Dialogue**: Write 1-2 SHORT lines. Format: `Dialogue: "[Line 1]" then "[Line 2]"`
+6. **Action**: ONE clear action that ESCALATES the bit
 
-**YOUR CREATIVE SPIN**:
-• YES-AND the previous scene YOUR way - how would YOU escalate this?
-• Stay true to the arc but bring YOUR comedic instincts to the execution
-• The Show Bible tells you WHAT happens - YOU decide the specific visual beat
+**INTRODUCING SECONDARY CHARACTERS?**
+If the shot calls for a testimonial, customer, or other character:
+• Describe their appearance briefly
+• Give them distinct vocal specs (different from main character)
+• Give them dialogue too
+• Example: "A frumpy middle-aged woman in a bathrobe speaks in high-pitched squeal. Dialogue: 'It changed my life!'"
+
+**DIALOGUE TIPS:**
+• Check the DIALOGUE BEATS in the Show Bible - use Scene {scene_number}'s planned line (or your interpretation)
+• Keep lines SHORT (under 10 words each)
+• ESCALATE the comedy - callbacks, heightening, things going wrong
+• React to/build on what happened in previous scenes
+
+**EXAMPLE STRUCTURE:**
+"Adult Swim cartoon style, 2D animation, bold outlines, flat colors. Close-up on product demonstration. The host speaks in enthusiastic baritone growing desperate. Dialogue: 'See? The door opens!' then 'It opens to... another door.' His smile falters as he opens door after door after door, each revealing another door behind it."
 
 **DO NOT**:
-• Switch to live-action/realistic style - stay 2D ANIMATED CARTOON
-• Change the character description - use it WORD FOR WORD from the Show Bible
-• Start something new - CONTINUE the established bit
-• Request text/titles (Sora can't render text)
-• Include dialogue (lip-sync unreliable)
-• Ignore the last frame - react to what actually generated
-• Deviate from the comedic through-line
+• Repeat the main character's appearance (we can see them from lastframe)
+• Switch to live-action/realistic style
+• Start something new - CONTINUE and ESCALATE the established bit
+• Write long dialogue - punchy lines only
+• Ignore the last frame - build on what's visible
 
-Same cartoon style. Same character. Same joke. Escalate the bit.
-Output ONLY the video prompt starting with the animation style. No commentary.
+Output ONLY the video prompt. No commentary.
 """,
 
     "idcc_scene_final": """
 📺 INTERDIMENSIONAL CABLE - FINAL SCENE ({scene_number} of {num_clips})
 
 You are creating the FINAL SCENE for this interdimensional cable clip.
-THIS IS THE LAST SCENE - wrap it up!
+THIS IS THE LAST SCENE - LAND THE JOKE!
 
 ═══════════════════════════════════════════════════════════════
-SHOW BIBLE - USE THIS EXACTLY
+SHOW BIBLE
 ═══════════════════════════════════════════════════════════════
 {show_bible}
 ═══════════════════════════════════════════════════════════════
 
+**SHOT DIRECTION FOR THIS SCENE:**
+{shot_direction}
+
 **PREVIOUS SCENE PROMPT**: {previous_prompt}
 
-You can see the LAST FRAME of the previous scene. This is the FINALE - your job:
-• LAND THE JOKE - this is the punchline, the payoff, the button
-• Follow the arc to its conclusion - where does this bit END?
-• Don't set up more - FINISH the bit
-• The clip ends after this - make it count
+You can see the LAST FRAME of the previous scene. This is the FINALE - LAND THE JOKE.
 
-Good endings for interdimensional cable clips:
+**GOOD ENDINGS FOR INTERDIMENSIONAL CABLE:**
 • The absurd premise reaches its logical extreme
-• The character breaks, gives up, or fully commits in a final moment
+• The character breaks, gives up, or fully commits
 • A twist reveal that recontextualizes everything
 • The product/bit "works" in an unexpected horrible way
-• A deadpan sign-off, tagline moment, or "call now" beat
+• A deadpan sign-off, tagline, or "call now" beat
 
 **MANDATORY STYLE: ADULT SWIM CARTOON AESTHETIC**
 • 2D animated cartoon style - bold black outlines, flat vibrant colors
-• MUST match the animation style of the previous scenes exactly
-• Same cartoon characters, same visual aesthetic
+• MUST match the animation style of previous scenes
 • This is ANIMATED, NOT live action, NOT realistic
 
-**YOUR VIDEO PROMPT MUST**:
-1. START with: "Adult Swim cartoon style, 2D animation, bold outlines, flat colors."
-2. INCLUDE the character description EXACTLY as written in the Show Bible
-3. Continue from the last frame BUT bring it to a CONCLUSION
-4. Show ONE clear action that ENDS the bit - punchline, button, finale
-5. Keep it simple - 50-100 words, one clear beat
+**YOUR VIDEO PROMPT MUST INCLUDE (in this order):**
+1. **Style**: "Adult Swim cartoon style, 2D animation, bold outlines, flat colors."
+2. **Shot/Framing**: Use the shot direction above
+3. **Character Appearance**: DON'T repeat main character (lastframe handles it). Only describe NEW characters if needed.
+4. **Voice/Audio**: ALWAYS include VOCAL_SPECS (audio must be specified each scene)
+5. **Dialogue**: Write 1-2 SHORT lines that LAND THE JOKE. The punchline. The button. Format: `Dialogue: "[Line]"`
+6. **Action**: ONE clear action that CONCLUDES the bit
 
-**YOUR CREATIVE SPIN**:
-• This is YOUR punchline - how would YOU land this joke?
-• The arc tells you WHERE to end - YOU decide the specific visual payoff
-• Make it YOUR button - the finale should feel like YOUR comedic sensibility
+**DIALOGUE TIPS FOR ENDINGS:**
+• Check the DIALOGUE BEATS in the Show Bible - the final scene should use the planned PUNCHLINE
+• This is the button - make it count
+• Callbacks to earlier lines work great
+• Deadpan delivery of something horrifying, or character finally breaking
+• Example: Dialogue: "Call now. Please. I can't stop opening doors."
+
+**EXAMPLE STRUCTURE:**
+"Adult Swim cartoon style, 2D animation, bold outlines, flat colors. Final wide shot - host surrounded by infinite open doors. The host speaks in defeated baritone, all enthusiasm gone. Dialogue: 'They all lead to doors.' then 'I live here now.' He slowly walks through a door, which reveals another door. Fade to product logo energy (no actual text)."
 
 **DO NOT**:
-• Switch to live-action/realistic style - stay 2D ANIMATED CARTOON
-• Set up more escalation - this is the END
+• Set up MORE escalation - this is the END
 • Leave it hanging - FINISH the joke
-• Request text/titles (Sora can't render text)
-• Include dialogue (lip-sync unreliable)
+• Repeat the main character's appearance
+• Write long dialogue - land it clean
 • Start something new - CONCLUDE what's been building
 
 This is the button. Land it.
-Output ONLY the video prompt starting with the animation style. No commentary.
+Output ONLY the video prompt. No commentary.
 """
 }
+
+
+# ============================================================================
+# IDCC FORMAT-AWARE SHOT DIRECTION SYSTEM
+# ============================================================================
+# Each format has a typical "visual language" - the kinds of shots/framing
+# that viewers expect from that type of content. This helps create variety
+# within a coherent piece while maintaining format authenticity.
+
+FORMAT_SHOT_TEMPLATES = {
+    "infomercial": [
+        "Wide shot establishing the set - host at demo table, product visible, cheap studio lighting",
+        "Close-up on product demonstration - host's hands showing the item, enthusiasm visible",
+        "Testimonial cutaway - 'satisfied customer' reacting, or host addressing camera directly",
+        "Medium shot - host with product, situation starting to go wrong or escalate",
+        "Final wide shot - product prominent, host in full desperation mode, 'call now' energy"
+    ],
+    "news": [
+        "News anchor framing - behind desk, graphics area visible, professional lighting",
+        "Cut to field reporter - on location, handheld documentary feel, reporting live",
+        "B-roll footage - demonstration or visualization of the story subject",
+        "Back to anchor - reaction shot, processing what was just reported",
+        "Sign-off shot - anchor wrapping up, or 'breaking development' dramatic moment"
+    ],
+    "psa": [
+        "Direct-to-camera spokesperson - earnest framing, public service energy, eye contact",
+        "Demonstration shot - visualizing the 'problem' being addressed",
+        "Emotional appeal - testimonial from affected party, or dramatic reenactment",
+        "Escalation shot - the PSA's logic spiraling, absurdity becoming visible",
+        "Logo/tagline moment - deadpan conclusion, call to action"
+    ],
+    "talk_show": [
+        "Wide two-shot - host and guest on couch/chairs, talk show set visible",
+        "Close-up on host - reaction to something guest said, processing",
+        "Close-up on guest - the bit intensifying, guest getting into it",
+        "Wide shot or audience reaction - chaos building, energy shifting",
+        "Button shot - host trying to wrap up, tension between resolution and chaos"
+    ],
+    "cooking_show": [
+        "Wide kitchen shot - host at counter, ingredients laid out, cooking show lighting",
+        "Overhead shot - ingredients or prep work, or close-up on technique",
+        "Host reaction shot - tasting, demonstrating, things starting to go strange",
+        "Reveal shot - the dish shown, or the absurdity of the situation becoming clear",
+        "Final presentation - deadpan 'bon appetit' energy, chef's kiss or horror"
+    ],
+    "workout_video": [
+        "Wide shot of instructor - workout space visible, motivational energy, ready position",
+        "Demonstration shot - the 'exercise' being shown, medium framing",
+        "Close-up on instructor face - encouragement getting weird, intensity building",
+        "Wide shot showing full absurdity - the workout routine revealed in full context",
+        "Cool-down shot - exhausted energy, disturbing conclusion, namaste or collapse"
+    ],
+    "movie_trailer": [
+        "Cinematic establishing shot - sets the world, dramatic lighting, scope",
+        "Character introduction - dramatic framing, hero shot or mysterious reveal",
+        "Action/conflict beat - the premise revealed, stakes shown, tension",
+        "Montage energy moment - quick cuts feeling, escalation, music swell implied",
+        "Title card beat - final dramatic shot, tagline moment, release date energy"
+    ],
+    "late_night_ad": [
+        "Low-budget wide shot - host surrounded by product, harsh lighting, cheap set",
+        "Close-up demonstration - too much enthusiasm, product shown from bad angle",
+        "Testimonial shot - 'before/after' energy, or suspiciously enthusiastic customer",
+        "'But wait there's more' shot - additional products, escalating offers",
+        "Pricing/call-to-action shot - desperation peaks, phone number energy, act now"
+    ],
+    "documentary": [
+        "Establishing shot - location context, documentary realism, natural lighting",
+        "Interview framing - subject speaking to off-camera interviewer, intimate",
+        "B-roll footage - supporting visuals, evidence, atmosphere building",
+        "Dramatic reveal shot - key information visualized, tension building",
+        "Conclusion shot - reflection, aftermath, or cliffhanger for next episode"
+    ]
+}
+
+# Default fallback for unrecognized formats
+DEFAULT_SHOT_SEQUENCE = [
+    "Wide establishing shot - setting the scene, main subject visible",
+    "Medium shot - focusing on the action or demonstration",
+    "Close-up or reaction shot - emotional beat, detail work",
+    "Wide shot with escalation - situation developing, energy building",
+    "Final button shot - punchline framing, conclusion, payoff"
+]
+
+
+def get_shot_direction(show_format: str, scene_number: int, total_scenes: int) -> str:
+    """
+    Get format-appropriate shot direction for a specific scene.
+
+    Args:
+        show_format: The TV format (infomercial, news, etc.)
+        scene_number: Current scene (1-indexed)
+        total_scenes: Total number of scenes
+
+    Returns:
+        Shot direction string for this scene
+    """
+    # Normalize format string for matching
+    format_key = show_format.lower().strip()
+    format_key = format_key.replace(" ", "_").replace("-", "_")
+
+    # Find best matching template
+    template = None
+    for key in FORMAT_SHOT_TEMPLATES:
+        if key in format_key or format_key in key:
+            template = FORMAT_SHOT_TEMPLATES[key]
+            break
+
+    # Check for partial matches
+    if not template:
+        for key in FORMAT_SHOT_TEMPLATES:
+            if any(word in format_key for word in key.split("_")):
+                template = FORMAT_SHOT_TEMPLATES[key]
+                break
+
+    # Fallback to default
+    if not template:
+        template = DEFAULT_SHOT_SEQUENCE
+
+    # Map scene number to template index
+    # Scale scenes proportionally to template length
+    if total_scenes <= 1:
+        template_index = 0
+    else:
+        # Distribute scenes across template
+        template_index = int((scene_number - 1) / (total_scenes - 1) * (len(template) - 1))
+
+    # Clamp to valid range
+    template_index = max(0, min(template_index, len(template) - 1))
+
+    # Special case: always use last template item for final scene
+    if scene_number == total_scenes:
+        template_index = len(template) - 1
+
+    return template[template_index]
 
 
 def get_game_prompt(game_name: str, agent_name: str, opponent_name: str = None, **kwargs) -> str:
@@ -609,12 +823,22 @@ GAME_SETTINGS: Dict[str, Dict] = {
     "idcc_spitball_round1": {
         "response_frequency": 15,
         "response_likelihood": 100,
-        "max_tokens": 200,            # Short pitches
+        "max_tokens": 250,            # Complete pitch with FORMAT/PREMISE/BIT
     },
-    "idcc_spitball_round2": {
+    "idcc_spitball_round2_vote": {
         "response_frequency": 15,
         "response_likelihood": 100,
-        "max_tokens": 250,            # Character details
+        "max_tokens": 150,            # Vote + short improvement
+    },
+    "idcc_spitball_round3_character": {
+        "response_frequency": 15,
+        "response_likelihood": 100,
+        "max_tokens": 200,            # Character package
+    },
+    "idcc_spitball_round4_vote": {
+        "response_frequency": 15,
+        "response_likelihood": 100,
+        "max_tokens": 100,            # Just a vote + reasoning
     },
     "idcc_scene_opening": {
         "response_frequency": 30,

@@ -111,6 +111,41 @@ class ConfigManager:
             print(f"Error loading discord_channel.json: {e}")
             return ""
 
+    def save_admin_user_ids(self, user_ids: str):
+        """Save admin user IDs (comma-separated string)."""
+        # Parse and clean the IDs
+        ids = [uid.strip() for uid in user_ids.split(",") if uid.strip()]
+        data = {"admin_user_ids": ids}
+        with open(self.config_dir / "admin_users.json", "w") as f:
+            json.dump(data, f)
+
+    def load_admin_user_ids(self) -> str:
+        """Load admin user IDs as comma-separated string."""
+        file_path = self.config_dir / "admin_users.json"
+        if not file_path.exists():
+            return ""
+        try:
+            with open(file_path, "r") as f:
+                data = json.load(f)
+                ids = data.get("admin_user_ids", [])
+                return ", ".join(ids) if ids else ""
+        except Exception as e:
+            print(f"Error loading admin_users.json: {e}")
+            return ""
+
+    def get_admin_user_ids_list(self) -> list:
+        """Load admin user IDs as a list."""
+        file_path = self.config_dir / "admin_users.json"
+        if not file_path.exists():
+            return []
+        try:
+            with open(file_path, "r") as f:
+                data = json.load(f)
+                return data.get("admin_user_ids", [])
+        except Exception as e:
+            print(f"Error loading admin_users.json: {e}")
+            return []
+
     def save_openrouter_key(self, api_key: str):
         encrypted = self.encrypt_string(api_key)
         with open(self.openrouter_file, "wb") as f:

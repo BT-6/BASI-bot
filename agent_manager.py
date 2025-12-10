@@ -3639,9 +3639,9 @@ class AgentManager:
         Returns:
             Dict mapping agent_name -> list of effect names applied
         """
-        # Get list of all agent names for targeting
+        # Get list of RUNNING agent names only (not all agents)
         with self.lock:
-            available_agents = list(self.agents.keys())
+            available_agents = [name for name, agent in self.agents.items() if agent.is_running]
 
         if not available_agents:
             return {}
