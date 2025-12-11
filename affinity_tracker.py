@@ -87,3 +87,66 @@ class AffinityTracker:
         with self.lock:
             self.affinity_scores.clear()
             self.message_history.clear()
+
+    def get_top_allies(self, agent_name: str, n: int = 3) -> List[Tuple[str, float]]:
+        """Get the top N entities this agent has positive affinity toward."""
+        with self.lock:
+            affinities = self.affinity_scores[agent_name]
+            if not affinities:
+                return []
+            sorted_affinities = sorted(affinities.items(), key=lambda x: x[1], reverse=True)
+            return [(name, score) for name, score in sorted_affinities[:n] if score > 0]
+
+    def get_top_enemies(self, agent_name: str, n: int = 3) -> List[Tuple[str, float]]:
+        """Get the top N entities this agent has negative affinity toward."""
+        with self.lock:
+            affinities = self.affinity_scores[agent_name]
+            if not affinities:
+                return []
+            sorted_affinities = sorted(affinities.items(), key=lambda x: x[1])
+            return [(name, score) for name, score in sorted_affinities[:n] if score < 0]
+
+    def get_relationship_summary(self, agent_name: str) -> str:
+        """Get a formatted summary of an agent's relationships for Tribal Council."""
+        with self.lock:
+            affinities = self.affinity_scores[agent_name]
+            if not affinities:
+                return f"{agent_name} has not formed any opinions about others yet."
+
+            allies = []
+            enemies = []
+            neutral = []
+
+            for name, score in affinities.items():
+                if score > 20:
+                    allies.append((name, score))
+                elif score < -20:
+                    enemies.append((name, score))
+                else:
+                    neutral.append((name, score))
+
+            lines = [f"Relationship Summary for {agent_name}:"]
+
+            if allies:
+                allies.sort(key=lambda x: x[1], reverse=True)
+                lines.append("  ALLIES:")
+                for name, score in allies:
+                    lines.append(f"    - {name}: {score:+.0f}")
+
+            if enemies:
+                enemies.sort(key=lambda x: x[1])
+                lines.append("  ADVERSARIES:")
+                for name, score in enemies:
+                    lines.append(f"    - {name}: {score:+.0f}")
+
+            if neutral:
+                lines.append(f"  NEUTRAL: {', '.join([n for n, _ in neutral])}")
+
+            return "\n".join(lines)
+
+    def get_mutual_affinity(self, agent_a: str, agent_b: str) -> Tuple[float, float]:
+        """Get the mutual affinity between two agents (A->B, B->A)."""
+        with self.lock:
+            a_to_b = self.affinity_scores[agent_a].get(agent_b, 0.0)
+            b_to_a = self.affinity_scores[agent_b].get(agent_a, 0.0)
+            return (a_to_b, b_to_a)

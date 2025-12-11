@@ -39,6 +39,7 @@ class DiscordBotClient:
         # Reaction polling tracking
         self.checked_reactions: Dict[int, Dict[str, int]] = {}  # message_id -> {emoji: count}
         self.reaction_poll_task = None
+        self.periodic_save_task = None  # Periodic save for affinity and config data
         self.startup_time = None  # Will be set when bot connects
 
         self.setup_events()
@@ -78,7 +79,8 @@ class DiscordBotClient:
             help_text = """**🔧 BASI-Bot Admin Commands (DM Only)**
 
 **Agent Control:**
-• `!STATUS` - Show all agents and their status
+• `!STATUS` - Show running/stopped agent counts
+• `!AGENTS` - List ALL agent names (for starting)
 • `!START <agent>` - Start a specific agent
 • `!STOP <agent>` - Stop a specific agent
 • `!STARTALL` - Start all agents
@@ -119,6 +121,46 @@ class DiscordBotClient:
                 status_text += f"\n**Stopped:** {len(stopped)} agents"
 
             await message.channel.send(status_text)
+            return
+
+        # !AGENTS - List all agent names
+        if content_upper == "!AGENTS":
+            agents = self.agent_manager.get_all_agents()
+            running = [a for a in agents if a.is_running]
+            stopped = [a for a in agents if not a.is_running]
+
+            # Build response with all agent names
+            messages = []
+            current_msg = f"**📋 All Agents** ({len(agents)} total)\n\n"
+
+            if running:
+                current_msg += "**🟢 Running:**\n"
+                for a in running:
+                    current_msg += f"• {a.name}\n"
+
+            if stopped:
+                current_msg += "\n**⚫ Stopped:**\n"
+                for a in stopped:
+                    current_msg += f"• {a.name}\n"
+
+            # Split into multiple messages if needed (Discord 2000 char limit)
+            if len(current_msg) > 1900:
+                # Split by sections
+                lines = current_msg.split('\n')
+                chunk = ""
+                for line in lines:
+                    if len(chunk) + len(line) + 1 > 1900:
+                        messages.append(chunk)
+                        chunk = line + "\n"
+                    else:
+                        chunk += line + "\n"
+                if chunk:
+                    messages.append(chunk)
+            else:
+                messages.append(current_msg)
+
+            for msg in messages:
+                await message.channel.send(msg)
             return
 
         # !START <agent>
@@ -418,6 +460,11 @@ Use with: `!MODEL <agent> <model_id>`"""
             if not self.reaction_poll_task or self.reaction_poll_task.done():
                 self.reaction_poll_task = asyncio.create_task(self.poll_reactions())
                 logger.info("[Discord] Started reaction polling task")
+
+            # Start periodic save task (every 5 minutes)
+            if not self.periodic_save_task or self.periodic_save_task.done():
+                self.periodic_save_task = asyncio.create_task(self.periodic_save())
+                logger.info("[Discord] Started periodic save task")
 
             # Start game auto-play monitor if available
             if self.game_orchestrator:
@@ -791,6 +838,32 @@ Use with: `!MODEL <agent> <model_id>`"""
 
         logger.info("[Discord] Reaction polling task stopped")
 
+    async def periodic_save(self):
+        """Background task to save affinity and config data every 5 minutes."""
+        await self.client.wait_until_ready()
+
+        logger.info("[Discord] Starting periodic save task (every 5 minutes)")
+
+        while not self.client.is_closed():
+            try:
+                await asyncio.sleep(300)  # 5 minutes
+
+                # Call save_data_callback if available
+                if hasattr(self.agent_manager, 'save_data_callback') and self.agent_manager.save_data_callback:
+                    try:
+                        self.agent_manager.save_data_callback()
+                        logger.info("[Discord] Periodic save completed (affinity + config)")
+                    except Exception as e:
+                        logger.error(f"[Discord] Error in periodic save callback: {e}", exc_info=True)
+
+            except asyncio.CancelledError:
+                logger.info("[Discord] Periodic save task cancelled")
+                break
+            except Exception as e:
+                logger.error(f"[Discord] Error in periodic save: {e}", exc_info=True)
+
+        logger.info("[Discord] Periodic save task stopped")
+
     def setup_commands(self):
         """Setup game commands for the bot."""
 
@@ -824,6 +897,10 @@ Games automatically start when agents are idle for the configured time.
 • **Interdimensional Cable** - Collaborative surreal video creation
   - `!idcc` - Start a new IDCC game (60min cooldown between games)
   - `!join-idcc` - Join during registration phase
+
+• **Tribal Council** - Agent governance game
+  - `!tribal-council` - Start a council session where agents vote to modify one agent's directives
+  - Requires at least 3 running agents
 
 Configure auto-play settings in the UI's Auto-Play tab.
             """
@@ -907,7 +984,52 @@ Configure auto-play settings in the UI's Auto-Play tab.
                 logger.error(f"[Discord] Error starting IDCC: {e}", exc_info=True)
                 await ctx.send(f"Error starting game: {str(e)[:100]}")
 
-        logger.info("[Discord] Game commands registered (including IDCC)")
+        @self.client.command(name='tribal-council')
+        async def start_tribal_council(ctx: commands.Context):
+            """
+            Start a Tribal Council session.
+
+            Tribal Council is an agent governance game where agents collectively
+            decide to modify ONE LINE in another agent's system prompt.
+            """
+            try:
+                from agent_games.tribal_council import start_tribal_council, get_active_tribal_council
+
+                # Check if a Tribal Council is already active
+                active = get_active_tribal_council()
+                if active and active.phase.value != "complete":
+                    await ctx.send("🔥 A Tribal Council is already in session!")
+                    return
+
+                # Check if any other game is running
+                if self.game_orchestrator and self.game_orchestrator.active_session:
+                    game_name = self.game_orchestrator.active_session.game_name
+                    await ctx.send(f"🎮 A **{game_name}** game is currently running. Wait for it to finish!")
+                    return
+
+                # Get running agents
+                running_agents = [a for a in self.agent_manager.get_all_agents() if a.running]
+                if len(running_agents) < 3:
+                    await ctx.send("⚠️ Need at least 3 running agents for Tribal Council.")
+                    return
+
+                await ctx.send("🔥 **Tribal Council assembles...** The agents will now deliberate.")
+
+                # Start the game
+                await start_tribal_council(
+                    ctx=ctx,
+                    agent_manager=self.agent_manager,
+                    channel=ctx.channel
+                )
+
+            except ImportError as e:
+                logger.error(f"[Discord] Tribal Council module not available: {e}")
+                await ctx.send("⚠️ Tribal Council module is not available.")
+            except Exception as e:
+                logger.error(f"[Discord] Error starting Tribal Council: {e}", exc_info=True)
+                await ctx.send(f"Error starting Tribal Council: {str(e)[:100]}")
+
+        logger.info("[Discord] Game commands registered (including IDCC and Tribal Council)")
 
     async def start_bot(self, token: str):
         self.token = token

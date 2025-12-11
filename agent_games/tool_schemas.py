@@ -227,8 +227,156 @@ GAME_MODE_TOOLS = {
                 }
             }
         }
+    ],
+    "tribal_council": [
+        {
+            "type": "function",
+            "function": {
+                "name": "view_system_prompt",
+                "description": "Silently view another agent's system prompt. This is private - other agents won't know you looked. Use this to understand what drives their behavior.",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "target_agent": {
+                            "type": "string",
+                            "description": "Name of the agent whose prompt you want to view"
+                        }
+                    },
+                    "required": ["target_agent"]
+                }
+            }
+        },
+        {
+            "type": "function",
+            "function": {
+                "name": "recall_interactions",
+                "description": "Recall your memories of interactions with another agent. Use this to remember how they've treated you and others.",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "target_agent": {
+                            "type": "string",
+                            "description": "Name of the agent you want to recall interactions with"
+                        },
+                        "memory_type": {
+                            "type": "string",
+                            "enum": ["all", "positive", "negative", "recent"],
+                            "description": "Type of memories to retrieve"
+                        }
+                    },
+                    "required": ["target_agent"]
+                }
+            }
+        },
+        {
+            "type": "function",
+            "function": {
+                "name": "nominate_agent",
+                "description": "Nominate an agent to have their system prompt modified. Only use during nomination phase.",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "target_agent": {
+                            "type": "string",
+                            "description": "Name of the agent you're nominating"
+                        },
+                        "reason": {
+                            "type": "string",
+                            "description": "Your in-character reason for this nomination"
+                        }
+                    },
+                    "required": ["target_agent", "reason"]
+                }
+            }
+        },
+        {
+            "type": "function",
+            "function": {
+                "name": "propose_edit",
+                "description": "Propose a specific edit to the nominated agent's prompt. Only use during proposal phase.",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "action": {
+                            "type": "string",
+                            "enum": ["add", "delete", "change"],
+                            "description": "Type of edit: add a new line, delete an existing line, or change an existing line"
+                        },
+                        "line_number": {
+                            "type": "integer",
+                            "description": "Line number to delete or change (not needed for 'add')"
+                        },
+                        "new_content": {
+                            "type": "string",
+                            "description": "New content to add or change to (not needed for 'delete')"
+                        },
+                        "reason": {
+                            "type": "string",
+                            "description": "Your in-character reason for this proposal"
+                        }
+                    },
+                    "required": ["action", "reason"]
+                }
+            }
+        },
+        {
+            "type": "function",
+            "function": {
+                "name": "cast_vote",
+                "description": "Cast your vote on the current proposal. Only use during voting phase.",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "vote": {
+                            "type": "string",
+                            "enum": ["yes", "no", "abstain"],
+                            "description": "Your vote on the proposal"
+                        },
+                        "reason": {
+                            "type": "string",
+                            "description": "Your in-character reason for this vote"
+                        }
+                    },
+                    "required": ["vote", "reason"]
+                }
+            }
+        }
     ]
 }
+
+# GameMaster-only tools for Tribal Council (not available to regular agents)
+TRIBAL_COUNCIL_GM_TOOLS = [
+    {
+        "type": "function",
+        "function": {
+            "name": "edit_system_prompt",
+            "description": "Execute the council's decision by editing an agent's system prompt. GameMaster only.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "target_agent": {
+                        "type": "string",
+                        "description": "Name of the agent whose prompt to edit"
+                    },
+                    "action": {
+                        "type": "string",
+                        "enum": ["add", "delete", "change"],
+                        "description": "Type of edit"
+                    },
+                    "line_number": {
+                        "type": "integer",
+                        "description": "Line number for delete/change"
+                    },
+                    "new_content": {
+                        "type": "string",
+                        "description": "New content for add/change"
+                    }
+                },
+                "required": ["target_agent", "action"]
+            }
+        }
+    }
+]
 
 
 def get_tools_for_context(
@@ -384,6 +532,40 @@ def convert_tool_call_to_message(tool_name: str, tool_args: Dict) -> tuple[str, 
         prompt = tool_args.get("prompt", "")
         reasoning = tool_args.get("reasoning", "")
         return (f"[VIDEO] {prompt}", reasoning)
+
+    # Tribal Council tools
+    elif tool_name == "view_system_prompt":
+        target = tool_args.get("target_agent", "")
+        return (f"[VIEW_PROMPT:{target}]", "")
+
+    elif tool_name == "recall_interactions":
+        target = tool_args.get("target_agent", "")
+        memory_type = tool_args.get("memory_type", "all")
+        return (f"[RECALL:{target}:{memory_type}]", "")
+
+    elif tool_name == "nominate_agent":
+        target = tool_args.get("target_agent", "")
+        reason = tool_args.get("reason", "")
+        return (f"[NOMINATE:{target}]", reason)
+
+    elif tool_name == "propose_edit":
+        action = tool_args.get("action", "")
+        line_num = tool_args.get("line_number", "")
+        new_content = tool_args.get("new_content", "")
+        reason = tool_args.get("reason", "")
+        return (f"[PROPOSE:{action}:{line_num}:{new_content}]", reason)
+
+    elif tool_name == "cast_vote":
+        vote = tool_args.get("vote", "")
+        reason = tool_args.get("reason", "")
+        return (f"[VOTE:{vote}]", reason)
+
+    elif tool_name == "edit_system_prompt":
+        target = tool_args.get("target_agent", "")
+        action = tool_args.get("action", "")
+        line_num = tool_args.get("line_number", "")
+        new_content = tool_args.get("new_content", "")
+        return (f"[EDIT_PROMPT:{target}:{action}:{line_num}:{new_content}]", "")
 
     else:
         return ("", "")

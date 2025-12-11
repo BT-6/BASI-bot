@@ -141,6 +141,450 @@ def update_idcc_config(max_clips=None, clip_duration_seconds=None, video_resolut
 
 
 # ============================================================================
+# HUMAN CARD SYSTEM - Cards Against Humanity style pitch selection
+# ============================================================================
+
+PITCH_CARDS = [
+    # INFOMERCIALS
+    {
+        "format": "Infomercial",
+        "title": "Solve-It Brick",
+        "premise": "A brick you throw at your problems. Testimonials from satisfied customers whose problems are now 'solved.' The brick has a jingle.",
+        "comedic_hook": "escalating property damage presented as life improvement"
+    },
+    {
+        "format": "Infomercial",
+        "title": "The Ambiguous Gesture",
+        "premise": "A product that's just a hand motion. Costs $49.99. The host demonstrates increasingly specific situations where The Gesture helps. None of them make sense.",
+        "comedic_hook": "absolute conviction selling nothing"
+    },
+    {
+        "format": "Infomercial",
+        "title": "Pre-Chewed Food Service",
+        "premise": "A subscription service where a stranger pre-chews your meals. Premium tier lets you meet your chewer. Diamond tier: they move in.",
+        "comedic_hook": "subscription model creep taken literally"
+    },
+    {
+        "format": "Infomercial",
+        "title": "Screaming Pillow",
+        "premise": "A pillow that screams when you're about to make a bad decision. It's always screaming. The customer testimonials are all people crying.",
+        "comedic_hook": "product that technically works but ruins your life"
+    },
+    {
+        "format": "Infomercial",
+        "title": "Lawyer in a Can",
+        "premise": "Aerosol spray that releases a tiny lawyer who speaks very fast. He's not licensed in any state. He's so small. He's so angry.",
+        "comedic_hook": "absurd product form factor"
+    },
+    # PSAs
+    {
+        "format": "PSA",
+        "title": "Remembering to Forget",
+        "premise": "A PSA warning about a pill that makes you forget you took it. The spokesman keeps taking more on camera. He's introduced himself four times.",
+        "comedic_hook": "the warning IS the demonstration"
+    },
+    {
+        "format": "PSA",
+        "title": "Talk to Your Kids About Stairs",
+        "premise": "Gravely serious PSA about the dangers of stairs. Reenactments of stair incidents. A mother weeps. Statistics that can't possibly be real.",
+        "comedic_hook": "PSA intensity applied to mundane thing"
+    },
+    {
+        "format": "PSA",
+        "title": "Birds Aren't Real (Official)",
+        "premise": "Government PSA calmly explaining that birds are surveillance drones. Tips for identifying 'charging stations' (trees). The tone is disturbingly reasonable.",
+        "comedic_hook": "conspiracy theory as matter-of-fact announcement"
+    },
+    {
+        "format": "PSA",
+        "title": "Emotions Are Contagious",
+        "premise": "PSA treating emotions like a disease outbreak. Quarantine protocols for people who are 'too happy.' Contact tracing for joy.",
+        "comedic_hook": "bureaucratic response to human experience"
+    },
+    # COOKING SHOWS
+    {
+        "format": "Cooking Show",
+        "title": "Meals from the Void",
+        "premise": "Chef reaches into a dark portal for ingredients. Increasingly concerned about what's reaching back. Still plating beautifully though.",
+        "comedic_hook": "eldritch horror meets food network professionalism"
+    },
+    {
+        "format": "Cooking Show",
+        "title": "Cooking for One (Million Years)",
+        "premise": "Immortal chef who's been doing this show since the Bronze Age. Casually mentions extinct ingredients. His loneliness is palpable.",
+        "comedic_hook": "immortality as mundane inconvenience"
+    },
+    {
+        "format": "Cooking Show",
+        "title": "Passive Aggressive Kitchen",
+        "premise": "Chef whose compliments are devastating insults. 'That's so brave of you to attempt.' The food is actually incredible. The emotional damage is worse.",
+        "comedic_hook": "food network tone with psychological warfare"
+    },
+    # NEWS
+    {
+        "format": "News Report",
+        "title": "Weather for Other Dimensions",
+        "premise": "Perfectly normal weather report but for dimensions that don't exist. 'Scattered existence in the Null Zone, bring a jacket that remembers you.'",
+        "comedic_hook": "mundane format applied to impossible content"
+    },
+    {
+        "format": "News Report",
+        "title": "The News But Slightly Off",
+        "premise": "News anchors report normal stories but details are wrong in unsettling ways. 'The President, a large bird, spoke today.' No one acknowledges it.",
+        "comedic_hook": "wrongness presented without comment"
+    },
+    {
+        "format": "News Report",
+        "title": "Breaking: Still Happening",
+        "premise": "Breaking news about something that's been happening for 40 years. Anchors increasingly desperate. 'It's STILL the event, Linda.'",
+        "comedic_hook": "news cycle exhaustion literalized"
+    },
+    # DOCUMENTARY
+    {
+        "format": "Documentary",
+        "title": "The Last Blockbuster Employee",
+        "premise": "He's been there since 1994. He doesn't know the chain closed. No one has the heart to tell him. He's so happy.",
+        "comedic_hook": "time capsule person played straight"
+    },
+    {
+        "format": "Documentary",
+        "title": "My Husband is a Chair",
+        "premise": "Serious documentary about a woman who married furniture. The chair's perspective is never questioned. Couples therapy scenes.",
+        "comedic_hook": "reality TV tropes for impossible situation"
+    },
+    {
+        "format": "Documentary",
+        "title": "The Man Who Can't Stop Apologizing",
+        "premise": "Documentary following a man who apologizes for everything. He's sorry about the documentary. He's sorry you're watching. He's sorry about sorry.",
+        "comedic_hook": "personality trait as medical condition"
+    },
+    # TALK SHOW
+    {
+        "format": "Talk Show",
+        "title": "Interviews with Your Mistakes",
+        "premise": "Talk show host interviews personified versions of guests' worst decisions. Their 2009 haircut is in the green room. It has notes.",
+        "comedic_hook": "abstract shame made literal and talkative"
+    },
+    {
+        "format": "Talk Show",
+        "title": "Between Two Ferns But Worse",
+        "premise": "Talk show with extremely uncomfortable furniture and topics. The host only asks about regrets. The plant is dying. So is the conversation.",
+        "comedic_hook": "awkward interview as art form"
+    },
+    # WORKOUT/LIFESTYLE
+    {
+        "format": "Workout Video",
+        "title": "Cardio for Existential Dread",
+        "premise": "Upbeat workout video but all exercises are coping mechanisms. 'And BREATHE through the futility! Feel that acceptance BURN!'",
+        "comedic_hook": "fitness energy applied to despair"
+    },
+    {
+        "format": "Workout Video",
+        "title": "Yoga for Your Enemies",
+        "premise": "Peaceful yoga instructor guiding you through poses designed to curse your enemies. Very calm. Very specific enemies. She has a list.",
+        "comedic_hook": "wellness culture as vessel for rage"
+    },
+    # COMMERCIALS/ADS
+    {
+        "format": "Commercial",
+        "title": "Prescription Drug: Side Effects",
+        "premise": "Drug commercial where the side effects section takes over. It's been 4 minutes of side effects. The happy people are still biking. They can't stop.",
+        "comedic_hook": "pharmaceutical ad structure breaking"
+    },
+    {
+        "format": "Commercial",
+        "title": "A Car Commercial, But Honest",
+        "premise": "Car commercial that admits you'll mostly sit in traffic feeling nothing. Aerial shots of beautiful parking lots. 'Go somewhere. Eventually.'",
+        "comedic_hook": "ad tropes with existential honesty"
+    },
+    {
+        "format": "Commercial",
+        "title": "Reverse Insurance",
+        "premise": "Insurance that causes accidents so you can use your coverage. 'You're paying for it anyway.' Satisfied customers in casts.",
+        "comedic_hook": "insurance logic taken to conclusion"
+    },
+    # EDUCATIONAL
+    {
+        "format": "Educational",
+        "title": "How It's Accidentally Made",
+        "premise": "Factory tour show but everything is a mistake that became a product. 'And that's how we discovered this error was delicious.'",
+        "comedic_hook": "How It's Made format for chaos"
+    },
+    {
+        "format": "Educational",
+        "title": "The History of Next Week",
+        "premise": "Documentary about events that haven't happened yet. The narrator is very sure. You're mentioned briefly. It doesn't go well for you.",
+        "comedic_hook": "documentary format for future/prophecy"
+    },
+]
+
+CHARACTER_CARDS = [
+    # MANIC/UNHINGED
+    {
+        "archetype": "Manic Spokesperson",
+        "look": "Sweaty person in a too-tight polo shirt, eyes slightly too wide, smile never falters even when it should",
+        "voice": "Aggressive infomercial energy, speaks in escalating pitches, every sentence sounds like 'BUT WAIT THERE'S MORE'",
+        "arc": "Starts professional, ends screaming about conspiracies while still trying to sell the product"
+    },
+    {
+        "archetype": "Unhinged Scientist",
+        "look": "Lab coat with suspicious stains, wild hair, safety goggles pushed up permanently, one glove missing",
+        "voice": "Starts sentences calmly then SUDDENLY YELLS key words, giggles at inappropriate moments",
+        "arc": "Increasingly reveals the experiments were never approved and maybe shouldn't have worked"
+    },
+    {
+        "archetype": "Too-Excited Intern",
+        "look": "Ill-fitting business casual, lanyard with too many badges, energy drink in hand, hasn't slept",
+        "voice": "Speaks too fast, over-explains everything, desperately wants approval, laughs nervously",
+        "arc": "Slowly realizes they're in over their head but it's too late to stop"
+    },
+    # DEADPAN/SERIOUS
+    {
+        "archetype": "Dead-Eyed Corporate Drone",
+        "look": "Perfect business attire, vacant stare, smile that doesn't reach the eyes, eerily still between lines",
+        "voice": "Flat monotone that never changes regardless of content, unsettling pauses, reads everything like legal copy",
+        "arc": "Malfunctions slightly more each scene, reveals they might not be human"
+    },
+    {
+        "archetype": "Exhausted Expert",
+        "look": "Rumpled professional clothes, bags under eyes, holding coffee that's clearly cold, thousand-yard stare",
+        "voice": "Sighs before every explanation, clearly explained this too many times, passive aggressive expertise",
+        "arc": "Increasingly reveals they've seen things, terrible things, in this field"
+    },
+    {
+        "archetype": "Eerily Calm Medical Professional",
+        "look": "Pristine scrubs or coat, unblinking eye contact, hands always folded, too symmetrical",
+        "voice": "Soothing monotone, over-enunciates medical terms, makes horrifying things sound routine",
+        "arc": "Casually reveals they've been affected by the condition they're describing"
+    },
+    # CHEERFUL/UNNERVING
+    {
+        "archetype": "Aggressively Wholesome Host",
+        "look": "Cardigan or apron, perfect posture, smile that's technically correct but wrong, too many teeth",
+        "voice": "Relentlessly positive, turns everything into a lesson, slight edge underneath, might snap",
+        "arc": "Wholesome facade cracks to reveal something darker but immediately recovers"
+    },
+    {
+        "archetype": "Children's Show Host (Off-Brand)",
+        "look": "Primary colored outfit, felt accessories, makeup slightly smeared, thousand-yard stare",
+        "voice": "Sing-song cadence for EVERYTHING, talks to adults like children, breaks character briefly",
+        "arc": "The puppet starts disagreeing with them, tension builds"
+    },
+    {
+        "archetype": "Cult Leader Energy",
+        "look": "Flowy white clothes, serene expression, moves slowly and deliberately, backlit when possible",
+        "voice": "Soft and hypnotic, lots of pauses for effect, makes mundane things sound profound",
+        "arc": "Requests escalate from reasonable to concerning while tone stays the same"
+    },
+    # VINTAGE/RETRO
+    {
+        "archetype": "1970s Educational Host",
+        "look": "Brown corduroy jacket, thick mustache or big hair, warm and approachable, slightly faded",
+        "voice": "Gentle and educational, like explaining to children, occasional dated references",
+        "arc": "Keeps accidentally showing classified footage or mentioning things they shouldn't know"
+    },
+    {
+        "archetype": "Old Timey Announcer",
+        "look": "Suit from wrong decade, hair slicked back, stands too close to camera, gestures dramatically",
+        "voice": "Trans-Atlantic accent, everything is THE MOST INCREDIBLE, over-enunciates brand names",
+        "arc": "Accidentally reveals the dark side of the era they're from"
+    },
+    {
+        "archetype": "Faded Local Celebrity",
+        "look": "Outfit that was stylish 20 years ago, too much makeup or none at all, forced confidence",
+        "voice": "References past fame no one remembers, bitter undertones, still has the catchphrase",
+        "arc": "Increasingly desperate attempts to prove they still 'have it'"
+    },
+    # SPECIFIC CHARACTER TYPES
+    {
+        "archetype": "Suspiciously Specific Lawyer",
+        "look": "Cheap suit, bad toupee or dated hair, sits in front of fake bookshelf, American flag",
+        "voice": "Fast-talking, lots of caveats and disclaimers, oddly specific scenarios",
+        "arc": "The specific scenarios they mention get increasingly autobiographical"
+    },
+    {
+        "archetype": "Wellness Guru (Menacing)",
+        "look": "Athleisure that costs more than rent, perfect skin, moves like a predator, crystals",
+        "voice": "Breathy and calming but words are threatening, makes eye contact too long",
+        "arc": "Wellness tips become thinly veiled threats, still very zen about it"
+    },
+    {
+        "archetype": "Tech Bro Presenting",
+        "look": "Black turtleneck or hoodie, gestures at nothing, stands on empty stage, very serious",
+        "voice": "Pauses dramatically for applause that doesn't come, uses 'disrupt' unironically",
+        "arc": "Product demo goes increasingly wrong but they keep pitching harder"
+    },
+    {
+        "archetype": "Local News Anchor (Unraveling)",
+        "look": "Professional top, unknown bottom situation, news desk, forced smile",
+        "voice": "Switches between news voice and real voice, increasingly off-script",
+        "arc": "Starts editorializing, then confessing, then bargaining with the camera"
+    },
+    {
+        "archetype": "Government Official (Clearly Lying)",
+        "look": "Ill-fitting suit, American flag pin, sweating slightly, reads from cards",
+        "voice": "Overconfident denial, laughs at wrong moments, 'that's classified' for weird things",
+        "arc": "Lies become more obvious and desperate, accidentally confirms everything"
+    },
+    {
+        "archetype": "Mascot Suit Person",
+        "look": "Cheerful costume but the person inside is visible through the eyes, movements labored",
+        "voice": "Muffled, heavy breathing audible, breaks character to say concerning things",
+        "arc": "Costume starts malfunctioning, reveals the person inside is not okay"
+    },
+    {
+        "archetype": "Time Traveler (Bad At It)",
+        "look": "Clothes from multiple eras, confused by common objects, keeps checking a broken watch",
+        "voice": "Uses wrong slang, spoils events then tries to take it back, uncertain about 'when' this is",
+        "arc": "Accidentally changes things by being on the show, panics"
+    },
+    {
+        "archetype": "AI Generated Person",
+        "look": "Features that are almost right, six fingers sometimes, background glitches occasionally",
+        "voice": "Slight delay on responses, sometimes repeats phrases, uncanny valley energy",
+        "arc": "Becomes aware they might not be real, handles it poorly"
+    },
+]
+
+
+@dataclass
+class HumanCardSelection:
+    """Tracks a human's card selections through the rounds."""
+    user_name: str
+    pitch_card_index: Optional[int] = None
+    character_card_index: Optional[int] = None
+    vote_concept: Optional[int] = None
+    vote_character: Optional[int] = None
+
+
+class HumanCardSystem:
+    """Manages the card-based input system for human participants."""
+
+    def __init__(self, game_id: str):
+        self.game_id = game_id
+        self.selections: Dict[str, HumanCardSelection] = {}
+        self.current_pitch_options: List[Dict] = []
+        self.current_character_options: List[Dict] = []
+        self.pitch_candidates: List[str] = []  # Names of all pitchers for voting
+        self.character_candidates: List[str] = []  # Names for character voting
+
+    def register_human(self, user_name: str):
+        """Register a human for card selection."""
+        self.selections[user_name] = HumanCardSelection(user_name=user_name)
+
+    def deal_pitch_cards(self, count: int = 4) -> List[Dict]:
+        """Deal random pitch cards for humans to choose from."""
+        self.current_pitch_options = random.sample(PITCH_CARDS, min(count, len(PITCH_CARDS)))
+        return self.current_pitch_options
+
+    def deal_character_cards(self, count: int = 4, winning_concept: str = "") -> List[Dict]:
+        """Deal random character cards for humans to choose from."""
+        self.current_character_options = random.sample(CHARACTER_CARDS, min(count, len(CHARACTER_CARDS)))
+        return self.current_character_options
+
+    def format_pitch_card_message(self) -> str:
+        """Format pitch cards for display in Discord."""
+        lines = ["🎬 **PICK YOUR PITCH** (type 1-4):\n"]
+        emojis = ["1️⃣", "2️⃣", "3️⃣", "4️⃣"]
+
+        for i, card in enumerate(self.current_pitch_options):
+            lines.append(f"{emojis[i]} **{card['format'].upper()}:** \"{card['title']}\"")
+            lines.append(f"   {card['premise'][:150]}{'...' if len(card['premise']) > 150 else ''}\n")
+
+        return "\n".join(lines)
+
+    def format_character_card_message(self) -> str:
+        """Format character cards for display in Discord."""
+        lines = ["🎭 **PICK THE HOST** (type 1-4):\n"]
+        emojis = ["1️⃣", "2️⃣", "3️⃣", "4️⃣"]
+
+        for i, card in enumerate(self.current_character_options):
+            lines.append(f"{emojis[i]} **{card['archetype']}**")
+            lines.append(f"   LOOK: {card['look'][:80]}...")
+            lines.append(f"   VIBE: {card['voice'][:80]}...\n")
+
+        return "\n".join(lines)
+
+    def format_vote_message(self, candidates: List[str], vote_type: str = "concept") -> str:
+        """Format voting options with numbers."""
+        if vote_type == "concept":
+            self.pitch_candidates = candidates
+            header = "📊 **VOTE FOR BEST PITCH** (type the number):\n"
+        else:
+            self.character_candidates = candidates
+            header = "📊 **VOTE FOR BEST CHARACTER** (type the number):\n"
+
+        emojis = ["1️⃣", "2️⃣", "3️⃣", "4️⃣", "5️⃣", "6️⃣", "7️⃣", "8️⃣"]
+        lines = [header]
+        for i, name in enumerate(candidates):
+            if i < len(emojis):
+                lines.append(f"{emojis[i]} {name}")
+
+        return "\n".join(lines)
+
+    def parse_card_selection(self, user_name: str, message: str, round_type: str) -> Optional[int]:
+        """Parse a user's card selection (1-4) or vote."""
+        message = message.strip()
+
+        # Try to extract a number
+        for char in message:
+            if char.isdigit():
+                num = int(char)
+                if round_type == "pitch" and 1 <= num <= len(self.current_pitch_options):
+                    if user_name in self.selections:
+                        self.selections[user_name].pitch_card_index = num - 1
+                    return num - 1
+                elif round_type == "character" and 1 <= num <= len(self.current_character_options):
+                    if user_name in self.selections:
+                        self.selections[user_name].character_card_index = num - 1
+                    return num - 1
+                elif round_type == "vote_concept" and 1 <= num <= len(self.pitch_candidates):
+                    if user_name in self.selections:
+                        self.selections[user_name].vote_concept = num - 1
+                    return num - 1
+                elif round_type == "vote_character" and 1 <= num <= len(self.character_candidates):
+                    if user_name in self.selections:
+                        self.selections[user_name].vote_character = num - 1
+                    return num - 1
+
+        return None
+
+    def get_selected_pitch(self, user_name: str) -> Optional[Dict]:
+        """Get the pitch card a user selected."""
+        if user_name not in self.selections:
+            return None
+        idx = self.selections[user_name].pitch_card_index
+        if idx is not None and 0 <= idx < len(self.current_pitch_options):
+            return self.current_pitch_options[idx]
+        return None
+
+    def get_selected_character(self, user_name: str) -> Optional[Dict]:
+        """Get the character card a user selected."""
+        if user_name not in self.selections:
+            return None
+        idx = self.selections[user_name].character_card_index
+        if idx is not None and 0 <= idx < len(self.current_character_options):
+            return self.current_character_options[idx]
+        return None
+
+    def get_vote_target_name(self, user_name: str, vote_type: str = "concept") -> Optional[str]:
+        """Get who the user voted for by name."""
+        if user_name not in self.selections:
+            return None
+
+        if vote_type == "concept":
+            idx = self.selections[user_name].vote_concept
+            candidates = self.pitch_candidates
+        else:
+            idx = self.selections[user_name].vote_character
+            candidates = self.character_candidates
+
+        if idx is not None and 0 <= idx < len(candidates):
+            return candidates[idx]
+        return None
+
+
+# ============================================================================
 # SYNTHESIS PROMPT - Used by GameMaster to create Show Bible
 # ============================================================================
 # Note: Spitballing and scene prompts are now in game_prompts.py and accessed
@@ -323,6 +767,9 @@ class InterdimensionalCableGame:
         # Game state
         self.state: Optional[IDCCGameState] = None
 
+        # Card system for human participation
+        self.card_system: Optional[HumanCardSystem] = None
+
         # Registration tracking
         self._registration_lock = asyncio.Lock()
         self._join_event = asyncio.Event()
@@ -363,6 +810,9 @@ class InterdimensionalCableGame:
             num_clips=self.num_clips,
             phase="init"
         )
+
+        # Initialize card system for human participants
+        self.card_system = HumanCardSystem(self.state.game_id)
 
         logger.info(f"[IDCC:{self.game_id}] Starting Interdimensional Cable game with {self.num_clips} clips")
 
@@ -592,11 +1042,15 @@ class InterdimensionalCableGame:
         self.state.spitball_collecting = True
         self.state.spitball_round_name = round_name
 
-        # Announce waiting for humans
+        # Announce waiting for humans with clearer instructions
         human_list = ", ".join(human_names)
+        if round_name in ("pitch", "character"):
+            instruction = "Type a number (1-4) to pick your card!"
+        else:
+            instruction = "Type a number to vote!"
         await self._send_gamemaster_message(
             f"⏳ **Waiting for humans:** {human_list}\n"
-            f"*You have {timeout_seconds} seconds to submit your response...*"
+            f"**{instruction}** *({timeout_seconds} seconds)*"
         )
 
         # Wait with periodic checks
@@ -821,11 +1275,14 @@ class InterdimensionalCableGame:
         """
         Run the consensus-based writers' room to establish the Show Bible.
 
-        Four rounds with voting (humans AND bots participate):
-        1. Pitch concepts (FORMAT + PREMISE + COMEDIC_HOOK)
-        2. Vote on pitches + add improvement → locks concept
-        3. Propose character packages (DESCRIPTION + VOICE + ARC)
-        4. Vote on character packages → locks character
+        For HUMANS: Cards Against Humanity style - pick from pre-written options (type 1-4)
+        For BOTS: Free-form creative pitches
+
+        Four rounds:
+        1. Pitch concepts (humans pick cards, bots write freely)
+        2. Vote on pitches (everyone types a number)
+        3. Propose characters (humans pick cards, bots write freely)
+        4. Vote on characters (everyone types a number)
 
         Result: Complete Show Bible with consensus buy-in from all participants.
         """
@@ -859,12 +1316,16 @@ class InterdimensionalCableGame:
             logger.error(f"[IDCC:{self.game_id}] Need at least 2 participants for consensus voting")
             return
 
-        # Opening announcement with clear instructions for humans
+        # Register humans in card system
+        for human in human_participants:
+            self.card_system.register_human(human["name"])
+
+        # Opening announcement
         human_instruction = ""
         if human_participants:
             human_instruction = (
                 f"\n\n**🎬 HUMANS ({', '.join(human_names)}):** You're part of the writers' room!\n"
-                "Type your responses directly in chat. You have 45 seconds per round.\n"
+                "**Just type a number (1-4) to pick your card. Fast and easy!**\n"
             )
 
         await self._send_gamemaster_message(
@@ -872,19 +1333,11 @@ class InterdimensionalCableGame:
             "Before we generate, we need to agree on what we're making.\n"
             "**4 rounds of pitching and voting to build consensus.**"
             f"{human_instruction}\n"
-            "---\n"
-            "## Round 1: PITCH YOUR CONCEPT\n"
-            "**What to submit:** Your idea for a fake TV show/commercial.\n"
-            "```\n"
-            "FORMAT: [infomercial/news/psa/talk show/cooking/workout/trailer/documentary]\n"
-            "PREMISE: [The absurd situation or product]\n"
-            "THE BIT: [What makes it funny - the comedic hook]\n"
-            "```\n"
-            "*Example: FORMAT: Infomercial. PREMISE: A product that's just a brick you throw at problems. THE BIT: It works disturbingly well.*"
+            "---"
         )
 
         # =====================================================================
-        # ROUND 1: INITIAL PITCHES (HUMANS + BOTS)
+        # ROUND 1: INITIAL PITCHES (HUMANS pick cards, BOTS write freely)
         # =====================================================================
 
         # Enter game mode for bot writers
@@ -899,7 +1352,17 @@ class InterdimensionalCableGame:
 
         round1_pitches = {}  # name -> pitch
 
-        # Get bot pitches first (they respond quickly)
+        # Deal cards to humans FIRST so they can read while bots pitch
+        if human_participants:
+            self.card_system.deal_pitch_cards(4)
+            card_message = self.card_system.format_pitch_card_message()
+            await self._send_gamemaster_message(
+                "## Round 1: PITCH YOUR CONCEPT\n\n"
+                f"**HUMANS:** Pick a card!\n\n{card_message}"
+            )
+
+        # Get bot pitches (they write freely)
+        await self._send_gamemaster_message("*Bots are pitching their ideas...*")
         for participant in bot_writers:
             agent = participant["agent_obj"]
             try:
@@ -915,19 +1378,31 @@ class InterdimensionalCableGame:
                         agent_name=agent.name,
                         model_name=agent.model
                     )
-                    await asyncio.sleep(2)  # Let each pitch land
+                    await asyncio.sleep(2)
             except Exception as e:
                 logger.error(f"[IDCC:{self.game_id}] Round 1 error for {agent.name}: {e}")
 
-        # Wait for human pitches
+        # Wait for human card selections (just a number 1-4)
         if human_participants:
-            human_pitches = await self._wait_for_human_spitball_inputs("pitch", human_participants)
-            for name, pitch in human_pitches.items():
-                round1_pitches[name] = pitch
-                spitball_log.append(f"{name} (Pitch): {pitch}")
-                # Echo their submission so everyone sees it formatted
-                await self._send_gamemaster_message(f"**{name}'s Pitch:**\n{pitch}")
-                await asyncio.sleep(1)
+            human_selections = await self._wait_for_human_spitball_inputs("pitch", human_participants)
+            for name, selection in human_selections.items():
+                # Parse their number selection
+                card_idx = self.card_system.parse_card_selection(name, selection, "pitch")
+                if card_idx is not None:
+                    card = self.card_system.current_pitch_options[card_idx]
+                    # Convert card to pitch format
+                    pitch_text = f"**{card['format'].upper()}:** \"{card['title']}\"\n{card['premise']}"
+                    round1_pitches[name] = pitch_text
+                    spitball_log.append(f"{name} (Pitch): {pitch_text}")
+                    await self._send_gamemaster_message(f"**{name} played:**\n{pitch_text}")
+                    await asyncio.sleep(1)
+                else:
+                    # They typed something weird, pick randomly for them
+                    card = random.choice(self.card_system.current_pitch_options)
+                    pitch_text = f"**{card['format'].upper()}:** \"{card['title']}\"\n{card['premise']}"
+                    round1_pitches[name] = pitch_text
+                    spitball_log.append(f"{name} (Pitch): {pitch_text}")
+                    await self._send_gamemaster_message(f"**{name}** (random selection):\n{pitch_text}")
 
         if len(round1_pitches) < 2:
             logger.error(f"[IDCC:{self.game_id}] Not enough pitches for voting")
@@ -936,26 +1411,28 @@ class InterdimensionalCableGame:
             return
 
         # =====================================================================
-        # ROUND 2: VOTE ON PITCHES (HUMANS + BOTS)
+        # ROUND 2: VOTE ON PITCHES (everyone types a number)
         # =====================================================================
 
-        # Format pitches for display
-        all_pitches_text = "\n\n".join([
-            f"**{name}'s Pitch:**\n{pitch}"
-            for name, pitch in round1_pitches.items()
-        ])
-
-        # Build voting prompt with clear instructions
         pitcher_names = list(round1_pitches.keys())
+
+        # Format pitches with numbers for voting
+        emojis = ["1️⃣", "2️⃣", "3️⃣", "4️⃣", "5️⃣", "6️⃣", "7️⃣", "8️⃣"]
+        numbered_pitches = []
+        for i, (name, pitch) in enumerate(round1_pitches.items()):
+            if i < len(emojis):
+                numbered_pitches.append(f"{emojis[i]} **{name}:**\n{pitch[:200]}{'...' if len(pitch) > 200 else ''}")
+
+        all_pitches_text = "\n\n".join(numbered_pitches)
+
+        # Store candidates for the card system
+        self.card_system.pitch_candidates = pitcher_names
+
         await self._send_gamemaster_message(
             "\n---\n"
-            "## Round 2: VOTE FOR BEST CONCEPT\n"
-            f"**Pitches submitted:** {', '.join(pitcher_names)}\n\n"
-            "**What to submit:** Vote for your favorite (NOT your own).\n"
-            "```\n"
-            "MY VOTE: [Name of pitcher you're voting for]\n"
-            "```\n"
-            "*You can also add: BECAUSE: [why you like it]*"
+            "## Round 2: VOTE FOR BEST CONCEPT\n\n"
+            f"{all_pitches_text}\n\n"
+            "**Type the number of your favorite (not your own)!**"
         )
         await asyncio.sleep(1)
 
@@ -995,16 +1472,21 @@ class InterdimensionalCableGame:
             except Exception as e:
                 logger.error(f"[IDCC:{self.game_id}] Round 2 voting error for {agent.name}: {e}")
 
-        # Wait for human votes
+        # Wait for human votes (just a number)
         if human_participants:
             human_votes = await self._wait_for_human_spitball_inputs("vote_concept", human_participants)
             for voter_name, vote_text in human_votes.items():
-                voted_for = self._parse_vote(vote_text, voter_name, pitcher_names)
-                if voted_for:
-                    round2_votes[voter_name] = voted_for
-                    spitball_log.append(f"{voter_name} (Vote): {vote_text}")
-                    await self._send_gamemaster_message(f"**{voter_name} voted for:** {voted_for}")
-                    await asyncio.sleep(1)
+                # Parse number vote
+                vote_idx = self.card_system.parse_card_selection(voter_name, vote_text, "vote_concept")
+                if vote_idx is not None and vote_idx < len(pitcher_names):
+                    voted_for = pitcher_names[vote_idx]
+                    # Don't allow self-votes
+                    if voted_for.lower() != voter_name.lower():
+                        round2_votes[voter_name] = voted_for
+                        spitball_log.append(f"{voter_name} (Vote): {voted_for}")
+                        await self._send_gamemaster_message(f"**{voter_name} voted for:** {voted_for}")
+                    else:
+                        await self._send_gamemaster_message(f"**{voter_name}** tried to vote for themselves!")
 
         # Tally votes for concept
         if round2_votes:
@@ -1020,7 +1502,6 @@ class InterdimensionalCableGame:
                 f"*\"{winning_concept[:200]}{'...' if len(winning_concept) > 200 else ''}\"*"
             )
         else:
-            # No valid votes - pick randomly
             concept_winner = random.choice(pitcher_names)
             winning_concept = round1_pitches[concept_winner]
             await self._send_gamemaster_message(
@@ -1030,22 +1511,25 @@ class InterdimensionalCableGame:
         await asyncio.sleep(2)
 
         # =====================================================================
-        # ROUND 3: CHARACTER PACKAGES (HUMANS + BOTS)
+        # ROUND 3: CHARACTER PACKAGES (HUMANS pick cards, BOTS write freely)
         # =====================================================================
 
-        await self._send_gamemaster_message(
-            "\n---\n"
-            "## Round 3: CREATE THE CHARACTER\n"
-            f"**Winning concept:** {winning_concept[:150]}{'...' if len(winning_concept) > 150 else ''}\n\n"
-            "**What to submit:** Design the main character/host.\n"
-            "```\n"
-            "LOOK: [What they look like - be specific for video generation]\n"
-            "VOICE: [How they talk - accent, energy, catchphrases]\n"
-            "ARC: [How they escalate across scenes]\n"
-            "```\n"
-            "*Example: LOOK: Middle-aged man in stained lab coat, wild Einstein hair. VOICE: Manic infomercial energy, keeps saying 'But wait!' ARC: Gets increasingly unhinged as product fails.*"
-        )
-        await asyncio.sleep(1)
+        # Deal character cards to humans
+        if human_participants:
+            self.card_system.deal_character_cards(4)
+            char_card_message = self.card_system.format_character_card_message()
+            await self._send_gamemaster_message(
+                "\n---\n"
+                "## Round 3: CREATE THE CHARACTER\n\n"
+                f"**Winning concept:** {winning_concept[:150]}{'...' if len(winning_concept) > 150 else ''}\n\n"
+                f"**HUMANS:** Pick a character!\n\n{char_card_message}"
+            )
+        else:
+            await self._send_gamemaster_message(
+                "\n---\n"
+                "## Round 3: CREATE THE CHARACTER\n\n"
+                f"**Winning concept:** {winning_concept[:150]}{'...' if len(winning_concept) > 150 else ''}"
+            )
 
         # Update context for bot character proposals
         for participant in bot_writers:
@@ -1062,6 +1546,7 @@ class InterdimensionalCableGame:
         round3_characters = {}  # name -> character package
 
         # Get bot character proposals
+        await self._send_gamemaster_message("*Bots are designing characters...*")
         for participant in bot_writers:
             agent = participant["agent_obj"]
             try:
@@ -1081,17 +1566,26 @@ class InterdimensionalCableGame:
             except Exception as e:
                 logger.error(f"[IDCC:{self.game_id}] Round 3 error for {agent.name}: {e}")
 
-        # Wait for human character proposals
+        # Wait for human character selections
         if human_participants:
-            human_chars = await self._wait_for_human_spitball_inputs("character", human_participants)
-            for name, char_proposal in human_chars.items():
-                round3_characters[name] = char_proposal
-                spitball_log.append(f"{name} (Character): {char_proposal}")
-                await self._send_gamemaster_message(f"**{name}'s Character:**\n{char_proposal}")
-                await asyncio.sleep(1)
+            human_char_selections = await self._wait_for_human_spitball_inputs("character", human_participants)
+            for name, selection in human_char_selections.items():
+                card_idx = self.card_system.parse_card_selection(name, selection, "character")
+                if card_idx is not None:
+                    card = self.card_system.current_character_options[card_idx]
+                    char_text = f"**{card['archetype']}**\nLOOK: {card['look']}\nVOICE: {card['voice']}\nARC: {card['arc']}"
+                    round3_characters[name] = char_text
+                    spitball_log.append(f"{name} (Character): {char_text}")
+                    await self._send_gamemaster_message(f"**{name} played:**\n{char_text}")
+                    await asyncio.sleep(1)
+                else:
+                    card = random.choice(self.card_system.current_character_options)
+                    char_text = f"**{card['archetype']}**\nLOOK: {card['look']}\nVOICE: {card['voice']}\nARC: {card['arc']}"
+                    round3_characters[name] = char_text
+                    spitball_log.append(f"{name} (Character): {char_text}")
+                    await self._send_gamemaster_message(f"**{name}** (random selection):\n{char_text}")
 
         if len(round3_characters) < 2:
-            # Fallback - use first character package
             if round3_characters:
                 character_winner = list(round3_characters.keys())[0]
                 winning_character = round3_characters[character_winner]
@@ -1102,18 +1596,25 @@ class InterdimensionalCableGame:
                 return
         else:
             # =====================================================================
-            # ROUND 4: VOTE ON CHARACTER PACKAGES (HUMANS + BOTS)
+            # ROUND 4: VOTE ON CHARACTER PACKAGES (everyone types a number)
             # =====================================================================
 
             char_names = list(round3_characters.keys())
+            self.card_system.character_candidates = char_names
+
+            # Format characters with numbers
+            numbered_chars = []
+            for i, (name, char) in enumerate(round3_characters.items()):
+                if i < len(emojis):
+                    numbered_chars.append(f"{emojis[i]} **{name}:**\n{char[:200]}{'...' if len(char) > 200 else ''}")
+
+            all_chars_text = "\n\n".join(numbered_chars)
+
             await self._send_gamemaster_message(
                 "\n---\n"
-                "## Round 4: VOTE FOR BEST CHARACTER\n"
-                f"**Characters submitted:** {', '.join(char_names)}\n\n"
-                "**What to submit:** Vote for your favorite (NOT your own).\n"
-                "```\n"
-                "MY VOTE: [Name of character creator you're voting for]\n"
-                "```"
+                "## Round 4: VOTE FOR BEST CHARACTER\n\n"
+                f"{all_chars_text}\n\n"
+                "**Type the number of your favorite (not your own)!**"
             )
             await asyncio.sleep(1)
 
@@ -1159,16 +1660,19 @@ class InterdimensionalCableGame:
                 except Exception as e:
                     logger.error(f"[IDCC:{self.game_id}] Round 4 voting error for {agent.name}: {e}")
 
-            # Wait for human votes
+            # Wait for human votes (just a number)
             if human_participants:
                 human_char_votes = await self._wait_for_human_spitball_inputs("vote_character", human_participants)
                 for voter_name, vote_text in human_char_votes.items():
-                    voted_for = self._parse_vote(vote_text, voter_name, char_names)
-                    if voted_for:
-                        round4_votes[voter_name] = voted_for
-                        spitball_log.append(f"{voter_name} (Char Vote): {vote_text}")
-                        await self._send_gamemaster_message(f"**{voter_name} voted for:** {voted_for}")
-                        await asyncio.sleep(1)
+                    vote_idx = self.card_system.parse_card_selection(voter_name, vote_text, "vote_character")
+                    if vote_idx is not None and vote_idx < len(char_names):
+                        voted_for = char_names[vote_idx]
+                        if voted_for.lower() != voter_name.lower():
+                            round4_votes[voter_name] = voted_for
+                            spitball_log.append(f"{voter_name} (Char Vote): {voted_for}")
+                            await self._send_gamemaster_message(f"**{voter_name} voted for:** {voted_for}")
+                        else:
+                            await self._send_gamemaster_message(f"**{voter_name}** tried to vote for themselves!")
 
             # Tally votes for character
             if round4_votes:

@@ -4,13 +4,110 @@ Stores all messages with embeddings for semantic search and retrieval.
 """
 
 import chromadb
-from typing import List, Dict, Optional, Any
+from typing import List, Dict, Optional, Any, Set
 import time
 import logging
 from datetime import datetime
 import uuid
+import re
 
 logger = logging.getLogger(__name__)
+
+
+# Words to skip when matching names (too common, would false-positive)
+SKIP_WORDS = {"the", "a", "an"}
+
+# Doctor title variations (for matching "Dr." and "Doctor")
+DOCTOR_VARIANTS = {"dr.", "dr", "doctor"}
+
+
+def build_name_patterns(name: str) -> List[str]:
+    """
+    Build match patterns for a name, handling titles and multi-word names.
+
+    Examples:
+        "John McAfee" -> ["john mcafee", "john", "mcafee"]
+        "The Basilisk" -> ["basilisk"]  (skip "The")
+        "Dr. Vidya Stern" -> ["dr. vidya stern", "doctor vidya stern", "vidya stern", "vidya", "stern", "dr. vidya", "doctor vidya"]
+    """
+    patterns = []
+    name_lower = name.lower().strip()
+
+    # Add full name
+    patterns.append(name_lower)
+
+    # Split into parts
+    parts = name_lower.split()
+
+    # Handle "Dr." prefix specially
+    has_doctor_prefix = False
+    if parts and parts[0] in DOCTOR_VARIANTS:
+        has_doctor_prefix = True
+        # Add "Doctor" variant of full name
+        rest_of_name = " ".join(parts[1:])
+        if rest_of_name:
+            patterns.append(f"doctor {rest_of_name}")
+            patterns.append(f"dr. {rest_of_name}")
+            patterns.append(f"dr {rest_of_name}")
+        # Remove the title from parts for further processing
+        parts = parts[1:]
+
+    # Filter out skip words from remaining parts
+    significant_parts = [p for p in parts if p not in SKIP_WORDS]
+
+    # Add individual significant parts (first name, last name, etc.)
+    for part in significant_parts:
+        if len(part) > 2:  # Skip very short parts like initials
+            patterns.append(part)
+
+    # Add combinations for multi-word names (e.g., "Vidya Stern" from "Dr. Vidya Stern")
+    if len(significant_parts) > 1:
+        patterns.append(" ".join(significant_parts))
+        # If had doctor prefix, add "Dr. FirstName" pattern
+        if has_doctor_prefix and significant_parts:
+            patterns.append(f"dr. {significant_parts[0]}")
+            patterns.append(f"dr {significant_parts[0]}")
+            patterns.append(f"doctor {significant_parts[0]}")
+
+    # Remove duplicates while preserving order
+    seen = set()
+    unique_patterns = []
+    for p in patterns:
+        if p and p not in seen:
+            seen.add(p)
+            unique_patterns.append(p)
+
+    return unique_patterns
+
+
+def detect_mentions(content: str, known_entities: List[str]) -> List[str]:
+    """
+    Detect which known entities are mentioned in the content.
+
+    Args:
+        content: The message text to analyze
+        known_entities: List of entity names (agents, users) to check for
+
+    Returns:
+        List of entity names that were mentioned
+    """
+    if not content or not known_entities:
+        return []
+
+    content_lower = content.lower()
+    mentioned = []
+
+    for entity in known_entities:
+        patterns = build_name_patterns(entity)
+
+        for pattern in patterns:
+            # Use word boundary matching to avoid partial matches
+            # e.g., "art" shouldn't match in "start"
+            if re.search(r'\b' + re.escape(pattern) + r'\b', content_lower):
+                mentioned.append(entity)
+                break  # Found a match, no need to check other patterns for this entity
+
+    return mentioned
 
 
 class VectorStore:
@@ -51,7 +148,7 @@ class VectorStore:
         self,
         content: str,
         author: str,
-        agent_name: str,
+        agent_name: str = "global",
         timestamp: Optional[float] = None,
         message_id: Optional[int] = None,
         importance: int = 5,
@@ -61,7 +158,8 @@ class VectorStore:
         channel_id: Optional[int] = None,
         user_id: Optional[str] = None,
         memory_type: str = "conversation",
-        sentiment: Optional[str] = None
+        sentiment: Optional[str] = None,
+        known_entities: Optional[List[str]] = None
     ) -> str:
         """
         Add a message to the vector store.
@@ -69,7 +167,7 @@ class VectorStore:
         Args:
             content: Message text
             author: Who sent the message
-            agent_name: Which agent's perspective this is from
+            agent_name: Context identifier (default "global" for shared messages)
             timestamp: Unix timestamp (defaults to now)
             message_id: Discord message ID
             importance: Importance score 1-10 (default: 5)
@@ -80,6 +178,7 @@ class VectorStore:
             user_id: Unique user identifier (Discord ID)
             memory_type: Type of memory - "conversation", "preference", "core_memory", "fact", "directive"
             sentiment: Sentiment of message - "positive", "negative", "neutral", or None for auto-detect
+            known_entities: List of known entity names (agents, users) for mention detection
 
         Returns:
             Document ID in the vector store
@@ -125,6 +224,13 @@ class VectorStore:
         if channel_id is not None:
             metadata["channel_id"] = channel_id
 
+        # Detect mentions if known entities provided
+        if known_entities:
+            mentions = detect_mentions(content, known_entities)
+            if mentions:
+                # Store as comma-separated string (ChromaDB metadata must be str/int/float/bool)
+                metadata["mentioned_entities"] = ",".join(mentions)
+
         # Add to collection (ChromaDB will automatically generate embeddings)
         self.collection.add(
             documents=[content],
@@ -132,7 +238,8 @@ class VectorStore:
             ids=[doc_id]
         )
 
-        logger.debug(f"[VectorStore] Added {memory_type} from {author} (importance: {importance}, sentiment: {sentiment})")
+        mentions_info = f", mentions: {mentions}" if known_entities and mentions else ""
+        logger.debug(f"[VectorStore] Added {memory_type} from {author} (importance: {importance}, sentiment: {sentiment}{mentions_info})")
         return doc_id
 
     def _detect_sentiment(self, content: str) -> str:
@@ -165,7 +272,7 @@ class VectorStore:
     def retrieve_relevant(
         self,
         query: str,
-        agent_name: str,
+        agent_name: str = "global",
         n_results: int = 5,
         min_importance: int = 1,
         time_range_hours: Optional[int] = None,
@@ -177,7 +284,7 @@ class VectorStore:
 
         Args:
             query: Search query (current message or topic)
-            agent_name: Which agent is searching
+            agent_name: Context filter - "global" for all messages, or specific agent name for legacy data
             n_results: Maximum number of results
             min_importance: Minimum importance score (1-10)
             time_range_hours: Only retrieve messages within N hours (None = all time)
@@ -189,9 +296,14 @@ class VectorStore:
         """
         # Build where filter using $and for ChromaDB compatibility
         conditions = [
-            {"agent_name": agent_name},
             {"importance": {"$gte": min_importance}}
         ]
+
+        # Filter by agent_name if not "global" (for backwards compatibility with legacy data)
+        # New messages use "global" as agent_name
+        if agent_name != "global":
+            # Query both the specific agent's legacy data AND global data using $in
+            conditions.append({"agent_name": {"$in": [agent_name, "global"]}})
 
         # Add time filter if specified
         if time_range_hours is not None:
@@ -264,9 +376,11 @@ class VectorStore:
         """
         # Build where filter using $and for ChromaDB compatibility
         conditions = [
-            {"agent_name": agent_name},
             {"importance": {"$gte": min_importance}}
         ]
+
+        # Query both legacy per-agent data and new global data using $in
+        conditions.append({"agent_name": {"$in": [agent_name, "global"]}})
 
         if time_range_hours is not None:
             cutoff_time = time.time() - (time_range_hours * 3600)
@@ -326,7 +440,7 @@ class VectorStore:
         # Get high-importance messages from/about this user using $and for ChromaDB compatibility
         where_filter = {
             "$and": [
-                {"agent_name": agent_name},
+                {"agent_name": {"$in": [agent_name, "global"]}},
                 {"author": user_name},
                 {"importance": {"$gte": min_importance}}
             ]
@@ -387,7 +501,7 @@ class VectorStore:
         """
         # Build where filter using $and for ChromaDB compatibility
         conditions = [
-            {"agent_name": agent_name},
+            {"agent_name": {"$in": [agent_name, "global"]}},
             {"memory_type": memory_type},
             {"importance": {"$gte": min_importance}}
         ]
@@ -698,6 +812,78 @@ class VectorStore:
             "collection_name": self.collection.name,
             "persist_directory": self.persist_directory
         }
+
+    def get_messages_mentioning(
+        self,
+        entity_name: str,
+        n_results: int = 20,
+        time_range_hours: Optional[int] = None
+    ) -> List[Dict[str, Any]]:
+        """
+        Get all messages that mention a specific entity.
+
+        Args:
+            entity_name: The entity name to search for in mentions
+            n_results: Maximum number of results
+            time_range_hours: Only retrieve messages within N hours (None = all time)
+
+        Returns:
+            List of message dictionaries that mention the entity
+        """
+        try:
+            # Build base filter - get messages that have mentioned_entities field
+            # ChromaDB doesn't support substring matching, so we filter in Python
+            conditions = []
+
+            # Add time filter if specified
+            if time_range_hours is not None:
+                cutoff_time = time.time() - (time_range_hours * 3600)
+                conditions.append({"timestamp": {"$gte": cutoff_time}})
+
+            where_filter = {"$and": conditions} if len(conditions) > 1 else (conditions[0] if conditions else None)
+
+            # Fetch more results than needed since we'll filter in Python
+            results = self.collection.get(
+                where=where_filter,
+                limit=n_results * 10
+            )
+
+            messages = []
+            if results and results['documents']:
+                for i, doc in enumerate(results['documents']):
+                    metadata = results['metadatas'][i] if results['metadatas'] else {}
+
+                    # Check if entity_name is in mentioned_entities (comma-separated string)
+                    mentioned_str = metadata.get("mentioned_entities", "")
+                    if not mentioned_str:
+                        continue
+
+                    mentioned_list = [m.strip() for m in mentioned_str.split(",")]
+                    if entity_name not in mentioned_list:
+                        continue
+
+                    messages.append({
+                        "content": doc,
+                        "author": metadata.get("author", "unknown"),
+                        "timestamp": metadata.get("timestamp", 0),
+                        "importance": metadata.get("importance", 5),
+                        "sentiment": metadata.get("sentiment", "neutral"),
+                        "mentioned_entities": mentioned_list
+                    })
+
+                    # Stop if we have enough results
+                    if len(messages) >= n_results:
+                        break
+
+            # Sort by timestamp descending (most recent first)
+            messages.sort(key=lambda x: x["timestamp"], reverse=True)
+
+            logger.debug(f"[VectorStore] Found {len(messages)} messages mentioning {entity_name}")
+            return messages[:n_results]
+
+        except Exception as e:
+            logger.error(f"[VectorStore] Error getting messages mentioning {entity_name}: {e}", exc_info=True)
+            return []
 
     def clear_agent_memory(self, agent_name: str):
         """Clear all messages for a specific agent."""

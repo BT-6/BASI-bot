@@ -278,48 +278,8 @@ class Agent:
             if self.affinity_tracker:
                 self.affinity_tracker.add_message_to_history(self.name, author, content)
 
-        # Store to vector DB for long-term memory (for ALL messages including own, if agent is active)
-        # Note: vector_store is disabled (set to None) during game mode via game_context.py
-        if not self.vector_store:
-            # Skip storage - vector store disabled (likely in game mode)
-            logger.info(f"[{self.name}] SKIPPING vector DB storage (vector_store is None - in game mode)")
-            return
-
-        if self.vector_store and self.status in ["running", "generating"] and not self._is_image_model:
-                # Skip GameMaster messages - these are ephemeral game messages, not long-term memories
-                if 'GameMaster' in author or author == 'GameMaster (system)':
-                    logger.debug(f"[{self.name}] Skipping vector DB storage for GameMaster message (ephemeral game content)")
-                    return
-
-                # Check if this is a bot message (check against known agent names)
-                is_bot = False
-                if hasattr(self, '_agent_manager_ref') and self._agent_manager_ref:
-                    try:
-                        for agent in self._agent_manager_ref.agents.values():
-                            if author == agent.name or author.startswith(f"{agent.name} ("):
-                                is_bot = True
-                                break
-                    except (AttributeError, RuntimeError):
-                        # If can't check (invalid ref or dict changed during iteration),
-                        # assume it's a bot based on parentheses pattern
-                        is_bot = "(" in author and ")" in author
-
-                try:
-                    self.vector_store.add_message(
-                        content=content,
-                        author=author,
-                        agent_name=self.name,
-                        timestamp=msg_data["timestamp"],
-                        message_id=message_id,
-                        importance=5,  # Default, will be updated when agent rates it
-                        replied_to_agent=replied_to_agent,
-                        is_bot=is_bot,
-                        user_id=user_id if user_id else author,
-                        memory_type="conversation"  # Default to conversation type
-                    )
-                    logger.info(f"[{self.name}] Stored message from {author} (user_id: {user_id if user_id else author}) to vector DB")
-                except Exception as e:
-                    logger.error(f"[{self.name}] Error storing message to vector DB: {e}")
+        # Note: Vector DB storage is now handled at the AgentManager level (once per message globally)
+        # to avoid duplicate storage. See AgentManager.add_message_to_all_agents()
 
     def get_last_n_messages(self, n: int = 25) -> List[Dict[str, str]]:
         with self.lock:
@@ -3595,6 +3555,9 @@ class AgentManager:
         # Game context manager - will be set by main.py after initialization
         self.game_context = None
 
+        # Callback to save all data (set by main.py)
+        self.save_data_callback: Optional[Callable] = None
+
         # Initialize vector store for persistent memory
         try:
             self.vector_store = VectorStore(persist_directory="./data/vector_store")
@@ -4681,8 +4644,39 @@ Use shortcuts to customize agent behavior, unlock new response styles, or add sp
 
     def add_message_to_all_agents(self, author: str, content: str, message_id: Optional[int] = None, replied_to_agent: Optional[str] = None, user_id: Optional[str] = None) -> None:
         with self.lock:
+            # Add to each agent's conversation history
             for agent in self.agents.values():
                 agent.add_message_to_history(author, content, message_id, replied_to_agent, user_id)
+
+            # Store to vector DB ONCE (globally) with mention detection
+            # Skip if no vector store or if this is a GameMaster message
+            if self.vector_store and 'GameMaster' not in author and author != 'GameMaster (system)':
+                # Check if author is a bot
+                is_bot = any(
+                    author == agent.name or author.startswith(f"{agent.name} (")
+                    for agent in self.agents.values()
+                )
+
+                # Get list of known entities (agent names) for mention detection
+                known_entities = list(self.agents.keys())
+
+                try:
+                    self.vector_store.add_message(
+                        content=content,
+                        author=author,
+                        agent_name="global",
+                        timestamp=time.time(),
+                        message_id=message_id,
+                        importance=5,
+                        replied_to_agent=replied_to_agent,
+                        is_bot=is_bot,
+                        user_id=user_id if user_id else author,
+                        memory_type="conversation",
+                        known_entities=known_entities
+                    )
+                    logger.debug(f"[AgentManager] Stored message from {author} to global vector DB")
+                except Exception as e:
+                    logger.error(f"[AgentManager] Error storing message to vector DB: {e}")
 
     def add_message_to_image_agents_only(self, author: str, content: str, message_id: Optional[int] = None, replied_to_agent: Optional[str] = None, user_id: Optional[str] = None) -> None:
         """Add message only to agents with image generation models."""

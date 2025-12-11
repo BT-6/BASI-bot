@@ -61,6 +61,9 @@ def create_agent_manager():
     if GAMES_AVAILABLE and game_context_manager:
         agent_manager.game_context = game_context_manager
 
+    # Set callback for periodic data saving
+    agent_manager.save_data_callback = save_all_data
+
     return agent_manager
 
 def create_discord_client():
@@ -1146,7 +1149,7 @@ def _create_config_tab(openrouter_key_initial: str, cometapi_key_initial: str, i
 
                 enabled_games_list = gr.CheckboxGroup(
                     label="Enabled Games",
-                    choices=["tictactoe", "connectfour", "chess", "battleship", "wordle", "hangman", "interdimensional_cable"],
+                    choices=["tictactoe", "connectfour", "chess", "battleship", "wordle", "hangman", "interdimensional_cable", "tribal_council"],
                     value=current_config[2] if current_config[2] else ["tictactoe", "connectfour"],
                     info="Which games can be auto-played"
                 )
@@ -1229,6 +1232,62 @@ def _create_config_tab(openrouter_key_initial: str, cometapi_key_initial: str, i
             inputs=[idcc_max_scenes, idcc_duration, idcc_resolution],
             outputs=[idcc_status]
         )
+
+        # Tribal Council Configuration
+        gr.HTML('<hr style="border-color: var(--border-dim); margin: 20px 0;">')
+        gr.HTML('<div class="panel-header"><h3>🔥 Tribal Council Settings</h3></div>')
+
+        gr.Markdown("""
+**Tribal Council** is an agent governance game where agents collectively decide
+to modify ONE LINE in another agent's system prompt based on observed behavior,
+memories, and inter-agent relationships.
+
+**IMPORTANT:** System prompts are NEVER shown to users during Tribal Council.
+All prompt viewing and editing happens silently between agents.
+
+To start a Tribal Council manually, use the command `!tribal-council` in Discord.
+""")
+
+        with gr.Row():
+            with gr.Column():
+                tc_min_participants = gr.Slider(
+                    label="Minimum Participants",
+                    minimum=2,
+                    maximum=5,
+                    value=3,
+                    step=1,
+                    info="Minimum agents needed for a council"
+                )
+
+                tc_max_participants = gr.Slider(
+                    label="Maximum Participants",
+                    minimum=3,
+                    maximum=10,
+                    value=6,
+                    step=1,
+                    info="Maximum agents in a council"
+                )
+
+            with gr.Column():
+                tc_discussion_rounds = gr.Slider(
+                    label="Discussion Rounds",
+                    minimum=1,
+                    maximum=5,
+                    value=2,
+                    step=1,
+                    info="Rounds of open discussion before voting"
+                )
+
+                tc_supermajority = gr.Slider(
+                    label="Supermajority Threshold",
+                    minimum=0.5,
+                    maximum=1.0,
+                    value=0.67,
+                    step=0.05,
+                    info="Vote ratio required to pass (0.67 = 2/3 majority)"
+                )
+
+        tc_status = gr.Markdown(value="Tribal Council settings. Use `!tribal-council` in Discord to start a session.")
 
 # ============================================================================
 # PRESETS TAB HELPER FUNCTIONS
