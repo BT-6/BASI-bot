@@ -494,6 +494,9 @@ Choose a move you haven't been playing. Break the pattern NOW!
         if len(legal_moves) > 10:
             legal_moves_text += f" (and {len(legal_moves) - 10} more)"
 
+        # Check for user hints/mentions for initial player
+        user_hints = self.get_user_hints_for_player(self.turn)
+
         # Send text prompt so agents can see game state
         turn_prompt = (
             f"**YOUR TURN, {self.turn}!**\n"
@@ -502,6 +505,11 @@ Choose a move you haven't been playing. Break the pattern NOW!
             f"**Available moves:** {legal_moves_text}\n"
             f"Enter your move in UCI format (e.g., `e2e4` to move pawn from e2 to e4)"
         )
+
+        # Append user hints if any
+        if user_hints:
+            turn_prompt += user_hints
+            logger.info(f"[Chess] Including user hint for {self.turn} in initial turn prompt")
 
         # CRITICAL: Add turn prompt directly to player's history
         # Discord bot ignores its own messages, so ctx.send() alone doesn't reach agents

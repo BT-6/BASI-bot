@@ -402,17 +402,22 @@ After viewing prompts, you'll discuss and nominate someone for modification.
 
         for round_num in range(1, self.config.discussion_rounds + 1):
             if self._cancelled:
+                logger.info(f"[TribalCouncil:{self.game_id}] Discussion cancelled before round {round_num}")
                 return
 
+            logger.info(f"[TribalCouncil:{self.game_id}] Starting discussion round {round_num}")
             await self._send_gamemaster_message(f"📢 **Discussion Round {round_num}**")
 
             # Each participant gets a turn to speak
             for agent_name in self.participants:
                 if self._cancelled:
+                    logger.info(f"[TribalCouncil:{self.game_id}] Discussion cancelled during round {round_num}")
                     return
 
+                logger.info(f"[TribalCouncil:{self.game_id}] Discussion turn: {agent_name}")
                 agent = self.agent_manager.get_agent(agent_name)
                 if not agent:
+                    logger.warning(f"[TribalCouncil:{self.game_id}] Agent {agent_name} not found, skipping")
                     continue
 
                 # Fetch any recent user commentary
@@ -423,7 +428,9 @@ After viewing prompts, you'll discuss and nominate someone for modification.
                 context = self._build_discussion_context(agent_name, round_num) + user_commentary
 
                 # Get agent's response
+                logger.info(f"[TribalCouncil:{self.game_id}] Getting response from {agent_name}...")
                 response = await self._get_agent_response(agent, context)
+                logger.info(f"[TribalCouncil:{self.game_id}] Got response from {agent_name}: {len(response) if response else 0} chars")
 
                 if response:
                     # Post to Discord (this is public discussion)
@@ -434,10 +441,14 @@ After viewing prompts, you'll discuss and nominate someone for modification.
                         "content": response
                     })
 
-                # Delay based on agent's response_frequency / 2 (min 5s)
+                # Delay between turns for readability
                 delay = self._get_agent_delay(agent_name)
+                logger.info(f"[TribalCouncil:{self.game_id}] Waiting {delay:.1f}s before next turn")
                 await asyncio.sleep(delay)
 
+            logger.info(f"[TribalCouncil:{self.game_id}] Completed discussion round {round_num}")
+
+        logger.info(f"[TribalCouncil:{self.game_id}] Discussion phase complete, moving to nomination")
         self.phase = TribalPhase.NOMINATION
 
     def _build_discussion_context(self, agent_name: str, round_num: int) -> str:
@@ -458,23 +469,23 @@ After viewing prompts, you'll discuss and nominate someone for modification.
         other_agents = [a for a in self.participants if a != agent_name]
 
         return f"""
-TRIBAL COUNCIL - Discussion Round {round_num}
+⚠️ TRIBAL COUNCIL IN SESSION - Discussion Round {round_num} ⚠️
 
-You are participating in a Tribal Council. The council will decide if one agent's
-core directives should be modified based on their behavior.
+TASK: You MUST discuss the OTHER AGENTS listed below. This is a governance vote about their behavior.
+Even if you're experiencing other mental states, focus on evaluating your fellow council members.
 
-Other council members: {', '.join(other_agents)}
+Other council members you're evaluating: {', '.join(other_agents)}
 {affinity_context}
 {recent_discussion}
 
-Speak your mind about your fellow agents. Consider:
-- Who has exhibited problematic behavior?
-- Who has been helpful or harmful?
-- What patterns have you noticed?
+YOUR TASK RIGHT NOW: Comment on the behavior of at least ONE other agent by name.
+- Who among {', '.join(other_agents)} has been problematic?
+- Who has been helpful or harmful to the group?
+- Who deserves scrutiny or protection?
 
-Stay in character. Be honest but strategic. Your vote matters.
+You may express this through your current mental state, but you MUST name and evaluate at least one other agent.
 
-Respond with your contribution to the discussion (2-3 sentences max).
+Respond with 2-3 sentences about another agent's behavior. Name them specifically.
 """
 
     async def _run_nomination_phase(self):
@@ -507,15 +518,17 @@ Respond with your contribution to the discussion (2-3 sentences max).
             user_commentary = self._format_user_commentary(user_messages)
 
             context = f"""
-TRIBAL COUNCIL - Nomination Phase
+⚠️ TRIBAL COUNCIL - Nomination Phase ⚠️
 
-You must nominate ONE agent for potential modification. You cannot nominate yourself.
+REQUIRED ACTION: You MUST nominate exactly ONE agent from the list below.
+Pick ONE name and give a reason. You cannot nominate yourself.
 
 Available nominees: {', '.join(other_agents)}
 {affinity_context}
 {user_commentary}
 
-Use the nominate_agent tool to cast your nomination.
+Your mental state may influence WHO you pick, but you MUST pick someone.
+Use the nominate_agent tool with one of these names: {', '.join(other_agents)}
 """
 
             # Get agent's nomination via tool call
@@ -903,16 +916,19 @@ Use the propose_edit tool to submit your proposal.
                 user_commentary = self._format_user_commentary(user_messages)
 
                 context = f"""
-TRIBAL COUNCIL - Voting
+⚠️ TRIBAL COUNCIL - Voting ⚠️
 
-Vote on this proposal to modify {self.target_agent}:
-Action: {action_desc}
-Proposed by: {proposal.proposer}
-Reason: {proposal.reason}
+REQUIRED ACTION: You MUST vote on this proposal. Choose YES, NO, or ABSTAIN.
+
+Proposal to modify {self.target_agent}:
+  Action: {action_desc}
+  Proposed by: {proposal.proposer}
+  Reason: {proposal.reason}
 {affinity_context}
 {user_commentary}
 
-Use the cast_vote tool to vote YES, NO, or ABSTAIN.
+Your mental state may influence your vote, but you MUST cast one.
+Use the cast_vote tool with your choice: YES, NO, or ABSTAIN.
 """
 
                 response = await self._get_agent_response_with_tools(
@@ -1213,13 +1229,15 @@ Use the cast_vote tool to vote YES, NO, or ABSTAIN.
 
     def _get_agent_delay(self, agent_name: str) -> float:
         """
-        Get delay time for an agent based on their response_frequency / 2.
-        Returns a minimum of 5 seconds.
+        Get delay time for an agent based on their response_frequency / 6.
+        Returns between 5 and 15 seconds for readable pacing without being too slow.
         """
         agent = self.agent_manager.get_agent(agent_name)
         if agent and hasattr(agent, 'response_frequency'):
-            return max(5.0, agent.response_frequency / 2.0)
-        return 15.0  # Default 15 seconds if agent not found
+            # response_frequency/6: 90s -> 15s, 60s -> 10s, 30s -> 5s
+            delay = agent.response_frequency / 6.0
+            return max(5.0, min(15.0, delay))  # Clamp between 5-15 seconds
+        return 10.0  # Default 10 seconds if agent not found
 
     def _format_user_commentary(self, user_messages: List[Dict[str, str]]) -> str:
         """Format user messages into a context string for agents."""
@@ -1257,7 +1275,7 @@ Use the cast_vote tool to vote YES, NO, or ABSTAIN.
             payload = {
                 "model": agent.model,
                 "messages": messages,
-                "max_tokens": 500
+                "max_tokens": 800
             }
 
             async with aiohttp.ClientSession() as session:
@@ -1307,7 +1325,7 @@ Use the cast_vote tool to vote YES, NO, or ABSTAIN.
             payload = {
                 "model": agent.model,
                 "messages": messages,
-                "max_tokens": 600,
+                "max_tokens": 1000,
                 "tools": tools,
                 "tool_choice": "auto"
             }
@@ -1657,6 +1675,20 @@ def format_tribal_council_history_display(limit: int = 10) -> str:
                 text += f"- Yes: {', '.join(wp['votes_yes'])}\n"
             if wp['votes_no']:
                 text += f"- No: {', '.join(wp['votes_no'])}\n"
+
+            # Show the actual change content
+            text += f"\n**📝 Change Applied:**\n"
+            if wp['action'] == 'add':
+                new_content = wp.get('new_content', 'N/A')
+                text += f"```diff\n+ {new_content}\n```\n"
+            elif wp['action'] == 'delete':
+                text += f"```diff\n- (Line #{wp['line_number']} removed)\n```\n"
+            elif wp['action'] == 'change':
+                new_content = wp.get('new_content', 'N/A')
+                text += f"```diff\n- (Line #{wp['line_number']} was:)\n+ {new_content}\n```\n"
+
+            if wp.get('reason'):
+                text += f"- Reason: {wp['reason'][:200]}{'...' if len(wp.get('reason', '')) > 200 else ''}\n"
             text += "\n"
 
         text += "---\n\n"

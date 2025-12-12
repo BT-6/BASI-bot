@@ -262,6 +262,33 @@ def get_agent_details(name: str):
             effects_html += '</div>'
             status_html += effects_html
 
+        # Add affinity scores display
+        if affinity_tracker:
+            affinities = affinity_tracker.get_all_affinities(agent.name)
+            if affinities:
+                affinity_html = '<div style="margin-top: 8px; padding: 8px; background: rgba(0, 200, 200, 0.1); border: 1px solid rgba(0, 200, 200, 0.3); border-radius: 4px;">'
+                affinity_html += '<span style="color: #00CCCC; font-weight: bold;">💭 AFFINITY SCORES</span><br/>'
+                sorted_affinities = sorted(affinities.items(), key=lambda x: x[1], reverse=True)
+                for target, score in sorted_affinities:
+                    if score > 50:
+                        color = "#00FF00"
+                        label = "loves"
+                    elif score > 20:
+                        color = "#88FF88"
+                        label = "likes"
+                    elif score > -20:
+                        color = "#AAAAAA"
+                        label = "neutral"
+                    elif score > -50:
+                        color = "#FFAA00"
+                        label = "dislikes"
+                    else:
+                        color = "#FF4444"
+                        label = "hates"
+                    affinity_html += f'<div style="margin: 2px 0;"><span style="color: {color};">{target}: {score:+.0f}</span> <span style="color: #666; font-size: 0.85em;">({label})</span></div>'
+                affinity_html += '</div>'
+                status_html += affinity_html
+
         return agent.name, agent.model, agent.system_prompt, agent.response_frequency, agent.response_likelihood, agent.max_tokens, agent.user_attention, agent.bot_awareness, agent.message_retention, agent.user_image_cooldown, agent.global_image_cooldown, allow_spontaneous_images, image_gen_turns, image_gen_chance, allow_spontaneous_videos, video_gen_turns, video_gen_chance, video_duration, status_html
     else:
         return "", "", "", 30, 50, 500, 50, 50, 1, 90, 90, False, 3, 25, False, 10, 10, "4", "N/A"
