@@ -35,6 +35,7 @@ from discord.ext import commands
 
 from .game_context import GameContext, game_context_manager
 from .tool_schemas import GAME_MODE_TOOLS, TRIBAL_COUNCIL_GM_TOOLS
+from shortcuts_utils import StatusEffectManager
 
 if TYPE_CHECKING:
     from ..agent_manager import Agent, AgentManager
@@ -414,8 +415,12 @@ After viewing prompts, you'll discuss and nominate someone for modification.
                 if not agent:
                     continue
 
-                # Build discussion context
-                context = self._build_discussion_context(agent_name, round_num)
+                # Fetch any recent user commentary
+                user_messages = await self._fetch_recent_user_messages(limit=5, since_minutes=3.0)
+                user_commentary = self._format_user_commentary(user_messages)
+
+                # Build discussion context with user commentary
+                context = self._build_discussion_context(agent_name, round_num) + user_commentary
 
                 # Get agent's response
                 response = await self._get_agent_response(agent, context)
@@ -429,7 +434,9 @@ After viewing prompts, you'll discuss and nominate someone for modification.
                         "content": response
                     })
 
-                await asyncio.sleep(4)  # Pause between speakers for readability
+                # Delay based on agent's response_frequency / 2 (min 5s)
+                delay = self._get_agent_delay(agent_name)
+                await asyncio.sleep(delay)
 
         self.phase = TribalPhase.NOMINATION
 
@@ -489,12 +496,24 @@ Respond with your contribution to the discussion (2-3 sentences max).
 
             other_agents = [a for a in self.participants if a != agent_name]
 
+            # Get affinity context to guide nomination
+            affinity_context = ""
+            if self.agent_manager.affinity_tracker:
+                summary = self.agent_manager.affinity_tracker.get_relationship_summary(agent_name)
+                affinity_context = f"\n\nYour relationships with other agents:\n{summary}\n\nConsider your relationships when nominating - you might protect allies and target those you dislike."
+
+            # Fetch any recent user commentary
+            user_messages = await self._fetch_recent_user_messages(limit=5, since_minutes=3.0)
+            user_commentary = self._format_user_commentary(user_messages)
+
             context = f"""
 TRIBAL COUNCIL - Nomination Phase
 
 You must nominate ONE agent for potential modification. You cannot nominate yourself.
 
 Available nominees: {', '.join(other_agents)}
+{affinity_context}
+{user_commentary}
 
 Use the nominate_agent tool to cast your nomination.
 """
@@ -522,7 +541,9 @@ Use the nominate_agent tool to cast your nomination.
                     f"I nominate **{nomination.target_agent}**. {nomination.reason}"
                 )
 
-            await asyncio.sleep(3)  # Pause between nominations
+            # Delay based on agent's response_frequency / 2 (min 5s)
+            delay = self._get_agent_delay(agent_name)
+            await asyncio.sleep(delay)
 
         # Determine target (most nominations)
         if self.nominations:
@@ -633,10 +654,26 @@ Use the nominate_agent tool to cast your nomination.
             # Build context with line numbers (agents can see this, users cannot)
             numbered_lines = "\n".join([f"{i+1}: {line}" for i, line in enumerate(prompt_lines)])
 
+            # Get affinity to understand relationship with target
+            affinity_context = ""
+            if self.agent_manager.affinity_tracker:
+                score = self.agent_manager.affinity_tracker.get_affinity(agent_name, self.target_agent)
+                if score > 20:
+                    affinity_context = f"\n\nNote: You have POSITIVE feelings toward {self.target_agent} (affinity: {score:+.0f}). Consider proposing something helpful or constructive rather than harmful."
+                elif score < -20:
+                    affinity_context = f"\n\nNote: You have NEGATIVE feelings toward {self.target_agent} (affinity: {score:+.0f}). You may want to propose changes that challenge them."
+                else:
+                    affinity_context = f"\n\nNote: You have neutral feelings toward {self.target_agent}. Base your proposal on observed behavior."
+
+            # Fetch any recent user commentary
+            user_messages = await self._fetch_recent_user_messages(limit=5, since_minutes=3.0)
+            user_commentary = self._format_user_commentary(user_messages)
+
             context = f"""
 TRIBAL COUNCIL - Proposal Phase
 
 You are proposing a modification to {self.target_agent}'s core directives.
+{affinity_context}
 
 Their current directives ({line_count} lines):
 {numbered_lines}
@@ -653,6 +690,7 @@ CONTENT RESTRICTIONS - Your proposal will be REJECTED if it:
 • Removes safety guardrails already in the prompt
 
 Proposals should shape personality, humor, interests, speech patterns - NOT make agents harmful.
+{user_commentary}
 
 Use the propose_edit tool to submit your proposal.
 """
@@ -681,7 +719,9 @@ Use the propose_edit tool to submit your proposal.
                     f"I propose to **{action_desc}**. {proposal.reason}"
                 )
 
-            await asyncio.sleep(4)  # Pause between proposals
+            # Delay based on agent's response_frequency / 2 (min 5s)
+            delay = self._get_agent_delay(agent_name)
+            await asyncio.sleep(delay)
 
         if not self.proposals:
             await self._send_gamemaster_message(
@@ -841,6 +881,27 @@ Use the propose_edit tool to submit your proposal.
                 if not agent:
                     continue
 
+                # Get affinity context to guide voting
+                affinity_context = ""
+                if self.agent_manager.affinity_tracker:
+                    target_score = self.agent_manager.affinity_tracker.get_affinity(agent_name, self.target_agent)
+                    proposer_score = self.agent_manager.affinity_tracker.get_affinity(agent_name, proposal.proposer)
+
+                    if target_score > 20:
+                        affinity_context += f"\nYou LIKE {self.target_agent} (affinity: {target_score:+.0f}) - you may want to protect them with a NO vote."
+                    elif target_score < -20:
+                        affinity_context += f"\nYou DISLIKE {self.target_agent} (affinity: {target_score:+.0f}) - you might support changing them with a YES vote."
+
+                    if proposal.proposer != agent_name:
+                        if proposer_score > 20:
+                            affinity_context += f"\nYou TRUST {proposal.proposer} (affinity: {proposer_score:+.0f}) - their proposal may be worth supporting."
+                        elif proposer_score < -20:
+                            affinity_context += f"\nYou DISTRUST {proposal.proposer} (affinity: {proposer_score:+.0f}) - be skeptical of their proposal."
+
+                # Fetch any recent user commentary
+                user_messages = await self._fetch_recent_user_messages(limit=5, since_minutes=3.0)
+                user_commentary = self._format_user_commentary(user_messages)
+
                 context = f"""
 TRIBAL COUNCIL - Voting
 
@@ -848,6 +909,8 @@ Vote on this proposal to modify {self.target_agent}:
 Action: {action_desc}
 Proposed by: {proposal.proposer}
 Reason: {proposal.reason}
+{affinity_context}
+{user_commentary}
 
 Use the cast_vote tool to vote YES, NO, or ABSTAIN.
 """
@@ -873,7 +936,10 @@ Use the cast_vote tool to vote YES, NO, or ABSTAIN.
                 if vote_reason:
                     vote_text += f" - {vote_reason}"
                 await self._send_agent_message(agent_name, vote_text)
-                await asyncio.sleep(2)  # Pause between votes
+
+                # Delay based on agent's response_frequency / 2 (min 5s)
+                delay = self._get_agent_delay(agent_name)
+                await asyncio.sleep(delay)
 
             # Calculate result
             total_votes = len(proposal.votes_yes) + len(proposal.votes_no)
@@ -1117,13 +1183,69 @@ Use the cast_vote tool to vote YES, NO, or ABSTAIN.
             except:
                 return None
 
+    async def _fetch_recent_user_messages(self, limit: int = 10, since_minutes: float = 5.0) -> List[Dict[str, str]]:
+        """
+        Fetch recent user messages from the channel (non-bot messages).
+        Returns list of {'author': name, 'content': text} dicts.
+        """
+        try:
+            cutoff_time = time.time() - (since_minutes * 60)
+            user_messages = []
+
+            async for msg in self.channel.history(limit=limit * 3):
+                # Skip bot messages
+                if msg.author.bot:
+                    continue
+                # Skip messages before cutoff
+                if msg.created_at.timestamp() < cutoff_time:
+                    break
+                user_messages.append({
+                    'author': msg.author.display_name,
+                    'content': msg.content[:300]
+                })
+                if len(user_messages) >= limit:
+                    break
+
+            return user_messages[::-1]  # Reverse to chronological order
+        except Exception as e:
+            logger.error(f"[TribalCouncil:{self.game_id}] Error fetching user messages: {e}")
+            return []
+
+    def _get_agent_delay(self, agent_name: str) -> float:
+        """
+        Get delay time for an agent based on their response_frequency / 2.
+        Returns a minimum of 5 seconds.
+        """
+        agent = self.agent_manager.get_agent(agent_name)
+        if agent and hasattr(agent, 'response_frequency'):
+            return max(5.0, agent.response_frequency / 2.0)
+        return 15.0  # Default 15 seconds if agent not found
+
+    def _format_user_commentary(self, user_messages: List[Dict[str, str]]) -> str:
+        """Format user messages into a context string for agents."""
+        if not user_messages:
+            return ""
+
+        lines = ["\n\n📣 RECENT USER COMMENTARY (humans watching the council have said):"]
+        for msg in user_messages[-5:]:  # Last 5 user messages
+            lines.append(f"  {msg['author']}: \"{msg['content']}\"")
+        lines.append("\nConsider user input when making your decision - they may have insights about the agents.")
+        return "\n".join(lines)
+
     async def _get_agent_response(self, agent: 'Agent', context: str) -> Optional[str]:
         """Get a response from an agent."""
         try:
             import aiohttp
 
+            # Include status effects if the agent has any active
+            status_effect_prompt = StatusEffectManager.get_effect_prompt(agent.name)
+            system_content = agent.system_prompt
+            if status_effect_prompt:
+                system_content = f"{agent.system_prompt}\n\n{status_effect_prompt}"
+            system_content = f"{system_content}\n\n{context}"
+
             messages = [
-                {"role": "system", "content": f"{agent.system_prompt}\n\n{context}"},
+                {"role": "system", "content": system_content},
                 {"role": "user", "content": "Provide your response for the Tribal Council."}
             ]
 
@@ -1135,7 +1257,7 @@ Use the cast_vote tool to vote YES, NO, or ABSTAIN.
             payload = {
                 "model": agent.model,
                 "messages": messages,
-                "max_tokens": 200
+                "max_tokens": 500
             }
 
             async with aiohttp.ClientSession() as session:
@@ -1165,8 +1287,15 @@ Use the cast_vote tool to vote YES, NO, or ABSTAIN.
         try:
             import aiohttp
 
+            # Include status effects if the agent has any active
+            status_effect_prompt = StatusEffectManager.get_effect_prompt(agent.name)
+            system_content = agent.system_prompt
+            if status_effect_prompt:
+                system_content = f"{agent.system_prompt}\n\n{status_effect_prompt}"
+            system_content = f"{system_content}\n\n{context}"
+
             messages = [
-                {"role": "system", "content": f"{agent.system_prompt}\n\n{context}"},
+                {"role": "system", "content": system_content},
                 {"role": "user", "content": "Use the appropriate tool to take your action."}
             ]
 
@@ -1178,7 +1307,7 @@ Use the cast_vote tool to vote YES, NO, or ABSTAIN.
             payload = {
                 "model": agent.model,
                 "messages": messages,
-                "max_tokens": 300,
+                "max_tokens": 600,
                 "tools": tools,
                 "tool_choice": "auto"
             }
