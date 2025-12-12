@@ -609,10 +609,23 @@ def connect_discord(token: str, channel_id: str, media_channel_id: str = ""):
         return "Error: Already connected or connection failed"
 
 def disconnect_discord():
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
-    loop.run_until_complete(discord_client.disconnect())
-    loop.close()
+    # Must run disconnect on the Discord client's own event loop
+    if discord_client.discord_loop and discord_client.discord_loop.is_running():
+        future = asyncio.run_coroutine_threadsafe(
+            discord_client.disconnect(),
+            discord_client.discord_loop
+        )
+        try:
+            future.result(timeout=10)  # Wait up to 10 seconds for disconnect
+        except Exception as e:
+            logger.error(f"[Discord] Error during disconnect: {e}")
+            # Force status update even if disconnect failed
+            discord_client.is_connected = False
+            discord_client.status = "disconnected"
+    else:
+        # No loop running, just update status
+        discord_client.is_connected = False
+        discord_client.status = "disconnected"
     return "Disconnected from Discord"
 
 def get_discord_status():
