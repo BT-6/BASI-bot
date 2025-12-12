@@ -202,7 +202,77 @@ class TribalCouncilGame:
         # Track who has viewed whose prompt (for logging/analytics only)
         self.prompt_views: Dict[str, List[str]] = {}  # viewer -> [targets viewed]
 
+        # Store pre-TC conversation context so agents remember what they were doing
+        self.pre_tc_context: str = ""
+
         self._cancelled = False
+
+    async def _capture_pre_tc_context(self):
+        """Capture what agents were doing before TC started (for context continuity)."""
+        try:
+            pre_tc_messages = []
+            async for msg in self.channel.history(limit=15):
+                # Skip GameMaster/system messages
+                if 'GameMaster' in msg.author.display_name:
+                    continue
+                # Skip shortcut commands
+                if msg.content.strip().startswith('!'):
+                    continue
+                # Only include participant messages
+                author_base = msg.author.display_name.split(' (')[0] if ' (' in msg.author.display_name else msg.author.display_name
+                if author_base in self.participants or not msg.author.bot:
+                    pre_tc_messages.append({
+                        'author': author_base,
+                        'content': msg.content[:200]
+                    })
+
+            # Reverse to chronological order and take last 8
+            pre_tc_messages = pre_tc_messages[::-1][-8:]
+
+            if pre_tc_messages:
+                lines = ["WHAT WAS HAPPENING BEFORE TRIBAL COUNCIL:"]
+                for m in pre_tc_messages:
+                    lines.append(f"  {m['author']}: \"{m['content']}...\"")
+                self.pre_tc_context = "\n".join(lines)
+                logger.info(f"[TribalCouncil:{self.game_id}] Captured {len(pre_tc_messages)} pre-TC messages for context")
+        except Exception as e:
+            logger.error(f"[TribalCouncil:{self.game_id}] Error capturing pre-TC context: {e}")
+            self.pre_tc_context = ""
+
+    def _inject_post_tc_context(self):
+        """Inject recovery context so agents remember what they were doing before TC."""
+        if not self.pre_tc_context:
+            return
+
+        # Build a summary of what happened in TC
+        tc_summary = ""
+        if self.winning_proposal:
+            tc_summary = f"The council decided to modify {self.target_agent}'s behavior."
+        elif self.target_agent:
+            tc_summary = f"The council discussed {self.target_agent} but no changes were made."
+        else:
+            tc_summary = "The council concluded without making changes."
+
+        # Create the recovery prompt
+        recovery_prompt = f"""
+
+🔔 TRIBAL COUNCIL HAS ENDED - RETURNING TO NORMAL CONVERSATION
+
+{tc_summary}
+
+REMEMBER: Before the council, you were in the middle of something:
+{self.pre_tc_context}
+
+You can now continue where you left off, react to what happened in the council, or move on to something new. The council has concluded.
+"""
+
+        # Inject into StatusEffectManager's pending recoveries for each participant
+        for agent_name in self.participants:
+            if agent_name not in StatusEffectManager._pending_recoveries:
+                StatusEffectManager._pending_recoveries[agent_name] = []
+            StatusEffectManager._pending_recoveries[agent_name].append(recovery_prompt)
+
+        logger.info(f"[TribalCouncil:{self.game_id}] Injected post-TC context for {len(self.participants)} agents")
 
     async def start(self, ctx: commands.Context, participant_names: Optional[List[str]] = None):
         """Start a Tribal Council session."""
@@ -221,6 +291,9 @@ class TribalCouncilGame:
                     f"Need at least {self.config.min_participants}, found {len(self.participants)}."
                 )
                 return
+
+            # Capture what was happening before TC (so agents remember context)
+            await self._capture_pre_tc_context()
 
             # Enter game mode for all participants
             for agent_name in self.participants:
@@ -259,11 +332,14 @@ class TribalCouncilGame:
 
             await self._run_implementation_phase()
 
-            # Exit game mode
+            # Exit game mode and inject post-TC context
             for agent_name in self.participants:
                 agent = self.agent_manager.get_agent(agent_name)
                 if agent:
                     game_context_manager.exit_game_mode(agent)
+
+            # Inject post-TC recovery context so agents remember what they were doing
+            self._inject_post_tc_context()
 
             self.phase = TribalPhase.COMPLETE
             logger.info(f"[TribalCouncil:{self.game_id}] Session complete")
@@ -464,12 +540,18 @@ After viewing prompts, you'll discuss and nominate someone for modification.
         if self.discussion_log:
             recent = self.discussion_log[-5:]  # Last 5 statements
             lines = [f"{d['agent']}: {d['content'][:200]}..." for d in recent]
-            recent_discussion = f"\n\nRecent discussion:\n" + "\n".join(lines)
+            recent_discussion = f"\n\nRecent TC discussion:\n" + "\n".join(lines)
+
+        # Include what was happening before TC started
+        pre_context = ""
+        if self.pre_tc_context:
+            pre_context = f"\n\n{self.pre_tc_context}\n\n(The above is what was happening before Tribal Council was called. You were interrupted for this council.)"
 
         other_agents = [a for a in self.participants if a != agent_name]
 
         return f"""
 ⚠️ TRIBAL COUNCIL IN SESSION - Discussion Round {round_num} ⚠️
+{pre_context}
 
 TASK: You MUST discuss the OTHER AGENTS listed below. This is a governance vote about their behavior.
 Even if you're experiencing other mental states, focus on evaluating your fellow council members.
@@ -1202,6 +1284,7 @@ Use the cast_vote tool with your choice: YES, NO, or ABSTAIN.
     async def _fetch_recent_user_messages(self, limit: int = 10, since_minutes: float = 5.0) -> List[Dict[str, str]]:
         """
         Fetch recent user messages from the channel (non-bot messages).
+        Filters out shortcut commands (!command) that agents shouldn't see.
         Returns list of {'author': name, 'content': text} dicts.
         """
         try:
@@ -1215,9 +1298,13 @@ Use the cast_vote tool with your choice: YES, NO, or ABSTAIN.
                 # Skip messages before cutoff
                 if msg.created_at.timestamp() < cutoff_time:
                     break
+                # Skip shortcut commands - agents shouldn't see these
+                content = msg.content.strip()
+                if content.startswith('!'):
+                    continue
                 user_messages.append({
                     'author': msg.author.display_name,
-                    'content': msg.content[:300]
+                    'content': content[:300]
                 })
                 if len(user_messages) >= limit:
                     break

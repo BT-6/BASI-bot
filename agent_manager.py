@@ -1690,6 +1690,16 @@ Now, using this retrieved context, provide your final response to the conversati
         logger.info(f"[{self.name}] Extracted sentiment: {sentiment}, importance: {importance}")
         logger.info(f"[{self.name}] Clean response length: {len(clean_response)} chars")
 
+        # Check for garbage/malformed responses (likely API issues or content filter artifacts)
+        # Common patterns: "ext...", single word fragments, extremely short non-commands
+        if len(clean_response) <= 10:
+            # Allow certain short valid responses
+            valid_short = ['yes', 'no', 'ok', 'okay', 'hi', 'hey', 'bye', 'lol', 'lmao', 'haha', 'sure', 'nice', 'cool', 'thanks', 'thx', '...', '..']
+            clean_lower = clean_response.lower().strip('.')
+            if clean_lower not in valid_short and not clean_response.startswith('['):
+                logger.warning(f"[{self.name}] Garbage response detected ('{clean_response}') - likely API issue, skipping")
+                return None
+
         # Prevent repeated [IMAGE] requests - strip [IMAGE] if agent used it recently
         if "[IMAGE]" in clean_response:
             current_time = time.time()
