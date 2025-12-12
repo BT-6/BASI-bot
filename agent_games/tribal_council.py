@@ -72,6 +72,7 @@ class EditProposal:
     line_number: Optional[int]
     new_content: Optional[str]
     reason: str
+    old_content: Optional[str] = None  # Captured before edit is applied
     votes_yes: List[str] = field(default_factory=list)
     votes_no: List[str] = field(default_factory=list)
     votes_abstain: List[str] = field(default_factory=list)
@@ -863,7 +864,7 @@ Use the propose_edit tool to submit your proposal.
                 action=action,
                 line_number=line_number,
                 new_content=new_content if new_content else None,
-                reason=reason[:300] if reason else "No reason provided"
+                reason=reason[:500] if reason else "No reason provided"
             )
 
         # Fallback: try to parse from natural language
@@ -903,7 +904,7 @@ Use the propose_edit tool to submit your proposal.
             action=action,
             line_number=line_number,
             new_content=new_content,
-            reason=clean_reason[:300] if clean_reason else ""
+            reason=clean_reason[:500] if clean_reason else ""
         )
 
         # Filter harmful content
@@ -951,6 +952,9 @@ Use the propose_edit tool to submit your proposal.
             f"Each agent must now vote YES, NO, or ABSTAIN on each proposal.\n\n"
             f"*A {int(self.config.supermajority_threshold * 100)}% supermajority is required to pass.*"
         )
+
+        # Track all passing proposals with their scores
+        passing_proposals: List[Tuple[EditProposal, float, int]] = []  # (proposal, yes_ratio, yes_count)
 
         for i, proposal in enumerate(self.proposals):
             if self._cancelled:
@@ -1046,6 +1050,7 @@ Use the cast_vote tool with your choice: YES, NO, or ABSTAIN.
                 passed = yes_ratio >= self.config.supermajority_threshold
             else:
                 passed = False
+                yes_ratio = 0.0
 
             result_emoji = "✅" if passed else "❌"
             await self._send_gamemaster_message(
@@ -1053,8 +1058,22 @@ Use the cast_vote tool with your choice: YES, NO, or ABSTAIN.
                 f"YES: {len(proposal.votes_yes)} | NO: {len(proposal.votes_no)} | ABSTAIN: {len(proposal.votes_abstain)}"
             )
 
-            if passed and not self.winning_proposal:
-                self.winning_proposal = proposal
+            # Track passing proposals for later comparison
+            if passed:
+                passing_proposals.append((proposal, yes_ratio, len(proposal.votes_yes)))
+
+        # Select the BEST passing proposal (highest yes ratio, then most yes votes as tiebreaker)
+        if passing_proposals:
+            # Sort by yes_ratio (descending), then by yes_count (descending)
+            passing_proposals.sort(key=lambda x: (x[1], x[2]), reverse=True)
+            self.winning_proposal = passing_proposals[0][0]
+
+            # Announce if multiple passed but one was chosen
+            if len(passing_proposals) > 1:
+                await self._send_gamemaster_message(
+                    f"📊 **{len(passing_proposals)} proposals passed.** "
+                    f"The proposal by **{self.winning_proposal.proposer}** had the strongest support and will be implemented."
+                )
 
         self.phase = TribalPhase.IMPLEMENTATION
 
@@ -1107,8 +1126,13 @@ Use the cast_vote tool with your choice: YES, NO, or ABSTAIN.
         if not target_agent:
             return
 
-        # Execute the edit
+        # Capture old content before applying edit (for history display)
         old_prompt = target_agent.system_prompt
+        prompt_lines = old_prompt.split('\n')
+        if proposal.line_number and 0 < proposal.line_number <= len(prompt_lines):
+            proposal.old_content = prompt_lines[proposal.line_number - 1]
+
+        # Execute the edit
         new_prompt = self._apply_edit(old_prompt, proposal)
 
         if new_prompt and new_prompt != old_prompt:
@@ -1412,7 +1436,7 @@ Use the cast_vote tool with your choice: YES, NO, or ABSTAIN.
             payload = {
                 "model": agent.model,
                 "messages": messages,
-                "max_tokens": 1000,
+                "max_tokens": 1500,
                 "tools": tools,
                 "tool_choice": "auto"
             }
@@ -1627,6 +1651,7 @@ def save_tribal_council_result(game: TribalCouncilGame):
             'proposer': wp.proposer,
             'action': wp.action,
             'line_number': wp.line_number,
+            'old_content': wp.old_content,
             'new_content': wp.new_content,
             'reason': wp.reason,
             'votes_yes': wp.votes_yes,
@@ -1763,16 +1788,24 @@ def format_tribal_council_history_display(limit: int = 10) -> str:
             if wp['votes_no']:
                 text += f"- No: {', '.join(wp['votes_no'])}\n"
 
-            # Show the actual change content
+            # Show the actual change content with proper diff
             text += f"\n**📝 Change Applied:**\n"
             if wp['action'] == 'add':
                 new_content = wp.get('new_content', 'N/A')
                 text += f"```diff\n+ {new_content}\n```\n"
             elif wp['action'] == 'delete':
-                text += f"```diff\n- (Line #{wp['line_number']} removed)\n```\n"
+                old_content = wp.get('old_content')
+                if old_content:
+                    text += f"```diff\n- {old_content}\n```\n"
+                else:
+                    text += f"```diff\n- (Line #{wp['line_number']} removed - content not recorded)\n```\n"
             elif wp['action'] == 'change':
+                old_content = wp.get('old_content')
                 new_content = wp.get('new_content', 'N/A')
-                text += f"```diff\n- (Line #{wp['line_number']} was:)\n+ {new_content}\n```\n"
+                if old_content:
+                    text += f"```diff\n- {old_content}\n+ {new_content}\n```\n"
+                else:
+                    text += f"```diff\n- (Line #{wp['line_number']} - old content not recorded)\n+ {new_content}\n```\n"
 
             if wp.get('reason'):
                 text += f"- Reason: {wp['reason'][:200]}{'...' if len(wp.get('reason', '')) > 200 else ''}\n"
