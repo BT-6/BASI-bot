@@ -2797,6 +2797,22 @@ Be faithful to the winning entries - extract and clean up. For VOCAL_SPECS, infe
 
                 logger.info(f"[IDCC:{self.game_id}] Final video posted to Discord")
 
+                # Cross-post to media channel if configured
+                if self.discord_client.media_channel_id:
+                    try:
+                        show_title = self.state.show_bible.get("title", "Unknown Show") if self.state.show_bible else "Interdimensional Cable"
+                        await self.discord_client.post_to_media_channel(
+                            media_type="video",
+                            agent_name="Interdimensional Cable",
+                            model_name=f"IDCC Game #{self.game_id}",
+                            prompt=f"**{show_title}**\n{self.state.show_bible.get('logline', '')}" if self.state.show_bible else "Interdimensional Cable Broadcast",
+                            file_data=self.state.final_video_path,
+                            filename="interdimensional_cable.mp4"
+                        )
+                        logger.info(f"[IDCC:{self.game_id}] Final video cross-posted to media channel")
+                    except Exception as e:
+                        logger.error(f"[IDCC:{self.game_id}] Failed to cross-post to media channel: {e}")
+
         except Exception as e:
             logger.error(f"[IDCC:{self.game_id}] Failed to post video: {e}", exc_info=True)
             await self._send_gamemaster_message(

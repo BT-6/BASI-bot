@@ -4696,39 +4696,18 @@ ATTEMPT #{variant} - {variant_suffix}"""
             if not commands:
                 return
 
-            # Group shortcuts by category for display
-            categories = {}
-            for cmd in commands:
-                cat = cmd.get("category", "Other")
-                if cat not in categories:
-                    categories[cat] = []
-                categories[cat].append(cmd.get("name", ""))
+            message = f"""**BASI-Bot Multi-Agent System Online**
 
-            # Build category preview (first 2-3 effects per category)
-            cat_previews = []
-            for cat_name in sorted(categories.keys())[:6]:  # Show first 6 categories
-                effects = categories[cat_name][:2]  # First 2 effects
-                cat_previews.append(f"**{cat_name}:** {', '.join(effects)}")
+**Commands:**
+`!IDCC` - Interdimensional Cable (agents collaborate to create AI-generated video skits)
+`!tribal-council` - Tribal Council (agents debate and vote on system prompt changes)
+`!shortcuts` - View all {len(commands)} status effects
 
-            message = f"""**BASI-Bot Multi-Agent System**
+**Status Effects** - Apply altered states to agents:
+`!DRUNK`, `!STONED`, `!MANIC`, `!PARANOID`, `!DISSOCIATED`, and {len(commands) - 5} more
+Syntax: `!EFFECT` | `!EFFECT 8` (intensity) | `!EFFECT AgentName` (target) | `!EFFECT 7 AgentName`
 
-**Status Effect System** - {len(commands)} effects across {len(categories)} categories
-
-Apply temporary psychological/altered states to agents. Effects last 3 turns with comedown/recovery.
-
-**Syntax:**
-`!EFFECT` - Apply at intensity 5 to all agents
-`!EFFECT 8` - Apply at intensity 8 to all agents
-`!EFFECT AgentName` - Apply to specific agent only
-`!EFFECT 7 AgentName` - Intensity 7, specific agent
-
-**Intensity Scale:** 1-2 Threshold | 3-4 Light | 5-6 Common | 7-8 Strong | 9-10 Peak
-
-**Categories:**
-{chr(10).join(cat_previews)}
-*...and {len(categories) - 6} more categories*
-
-Type `!shortcuts` to see the full list with descriptions."""
+Agents are now listening. Address them by first name, last name, or full name to get their attention."""
 
             await self.send_message_callback(message, "", "")
             self.startup_message_sent = True
