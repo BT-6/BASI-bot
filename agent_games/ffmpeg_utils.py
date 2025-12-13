@@ -13,6 +13,7 @@ eliminating PATH requirements.
 import asyncio
 import logging
 import os
+import platform
 import subprocess
 import tempfile
 import time
@@ -28,9 +29,12 @@ logger = logging.getLogger(__name__)
 # Base directory for BASI-bot
 BASE_DIR = Path(__file__).parent.parent
 
-# FFmpeg binary paths (bundled with app)
-FFMPEG_PATH = BASE_DIR / "bin" / "ffmpeg.exe"
-FFPROBE_PATH = BASE_DIR / "bin" / "ffprobe.exe"
+# FFmpeg binary paths (platform-aware)
+IS_WINDOWS = platform.system() == "Windows"
+FFMPEG_EXE = "ffmpeg.exe" if IS_WINDOWS else "ffmpeg"
+FFPROBE_EXE = "ffprobe.exe" if IS_WINDOWS else "ffprobe"
+FFMPEG_PATH = BASE_DIR / "bin" / FFMPEG_EXE
+FFPROBE_PATH = BASE_DIR / "bin" / FFPROBE_EXE
 
 # Temp directory for video processing
 VIDEO_TEMP_DIR = BASE_DIR / "data" / "video_temp"
@@ -41,7 +45,7 @@ def get_ffmpeg_path() -> Optional[Path]:
     Get path to FFmpeg executable.
 
     Returns:
-        Path to ffmpeg.exe if found, None otherwise
+        Path to ffmpeg if found, None otherwise
     """
     if FFMPEG_PATH.exists():
         return FFMPEG_PATH
@@ -52,7 +56,7 @@ def get_ffmpeg_path() -> Optional[Path]:
         logger.info(f"[FFmpeg] Using system FFmpeg: {ffmpeg_system}")
         return Path(ffmpeg_system)
 
-    logger.error("[FFmpeg] ffmpeg.exe not found in bin/ or system PATH")
+    logger.error("[FFmpeg] ffmpeg not found in bin/ or system PATH")
     return None
 
 
@@ -61,7 +65,7 @@ def get_ffprobe_path() -> Optional[Path]:
     Get path to FFprobe executable.
 
     Returns:
-        Path to ffprobe.exe if found, None otherwise
+        Path to ffprobe if found, None otherwise
     """
     if FFPROBE_PATH.exists():
         return FFPROBE_PATH
